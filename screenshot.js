@@ -9,26 +9,25 @@ await new Promise(r => setTimeout(r, 3000));
 await page.screenshot({ path: 'screenshot.png', fullPage: false });
 console.log('Screenshot 1 saved (initial state)');
 
-const shipIcons = await page.$$('.ship-icon');
-console.log(`Found ${shipIcons.length} ship icons`);
-
-if (shipIcons.length > 0) {
-  await shipIcons[0].click();
+const rows = await page.$$('.inbound-row');
+console.log(`Found ${rows.length} inbound rows`);
+if (rows.length > 0) {
+  await rows[0].click();
   await new Promise(r => setTimeout(r, 500));
-  await page.screenshot({ path: 'screenshot-clicked.png', fullPage: false });
-  console.log('Screenshot 2 saved (after clicking ship)');
 }
+
+await page.screenshot({ path: 'screenshot-clicked.png', fullPage: false });
+console.log('Screenshot 2 saved (after clicking row)');
 
 const inspection = await page.evaluate(() => {
   try {
     return {
-      rootChildCount: document.getElementById('root')?.childElementCount,
-      hasLeafletContainer: !!document.querySelector('.leaflet-container'),
-      hasShipIcons: document.querySelectorAll('.ship-icon').length,
+      shipIconCount: document.querySelectorAll('.ship-icon').length,
+      namedShipCount: document.querySelectorAll('.ship-name-tooltip').length,
       hasInboundPanel: !!document.querySelector('.inbound-panel'),
       hasShipInfoCard: !!document.querySelector('.ship-info-card'),
-      mapHeight: document.querySelector('.vts-map')?.offsetHeight,
-      mapWidth: document.querySelector('.vts-map')?.offsetWidth,
+      hasScanBtn: !!document.querySelector('.scan-ais-btn'),
+      hasDestInput: !!document.querySelector('.dest-input'),
     };
   } catch (e) {
     return { error: e.message };

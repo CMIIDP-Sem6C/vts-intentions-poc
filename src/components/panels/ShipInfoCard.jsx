@@ -1,5 +1,56 @@
-export default function ShipInfoCard({ ship, onClose }) {
+import { useState, useEffect } from 'react';
+
+function getStatusLevel(ship) {
+  const destKnown = ship.destination && ship.destination !== 'Unknown';
+  if (destKnown && ship.aisActive) return 'green';
+  if (destKnown || ship.aisActive) return 'yellow';
+  return 'red';
+}
+
+const STATUS_LABELS = {
+  red: 'Onbekend',
+  yellow: 'Gedeeltelijk',
+  green: 'Volledig',
+};
+
+const STATUS_CSS = {
+  red: 'status-red',
+  yellow: 'status-yellow',
+  green: 'status-ok',
+};
+
+export default function ShipInfoCard({ ship, onClose, onSetDestination, onScanAIS }) {
+  const [editDest, setEditDest] = useState('');
+  const [scanning, setScanning] = useState(false);
+
+  useEffect(() => {
+    if (ship) {
+      setEditDest(ship.destination === 'Unknown' ? '' : ship.destination);
+      setScanning(false);
+    }
+  }, [ship?.id, ship?.destination]);
+
   if (!ship) return null;
+
+  const level = getStatusLevel(ship);
+
+  const handleDestSubmit = () => {
+    const trimmed = editDest.trim();
+    if (trimmed && trimmed !== ship.destination) {
+      onSetDestination(ship.id, trimmed);
+    } else if (!trimmed && ship.destination !== 'Unknown') {
+      onSetDestination(ship.id, 'Unknown');
+    }
+  };
+
+  const handleScan = () => {
+    if (ship.aisActive || scanning) return;
+    setScanning(true);
+    setTimeout(() => {
+      onScanAIS(ship.id);
+      setScanning(false);
+    }, 1800);
+  };
 
   return (
     <div className="panel ship-info-card">
@@ -8,6 +59,20 @@ export default function ShipInfoCard({ ship, onClose }) {
       </button>
 
       <h2 className="panel-title">SCHIP INFO - {ship.name}</h2>
+
+      <div className="ship-info-actions">
+        <button
+          className={`scan-ais-btn ${scanning ? 'scanning' : ''} ${ship.aisActive ? 'active' : ''}`}
+          onClick={handleScan}
+          disabled={ship.aisActive}
+        >
+          {ship.aisActive
+            ? 'AIS / VDES ACTIEF'
+            : scanning
+              ? 'SCANNING...'
+              : 'SCAN AIS / VDES'}
+        </button>
+      </div>
 
       <div className="ship-info-body">
         <div className="ship-info-visual">
@@ -19,20 +84,36 @@ export default function ShipInfoCard({ ship, onClose }) {
               <line x1="40" y1="5" x2="40" y2="12" stroke="#777" strokeWidth="1.5" />
             </svg>
           </div>
-          <button className="vhf-btn">CONTACT WITH VHF</button>
+          <button className="vhf-btn">CONTACT VIA VHF</button>
         </div>
 
         <div className="ship-info-details">
           <div className="info-row">
             <span className="info-label">BESTEMMING</span>
-            <span className={`info-value ${ship.destination === 'Unknown' ? 'dest-unknown' : 'dest-known'}`}>
-              {ship.destination}
+            <input
+              className={`dest-input ${level === 'red' ? 'dest-unknown' : ''}`}
+              value={editDest}
+              placeholder="Onbekend - voer in..."
+              onChange={(e) => setEditDest(e.target.value)}
+              onBlur={handleDestSubmit}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleDestSubmit();
+                  e.target.blur();
+                }
+              }}
+            />
+          </div>
+          <div className="info-row">
+            <span className="info-label">AIS STATUS</span>
+            <span className={`info-value ${STATUS_CSS[level]}`}>
+              {ship.aisActive ? 'Actief' : ship.aisStatus}
             </span>
           </div>
           <div className="info-row">
-            <span className="info-label">AIS / VDES STATUS</span>
-            <span className={`info-value ${ship.verified ? 'status-ok' : 'status-warn'}`}>
-              {ship.aisStatus}
+            <span className="info-label">TRACKING</span>
+            <span className={`info-value ${STATUS_CSS[level]}`}>
+              {STATUS_LABELS[level]}
             </span>
           </div>
           <div className="info-row">

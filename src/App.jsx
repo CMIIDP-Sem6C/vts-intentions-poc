@@ -4,28 +4,34 @@ import VTSMap from './components/map/VTSMap';
 import InboundPanel from './components/panels/InboundPanel';
 import ShipInfoCard from './components/panels/ShipInfoCard';
 import useShipSimulation from './hooks/useShipSimulation';
-import { MOCK_SHIPS } from './data/mockShips';
+import { MOCK_SHIPS, MOORED_SHIPS } from './data/mockShips';
 import './App.css';
 
 export default function App() {
   const simulatedShips = useShipSimulation(MOCK_SHIPS);
 
   const [selectedShipId, setSelectedShipId] = useState(null);
-  const [verifiedMap, setVerifiedMap] = useState(() => {
-    const map = {};
-    MOCK_SHIPS.forEach((s) => {
-      map[s.id] = s.verified;
-    });
-    return map;
+
+  const [destinationMap, setDestinationMap] = useState({});
+  const [aisActiveMap, setAisActiveMap] = useState(() => {
+    const m = {};
+    MOCK_SHIPS.forEach((s) => { m[s.id] = s.aisActive; });
+    return m;
   });
+
+  const [mooredShips, setMooredShips] = useState(() =>
+    MOORED_SHIPS.map((ms) => ({ ...ms }))
+  );
+  const [selectedMooredId, setSelectedMooredId] = useState(null);
 
   const ships = useMemo(
     () =>
       simulatedShips.map((ship) => ({
         ...ship,
-        verified: verifiedMap[ship.id] ?? ship.verified,
+        destination: destinationMap[ship.id] || ship.destination,
+        aisActive: aisActiveMap[ship.id] ?? ship.aisActive,
       })),
-    [simulatedShips, verifiedMap]
+    [simulatedShips, destinationMap, aisActiveMap]
   );
 
   const selectedShip = useMemo(
@@ -35,14 +41,30 @@ export default function App() {
 
   const handleSelectShip = useCallback((id) => {
     setSelectedShipId((prev) => (prev === id ? null : id));
-  }, []);
-
-  const handleToggleVerified = useCallback((id) => {
-    setVerifiedMap((prev) => ({ ...prev, [id]: !prev[id] }));
+    setSelectedMooredId(null);
   }, []);
 
   const handleCloseInfo = useCallback(() => {
     setSelectedShipId(null);
+  }, []);
+
+  const handleSetDestination = useCallback((id, dest) => {
+    setDestinationMap((prev) => ({ ...prev, [id]: dest }));
+  }, []);
+
+  const handleScanAIS = useCallback((id) => {
+    setAisActiveMap((prev) => ({ ...prev, [id]: true }));
+  }, []);
+
+  const handleSelectMoored = useCallback((id) => {
+    setSelectedMooredId((prev) => (prev === id ? null : id));
+    setSelectedShipId(null);
+  }, []);
+
+  const handleUpdateMoored = useCallback((id, updates) => {
+    setMooredShips((prev) =>
+      prev.map((ms) => (ms.id === id ? { ...ms, ...updates } : ms))
+    );
   }, []);
 
   return (
@@ -52,6 +74,10 @@ export default function App() {
           ships={ships}
           selectedShipId={selectedShipId}
           onSelectShip={handleSelectShip}
+          mooredShips={mooredShips}
+          selectedMooredId={selectedMooredId}
+          onSelectMoored={handleSelectMoored}
+          onUpdateMoored={handleUpdateMoored}
         />
       }
       inboundPanel={
@@ -59,11 +85,15 @@ export default function App() {
           ships={ships}
           selectedShipId={selectedShipId}
           onSelectShip={handleSelectShip}
-          onToggleVerified={handleToggleVerified}
         />
       }
       shipInfoCard={
-        <ShipInfoCard ship={selectedShip} onClose={handleCloseInfo} />
+        <ShipInfoCard
+          ship={selectedShip}
+          onClose={handleCloseInfo}
+          onSetDestination={handleSetDestination}
+          onScanAIS={handleScanAIS}
+        />
       }
     />
   );

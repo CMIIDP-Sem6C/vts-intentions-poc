@@ -20,6 +20,10 @@
   height: 100%;
 }
 
+.leaflet-tile-pane {
+  filter: sepia(0.30) saturate(1.25) brightness(0.88) hue-rotate(-8deg);
+}
+
 .overlay-panels {
   position: absolute;
   inset: 0;
@@ -52,12 +56,12 @@
    ============================== */
 
 .panel {
-  background: rgba(40, 40, 40, 0.92);
+  background: rgba(30, 30, 30, 0.94);
   color: #e0e0e0;
   border-radius: 6px;
   padding: 14px 16px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(4px);
+  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
 }
 
 .panel-title {
@@ -74,7 +78,7 @@
    ============================== */
 
 .inbound-panel {
-  min-width: 380px;
+  min-width: 420px;
 }
 
 .inbound-table {
@@ -99,12 +103,23 @@
 }
 
 .inbound-table tbody tr:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.06);
 }
 
-.inbound-table tbody tr.selected {
-  background: rgba(255, 255, 255, 0.15);
+.inbound-row.status-red {
+  border-left: 3px solid #F44336;
+}
+
+.inbound-row.status-yellow {
   border-left: 3px solid #FF9800;
+}
+
+.inbound-row.status-green {
+  border-left: 3px solid #4CAF50;
+}
+
+.inbound-row.selected {
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .inbound-table td {
@@ -123,35 +138,14 @@
   font-variant-numeric: tabular-nums;
 }
 
-.dest-known {
-  color: #FF9800;
+.dest-text {
   font-weight: 600;
   font-style: italic;
 }
 
-.dest-unknown {
-  color: #F44336;
-  font-weight: 700;
-  font-style: italic;
-}
-
-.verified-cell {
+.status-cell {
   text-align: center;
-}
-
-.star-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 2px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.15s;
-}
-
-.star-btn:hover {
-  transform: scale(1.25);
+  line-height: 1;
 }
 
 /* ==============================
@@ -159,8 +153,8 @@
    ============================== */
 
 .ship-info-card {
-  min-width: 380px;
-  max-width: 440px;
+  min-width: 400px;
+  max-width: 460px;
   position: relative;
 }
 
@@ -182,6 +176,54 @@
 .close-btn:hover {
   color: #fff;
 }
+
+/* --- Scan AIS button --- */
+
+.ship-info-actions {
+  margin-bottom: 12px;
+}
+
+.scan-ais-btn {
+  width: 100%;
+  padding: 9px 16px;
+  background: #333;
+  color: #ccc;
+  border: 1px solid #555;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s;
+}
+
+.scan-ais-btn:hover:not(:disabled) {
+  background: #3e3e3e;
+  border-color: #FF9800;
+  color: #fff;
+}
+
+.scan-ais-btn.scanning {
+  border-color: #FF9800;
+  color: #FF9800;
+  animation: scan-pulse 0.6s infinite alternate;
+}
+
+.scan-ais-btn.active,
+.scan-ais-btn:disabled {
+  background: rgba(76, 175, 80, 0.12);
+  color: #4CAF50;
+  border-color: rgba(76, 175, 80, 0.4);
+  cursor: default;
+}
+
+@keyframes scan-pulse {
+  from { opacity: 0.5; }
+  to   { opacity: 1; }
+}
+
+/* --- Info body --- */
 
 .ship-info-body {
   display: flex;
@@ -249,8 +291,56 @@
   color: #e0e0e0;
 }
 
+/* --- Editable destination input --- */
+
+.dest-input {
+  background: transparent;
+  border: 1px solid transparent;
+  color: #FF9800;
+  padding: 3px 6px;
+  border-radius: 3px;
+  font-size: 13px;
+  font-weight: 600;
+  font-style: italic;
+  width: 150px;
+  text-align: right;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+
+.dest-input:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.dest-input:focus {
+  outline: none;
+  border-color: #FF9800;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.dest-input::placeholder {
+  color: #F44336;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.dest-input.dest-unknown {
+  color: #F44336;
+}
+
+/* --- Status colours --- */
+
 .status-ok {
   color: #4CAF50;
+}
+
+.status-yellow {
+  color: #FF9800;
+}
+
+.status-red {
+  color: #F44336;
 }
 
 .status-warn {
@@ -308,23 +398,104 @@
 }
 
 .ship-name-tooltip {
-  background: rgba(20, 20, 20, 0.9) !important;
-  color: #fff !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  font-size: 13px !important;
-  font-weight: 700 !important;
-  padding: 3px 10px !important;
-  border-radius: 3px !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5) !important;
-  letter-spacing: 0.3px !important;
+  background: rgba(0, 0, 0, 0.75) !important;
+  color: #ccc !important;
+  border: none !important;
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  padding: 1px 6px !important;
+  border-radius: 2px !important;
+  box-shadow: none !important;
+  letter-spacing: 0.2px !important;
   white-space: nowrap !important;
 }
 
 .ship-name-tooltip::before {
-  border-top-color: rgba(20, 20, 20, 0.9) !important;
+  border-right-color: rgba(0, 0, 0, 0.75) !important;
+  border-top-color: transparent !important;
 }
 
 .leaflet-control-attribution {
-  font-size: 10px !important;
-  background: rgba(255, 255, 255, 0.6) !important;
+  font-size: 9px !important;
+  background: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* ==============================
+   Moored ship controls popup
+   ============================== */
+
+.moored-popup .leaflet-popup-content-wrapper {
+  background: rgba(30, 30, 30, 0.95) !important;
+  color: #e0e0e0 !important;
+  border-radius: 6px !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.6) !important;
+  padding: 0 !important;
+}
+
+.moored-popup .leaflet-popup-tip {
+  background: rgba(30, 30, 30, 0.95) !important;
+}
+
+.moored-popup .leaflet-popup-content {
+  margin: 0 !important;
+}
+
+.moored-controls {
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 180px;
+}
+
+.moored-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: #999;
+}
+
+.moored-heading-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rotate-btn {
+  background: #444;
+  color: #ccc;
+  border: 1px solid #555;
+  border-radius: 3px;
+  padding: 4px 7px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+
+.rotate-btn:hover {
+  background: #555;
+  color: #fff;
+  border-color: #FF9800;
+}
+
+.heading-display {
+  font-size: 14px;
+  font-weight: 700;
+  color: #FF9800;
+  min-width: 36px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.heading-display::after {
+  content: '\00B0';
+}
+
+.moored-hint {
+  font-size: 9px;
+  color: #777;
+  letter-spacing: 0.3px;
 }

@@ -2,6 +2,12 @@
 
 Een digitale weergave van een VTS-overlay (Vessel Traffic Services) voor het Rotterdamse havengebied. De applicatie toont schepen op een interactieve kaart, hun koers, bestemming en verificatiestatus. Gebouwd als technisch prototype (MVP) voor het onderzoeksproject "Slimme Objecten".
 
+## Screenshots
+
+![VTS Kaartoverzicht](docs/vts-overview.png)
+
+![Schip Info Panel](docs/vts-ship-info.png)
+
 ## Vereisten
 
 - [Node.js](https://nodejs.org/) v18 of hoger
@@ -36,22 +42,22 @@ De gebouwde bestanden staan dan in de `dist/` map.
 src/
   components/
     map/
-      VTSMap.jsx          Leaflet kaart met sector-overlay
-      ShipMarker.jsx      Scheepsicoon (SVG) met koersvector
+      VTSMap.jsx          Leaflet kaart met sector-overlay, moored ships, radar contacts
+      ShipMarker.jsx      Triangle + hull scheepsiconen met koersvector en tracklines
     panels/
-      InboundPanel.jsx    Lijst inkomende schepen + verificatie-toggle
-      ShipInfoCard.jsx    Detail-panel bij selectie van een schip
+      InboundPanel.jsx    Lijst inkomende schepen met status kleuren (rood/geel/groen)
+      ShipInfoCard.jsx    Detail-panel met editable bestemming en AIS scan functie
     layout/
       AppLayout.jsx       Fullscreen layout met overlay-panels
   data/
-    mockShips.js          6 schepen met waypoints op de Oude Maas (OSM data)
-    sectors.js            Sectorgrenzen en kaartcentrum
+    mockShips.js          Scheepsdata met OSM-coordinaten Nieuwe Maas, moored ships, radar contacts
+    sectors.js            Sectorgrenzen Nieuwe Maas (Pernis - Erasmusbrug)
   hooks/
-    useShipSimulation.js  Simuleert scheepsbewegingen langs waypoints
+    useShipSimulation.js  Simuleert scheepsbewegingen langs waypoints met route reversal
   utils/
     navigation.js         Haversine, heading, ETA berekeningen
   App.jsx                 Hoofdcomponent met state management
-  App.css                 Styling (donkere VTS-panels)
+  App.css                 Tidalis-stijl donker VTS-thema
 ```
 
 ## Tech Stack
@@ -59,14 +65,20 @@ src/
 - **React 18** (JavaScript)
 - **Vite** (bundler)
 - **Leaflet** + **react-leaflet** (kaart)
-- Waypoint-coordinaten gebaseerd op **OpenStreetMap** data (Oude Maas middenlijn)
+- **Puppeteer** (screenshots)
+- Waypoint-coordinaten gebaseerd op **OpenStreetMap** data (Nieuwe Maas centreline)
 
 ## Functionaliteiten
 
-- Interactieve kaart van het Oude Maas havengebied
-- 6 gesimuleerde schepen die langs realistische vaarroutes bewegen
-- Scheepsiconen met kleurcodering (geel = inbound, groen = in-sector, paars = overig)
-- Koersvector-lijnen die de vaarrichting tonen
-- Inbound Vessels panel met naam, ETA, bestemming en verificatiestatus
-- Klikbare ster-icoon om de bestemming als geverifieerd te markeren
-- Ship Info kaart met gedetailleerde scheepsinformatie en operator-notities
+- Interactieve kaart van het Nieuwe Maas VTS-sector (Rotterdam)
+- 6 gesimuleerde schepen met realistische vaarroutes (OSM-coordinaten)
+- Twee typen scheepsmarkers: driehoekige pijltjes en langwerpige vrachtschepen
+- Afgemeerde schepen in echte havenbassins (Waalhaven, Eemhaven, Merwehaven, etc.)
+- Radar contacts langs de oevers
+- Tracklines alleen zichtbaar bij hover of selectie, richtingsvector altijd zichtbaar
+- Status kleursysteem: rood (onbekend), geel (gedeeltelijk), groen (volledig bekend)
+- VTS operator kan bestemming invoeren en AIS status scannen
+- Draggable en roteerbare afgemeerde schepen
+- Tidalis-gebaseerde visuele stijl met warm kleurfilter
+
+TBA
