@@ -1,0 +1,330 @@
+/* ==============================
+   Layout
+   ============================== */
+
+.app-layout {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.map-container {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.vts-map {
+  width: 100%;
+  height: 100%;
+}
+
+.overlay-panels {
+  position: absolute;
+  inset: 0;
+  z-index: 1000;
+  pointer-events: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 12px;
+  gap: 12px;
+}
+
+.left-panels,
+.right-panels {
+  pointer-events: auto;
+  max-height: calc(100vh - 24px);
+  overflow-y: auto;
+}
+
+.left-panels {
+  flex: 0 0 auto;
+}
+
+.right-panels {
+  flex: 0 0 auto;
+}
+
+/* ==============================
+   Panel base
+   ============================== */
+
+.panel {
+  background: rgba(40, 40, 40, 0.92);
+  color: #e0e0e0;
+  border-radius: 6px;
+  padding: 14px 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+}
+
+.panel-title {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #ffffff;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+/* ==============================
+   Inbound Panel
+   ============================== */
+
+.inbound-panel {
+  min-width: 380px;
+}
+
+.inbound-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.inbound-table thead th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  color: #aaa;
+  padding: 4px 8px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  letter-spacing: 0.3px;
+}
+
+.inbound-table tbody tr {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.inbound-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.inbound-table tbody tr.selected {
+  background: rgba(255, 255, 255, 0.15);
+  border-left: 3px solid #FF9800;
+}
+
+.inbound-table td {
+  padding: 7px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  vertical-align: middle;
+}
+
+.ship-name-cell {
+  font-weight: 600;
+  color: #fff;
+}
+
+.eta-cell {
+  color: #bbb;
+  font-variant-numeric: tabular-nums;
+}
+
+.dest-known {
+  color: #FF9800;
+  font-weight: 600;
+  font-style: italic;
+}
+
+.dest-unknown {
+  color: #F44336;
+  font-weight: 700;
+  font-style: italic;
+}
+
+.verified-cell {
+  text-align: center;
+}
+
+.star-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s;
+}
+
+.star-btn:hover {
+  transform: scale(1.25);
+}
+
+/* ==============================
+   Ship Info Card
+   ============================== */
+
+.ship-info-card {
+  min-width: 380px;
+  max-width: 440px;
+  position: relative;
+}
+
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  background: none;
+  border: none;
+  color: #999;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 4px 8px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.close-btn:hover {
+  color: #fff;
+}
+
+.ship-info-body {
+  display: flex;
+  gap: 16px;
+}
+
+.ship-info-visual {
+  flex: 0 0 140px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ship-placeholder-img {
+  width: 140px;
+  height: 70px;
+  background: #333;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.vhf-btn {
+  background: #555;
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.15s;
+}
+
+.vhf-btn:hover {
+  background: #777;
+}
+
+.ship-info-details {
+  flex: 1;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.info-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #999;
+  letter-spacing: 0.3px;
+}
+
+.info-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: #e0e0e0;
+}
+
+.status-ok {
+  color: #4CAF50;
+}
+
+.status-warn {
+  color: #F44336;
+}
+
+/* ==============================
+   Operator Notes
+   ============================== */
+
+.operator-notes {
+  margin-top: 12px;
+}
+
+.notes-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #999;
+  letter-spacing: 0.3px;
+  margin-bottom: 6px;
+}
+
+.note-entry {
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.note-entry:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.note-header {
+  font-size: 12px;
+  font-weight: 700;
+  color: #FF9800;
+  margin-bottom: 2px;
+}
+
+.note-text {
+  font-size: 12px;
+  color: #bbb;
+  line-height: 1.4;
+}
+
+/* ==============================
+   Leaflet overrides
+   ============================== */
+
+.ship-icon {
+  background: transparent !important;
+  border: none !important;
+}
+
+.ship-name-tooltip {
+  background: rgba(20, 20, 20, 0.9) !important;
+  color: #fff !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  padding: 3px 10px !important;
+  border-radius: 3px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5) !important;
+  letter-spacing: 0.3px !important;
+  white-space: nowrap !important;
+}
+
+.ship-name-tooltip::before {
+  border-top-color: rgba(20, 20, 20, 0.9) !important;
+}
+
+.leaflet-control-attribution {
+  font-size: 10px !important;
+  background: rgba(255, 255, 255, 0.6) !important;
+}
