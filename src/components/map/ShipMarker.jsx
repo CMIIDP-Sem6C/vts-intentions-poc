@@ -1,13 +1,10 @@
 import { useMemo, useState, useCallback } from 'react';
 import { Marker, Polyline, Tooltip } from 'react-leaflet';
 import L from 'leaflet';
-import { getCourseVectorEnd } from '../../utils/navigation';
 
 const FILL = '#1B5E20';
 const FILL_SEL = '#2E7D32';
-const VECTOR_COLOR = '#D32F2F';
 const ROUTE_COLOR = '#E57373';
-const VECTOR_NM_PER_KNOT = 0.05;
 
 function createTriangleIcon(heading, isSelected) {
   const size = isSelected ? 20 : 16;
@@ -56,13 +53,6 @@ export default function ShipMarker({ ship, isSelected, onSelect }) {
     [headingRounded, ship.markerType, isSelected]
   );
 
-  const vectorLengthNm = ship.speed * VECTOR_NM_PER_KNOT;
-
-  const vectorEnd = useMemo(
-    () => getCourseVectorEnd(ship.position, ship.heading, vectorLengthNm),
-    [ship.position, ship.heading, vectorLengthNm]
-  );
-
   const remainingRoute = useMemo(() => {
     if (!ship.waypoints || ship.currentWaypointIndex == null) return [];
     return [ship.position, ...ship.waypoints.slice(ship.currentWaypointIndex)];
@@ -84,15 +74,6 @@ export default function ShipMarker({ ship, isSelected, onSelect }) {
           }}
         />
       )}
-
-      <Polyline
-        positions={[ship.position, vectorEnd]}
-        pathOptions={{
-          color: VECTOR_COLOR,
-          weight: 2,
-          opacity: 0.75,
-        }}
-      />
 
       <Marker
         position={ship.position}
