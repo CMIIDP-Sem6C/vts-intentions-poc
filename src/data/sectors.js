@@ -377,3 +377,78 @@ export const SECTORS = {
     ],
   },
 };
+
+/**
+ * Sector water boundary lines -- where sector borders cross the Nieuwe Maas.
+ * Derived from shared polygon edge points between adjacent sectors.
+ */
+export const SECTOR_WATER_BOUNDARIES = [
+  {
+    id: 'botlek-eemhaven',
+    label: 'Botlek / Eemhaven',
+    line: [[51.8992377, 4.3469253], [51.8949155, 4.3489269]],
+  },
+  {
+    id: 'eemhaven-waalhaven',
+    label: 'Eemhaven / Waalhaven',
+    line: [[51.9013801, 4.4072839], [51.8977488, 4.409563]],
+  },
+  {
+    id: 'waalhaven-maasbruggen',
+    label: 'Waalhaven / Maasbruggen',
+    line: [[51.9013471, 4.4540093], [51.8977204, 4.4531132]],
+  },
+];
+
+/**
+ * Kilometermarkeringen along the Nieuwe Maas (route 55001).
+ * Source: Rijkswaterstaat ArcGIS FeatureServer layer 11.
+ */
+export const KM_MARKERS = [
+  { id: 'km1012', label: '1012', position: [51.89427, 4.3346] },
+  { id: 'km1011', label: '1011', position: [51.89716, 4.3481] },
+  { id: 'km1010', label: '1010', position: [51.89905, 4.3613] },
+  { id: 'km1009', label: '1009', position: [51.89813, 4.3761] },
+  { id: 'km1008', label: '1008', position: [51.89758, 4.3912] },
+  { id: 'km1007', label: '1007', position: [51.89871, 4.4052] },
+  { id: 'km1006', label: '1006', position: [51.90142, 4.4187] },
+  { id: 'km1005', label: '1005', position: [51.90208, 4.4324] },
+  { id: 'km1004', label: '1004', position: [51.90015, 4.4476] },
+  { id: 'km1003', label: '1003', position: [51.89981, 4.4612] },
+  { id: 'km1002', label: '1002', position: [51.90254, 4.4751] },
+  { id: 'km1001', label: '1001', position: [51.90876, 4.4847] },
+  { id: 'km1000', label: '1000', position: [51.91573, 4.4930] },
+];
+
+/**
+ * Zwaaiplaats (turning basin) in the VTS area.
+ * Source: Rijkswaterstaat ArcGIS FeatureServer layer 30.
+ */
+export const TURNING_BASINS = [
+  { id: 'zp-1', label: 'Zwaaiplaats', position: [51.9091, 4.4072], width: 30 },
+];
+
+/**
+ * Nieuwe Maas waterway centreline (OSM way 41948489 + 1460533133).
+ * Shown as a subtle mid-channel reference line.
+ */
+export const WATERWAY_CENTERLINE = [
+  [51.89427, 4.3346],
+  [51.89759, 4.3501],
+  [51.89948, 4.3646],
+  [51.89720, 4.3841],
+  [51.89819, 4.4028],
+  [51.90101, 4.4158],
+  [51.90221, 4.4242],
+  [51.90204, 4.4352],
+  [51.90140, 4.4408],
+  [51.90004, 4.4482],
+  [51.89948, 4.4548],
+  [51.90006, 4.4660],
+  [51.90204, 4.4738],
+  [51.90388, 4.4786],
+  [51.90775, 4.4837],
+  [51.91049, 4.4864],
+  [51.91343, 4.4896],
+  [51.91573, 4.4930],
+];

@@ -1,25 +1,36 @@
-import { useCallback } from 'react';
-import { MapContainer, TileLayer, Polygon, CircleMarker, Marker, Popup } from 'react-leaflet';
+import { useCallback, useMemo } from 'react';
+import { MapContainer, TileLayer, Polyline, CircleMarker, Marker, Popup, Tooltip, useMap } from 'react-leaflet';
 import L from 'leaflet';
-import { SECTORS } from '../../data/sectors';
+import { SECTORS, SECTOR_WATER_BOUNDARIES, WATERWAY_CENTERLINE, KM_MARKERS, TURNING_BASINS } from '../../data/sectors';
 import { RADAR_CONTACTS } from '../../data/mockShips';
 import ShipMarker from './ShipMarker';
 import 'leaflet/dist/leaflet.css';
 
-const ACTIVE_SECTOR_STYLE = {
-  color: '#FF9800',
-  weight: 2.5,
-  dashArray: '8 4',
-  fillOpacity: 0.05,
-  fillColor: '#FF9800',
-};
+const ALL_SECTORS_BOUNDS = (() => {
+  const allCoords = Object.values(SECTORS).flatMap((s) => s.boundary);
+  const lats = allCoords.map((c) => c[0]);
+  const lngs = allCoords.map((c) => c[1]);
+  const pad = 0.02;
+  return L.latLngBounds(
+    [Math.min(...lats) - pad, Math.min(...lngs) - pad * 2],
+    [Math.max(...lats) + pad, Math.max(...lngs) + pad * 2]
+  );
+})();
 
-const INACTIVE_SECTOR_STYLE = {
-  color: '#78909C',
-  weight: 1.5,
-  dashArray: '6 6',
-  fillOpacity: 0.02,
-  fillColor: '#607D8B',
+function MapConstraints() {
+  const map = useMap();
+  useMemo(() => {
+    map.setMaxBounds(ALL_SECTORS_BOUNDS.pad(0.5));
+    map.setMinZoom(12);
+    map.setMaxZoom(17);
+  }, [map]);
+  return null;
+}
+
+const SECTOR_BORDER_STYLE = {
+  color: '#66BB6A',
+  weight: 2,
+  opacity: 0.8,
 };
 
 const RADAR_STYLE = {
@@ -113,17 +124,53 @@ export default function VTSMap({
       className="vts-map"
       zoomControl={false}
     >
+      <MapConstraints />
       <TileLayer
         attribution='&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
-        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+        url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png"
       />
 
-      {Object.entries(SECTORS).map(([key, sector]) => (
-        <Polygon
-          key={key}
-          positions={sector.boundary}
-          pathOptions={key === activeSector ? ACTIVE_SECTOR_STYLE : INACTIVE_SECTOR_STYLE}
+      {SECTOR_WATER_BOUNDARIES.map((b) => (
+        <Polyline
+          key={b.id}
+          positions={b.line}
+          pathOptions={SECTOR_BORDER_STYLE}
         />
+      ))}
+
+      <Polyline
+        positions={WATERWAY_CENTERLINE}
+        pathOptions={{
+          color: '#5a5a5a',
+          weight: 1,
+          opacity: 0.5,
+        }}
+      />
+
+      {KM_MARKERS.map((km) => (
+        <CircleMarker
+          key={km.id}
+          center={km.position}
+          radius={2}
+          pathOptions={{ color: '#888', fillColor: '#888', fillOpacity: 1, weight: 0 }}
+        >
+          <Tooltip direction="top" offset={[0, -4]} permanent className="km-marker-tooltip">
+            {km.label}
+          </Tooltip>
+        </CircleMarker>
+      ))}
+
+      {TURNING_BASINS.map((tb) => (
+        <CircleMarker
+          key={tb.id}
+          center={tb.position}
+          radius={8}
+          pathOptions={{ color: '#607D8B', fillColor: 'transparent', fillOpacity: 0, weight: 1, opacity: 0.6 }}
+        >
+          <Tooltip direction="top" offset={[0, -8]} className="km-marker-tooltip">
+            {tb.label}
+          </Tooltip>
+        </CircleMarker>
       ))}
 
       {RADAR_CONTACTS.map((rc) => (
