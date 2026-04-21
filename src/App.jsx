@@ -4,20 +4,19 @@ import VTSMap from './components/map/VTSMap';
 import InboundPanel from './components/panels/InboundPanel';
 import ShipInfoCard from './components/panels/ShipInfoCard';
 import useShipSimulation from './hooks/useShipSimulation';
+import useVerificationSync from './hooks/useVerificationSync';
 import { MOCK_SHIPS, MOORED_SHIPS } from './data/mockShips';
 import './App.css';
 
 export default function App() {
   const simulatedShips = useShipSimulation(MOCK_SHIPS);
+  const {
+    verificationByShipId,
+    updateVerification,
+    verificationError,
+  } = useVerificationSync();
 
   const [selectedShipId, setSelectedShipId] = useState(null);
-
-  const [destinationMap, setDestinationMap] = useState({});
-  const [aisActiveMap, setAisActiveMap] = useState(() => {
-    const m = {};
-    MOCK_SHIPS.forEach((s) => { m[s.id] = s.aisActive; });
-    return m;
-  });
 
   const [mooredShips, setMooredShips] = useState(() =>
     MOORED_SHIPS.map((ms) => ({ ...ms }))
@@ -28,10 +27,10 @@ export default function App() {
     () =>
       simulatedShips.map((ship) => ({
         ...ship,
-        destination: destinationMap[ship.id] || ship.destination,
-        aisActive: aisActiveMap[ship.id] ?? ship.aisActive,
+        destination: verificationByShipId[ship.id]?.destination ?? ship.destination,
+        verified: verificationByShipId[ship.id]?.verified ?? false,
       })),
-    [simulatedShips, destinationMap, aisActiveMap]
+    [simulatedShips, verificationByShipId]
   );
 
   const selectedShip = useMemo(
@@ -48,13 +47,29 @@ export default function App() {
     setSelectedShipId(null);
   }, []);
 
-  const handleSetDestination = useCallback((id, dest) => {
-    setDestinationMap((prev) => ({ ...prev, [id]: dest }));
-  }, []);
+  const handleSetDestination = useCallback(async (id, dest) => {
+    try {
+      await updateVerification(id, { destination: dest, verified: true });
+    } catch (_error) {
+      // Polling loop will retry and show server error in UI.
+    }
+  }, [updateVerification]);
 
-  const handleScanAIS = useCallback((id) => {
-    setAisActiveMap((prev) => ({ ...prev, [id]: true }));
-  }, []);
+  const handleVerifyShip = useCallback(async (id) => {
+    try {
+      await updateVerification(id, { verified: true });
+    } catch (_error) {
+      // Polling loop will retry and show server error in UI.
+    }
+  }, [updateVerification]);
+
+  const handleToggleShipVerification = useCallback(async (id, verified) => {
+    try {
+      await updateVerification(id, { verified });
+    } catch (_error) {
+      // Polling loop will retry and show server error in UI.
+    }
+  }, [updateVerification]);
 
   const handleSelectMoored = useCallback((id) => {
     setSelectedMooredId((prev) => (prev === id ? null : id));
@@ -85,6 +100,7 @@ export default function App() {
           ships={ships}
           selectedShipId={selectedShipId}
           onSelectShip={handleSelectShip}
+          onToggleShipVerification={handleToggleShipVerification}
         />
       }
       shipInfoCard={
@@ -92,7 +108,8 @@ export default function App() {
           ship={selectedShip}
           onClose={handleCloseInfo}
           onSetDestination={handleSetDestination}
-          onScanAIS={handleScanAIS}
+          onVerifyShip={handleVerifyShip}
+          verificationError={verificationError}
         />
       }
     />

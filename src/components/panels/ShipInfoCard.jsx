@@ -1,16 +1,15 @@
 import { useState, useEffect } from 'react';
 
 function getStatusLevel(ship) {
+  if (ship.verified) return 'green';
   const destKnown = ship.destination && ship.destination !== 'Unknown';
-  if (destKnown && ship.aisActive) return 'green';
-  if (destKnown || ship.aisActive) return 'yellow';
-  return 'red';
+  return destKnown ? 'yellow' : 'red';
 }
 
 const STATUS_LABELS = {
   red: 'Onbekend',
   yellow: 'Gedeeltelijk',
-  green: 'Volledig',
+  green: 'Geverifieerd',
 };
 
 const STATUS_CSS = {
@@ -19,7 +18,13 @@ const STATUS_CSS = {
   green: 'status-ok',
 };
 
-export default function ShipInfoCard({ ship, onClose, onSetDestination, onScanAIS }) {
+export default function ShipInfoCard({
+  ship,
+  onClose,
+  onSetDestination,
+  onVerifyShip,
+  verificationError,
+}) {
   const [editDest, setEditDest] = useState('');
   const [scanning, setScanning] = useState(false);
 
@@ -44,10 +49,10 @@ export default function ShipInfoCard({ ship, onClose, onSetDestination, onScanAI
   };
 
   const handleScan = () => {
-    if (ship.aisActive || scanning) return;
+    if (ship.verified || scanning) return;
     setScanning(true);
     setTimeout(() => {
-      onScanAIS(ship.id);
+      onVerifyShip(ship.id);
       setScanning(false);
     }, 1800);
   };
@@ -62,15 +67,15 @@ export default function ShipInfoCard({ ship, onClose, onSetDestination, onScanAI
 
       <div className="ship-info-actions">
         <button
-          className={`scan-ais-btn ${scanning ? 'scanning' : ''} ${ship.aisActive ? 'active' : ''}`}
+          className={`scan-ais-btn ${scanning ? 'scanning' : ''} ${ship.verified ? 'active' : ''}`}
           onClick={handleScan}
-          disabled={ship.aisActive}
+          disabled={ship.verified}
         >
-          {ship.aisActive
-            ? 'AIS / VDES ACTIEF'
+          {ship.verified
+            ? 'SCHIP GEVERIFIEERD'
             : scanning
-              ? 'SCANNING...'
-              : 'SCAN AIS / VDES'}
+              ? 'VERIFIEREN...'
+              : 'VERIFIEER SCHIP'}
         </button>
       </div>
 
@@ -105,9 +110,9 @@ export default function ShipInfoCard({ ship, onClose, onSetDestination, onScanAI
             />
           </div>
           <div className="info-row">
-            <span className="info-label">AIS STATUS</span>
+            <span className="info-label">VERIFICATIE</span>
             <span className={`info-value ${STATUS_CSS[level]}`}>
-              {ship.aisActive ? 'Actief' : ship.aisStatus}
+              {ship.verified ? 'Geverifieerd' : 'Niet geverifieerd'}
             </span>
           </div>
           <div className="info-row">
@@ -136,6 +141,15 @@ export default function ShipInfoCard({ ship, onClose, onSetDestination, onScanAI
                   <div className="note-text">{note.note}</div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {verificationError && (
+            <div className="operator-notes">
+              <h3 className="notes-title">DATABASE FOUT</h3>
+              <div className="note-entry">
+                <div className="note-text">{verificationError}</div>
+              </div>
             </div>
           )}
         </div>

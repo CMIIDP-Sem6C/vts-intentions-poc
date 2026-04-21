@@ -9,3 +9,4 @@ screenshot-clicked.png
 .DS_Store
 Thumbs.db
 *.log
+.env

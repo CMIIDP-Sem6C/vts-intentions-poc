@@ -146,6 +146,30 @@
 .status-cell {
   text-align: center;
   line-height: 1;
+  width: 40px;
+}
+
+.verify-star-btn {
+  border: none;
+  background: transparent;
+  padding: 0;
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.verify-star-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  transform: scale(1.07);
+}
+
+.verify-star-btn:active {
+  transform: scale(0.95);
 }
 
 /* ==============================
