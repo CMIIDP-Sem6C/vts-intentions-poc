@@ -1,17 +1,25 @@
 import { useCallback } from 'react';
 import { MapContainer, TileLayer, Polygon, CircleMarker, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
-import { SECTOR_CENTER, SECTOR_ZOOM, SECTOR_BOUNDARY } from '../../data/sectors';
+import { SECTORS } from '../../data/sectors';
 import { RADAR_CONTACTS } from '../../data/mockShips';
 import ShipMarker from './ShipMarker';
 import 'leaflet/dist/leaflet.css';
 
-const SECTOR_STYLE = {
-  color: '#D84315',
-  weight: 2,
-  dashArray: '10 5',
+const ACTIVE_SECTOR_STYLE = {
+  color: '#FF9800',
+  weight: 2.5,
+  dashArray: '8 4',
+  fillOpacity: 0.05,
+  fillColor: '#FF9800',
+};
+
+const INACTIVE_SECTOR_STYLE = {
+  color: '#78909C',
+  weight: 1.5,
+  dashArray: '6 6',
   fillOpacity: 0.02,
-  fillColor: '#FF5722',
+  fillColor: '#607D8B',
 };
 
 const RADAR_STYLE = {
@@ -94,11 +102,14 @@ export default function VTSMap({
   selectedMooredId,
   onSelectMoored,
   onUpdateMoored,
+  activeSector,
 }) {
+  const active = SECTORS[activeSector];
+
   return (
     <MapContainer
-      center={SECTOR_CENTER}
-      zoom={SECTOR_ZOOM}
+      center={active.center}
+      zoom={active.zoom}
       className="vts-map"
       zoomControl={false}
     >
@@ -107,7 +118,13 @@ export default function VTSMap({
         url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
       />
 
-      <Polygon positions={SECTOR_BOUNDARY} pathOptions={SECTOR_STYLE} />
+      {Object.entries(SECTORS).map(([key, sector]) => (
+        <Polygon
+          key={key}
+          positions={sector.boundary}
+          pathOptions={key === activeSector ? ACTIVE_SECTOR_STYLE : INACTIVE_SECTOR_STYLE}
+        />
+      ))}
 
       {RADAR_CONTACTS.map((rc) => (
         <CircleMarker
