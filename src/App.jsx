@@ -92,6 +92,7 @@ export default function App() {
           ships={ships}
           selectedShipId={selectedShipId}
           onSelectShip={handleSelectShip}
+          activeSector={activeSector}
         />
       }
       shipInfoCard={
