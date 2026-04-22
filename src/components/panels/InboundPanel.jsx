@@ -13,12 +13,13 @@ const STATUS_COLORS = {
   green: '#4CAF50',
 };
 
-function getStatusDots(ship) {
+function getStatusLevel(ship) {
   const destKnown = ship.destination && ship.destination !== 'Unknown';
+  const isVerified = Boolean(ship.verified);
   const dots = [];
-  if (destKnown && ship.aisActive) {
+  if (destKnown && isVerified) {
     dots.push('green', 'green', 'green');
-  } else if (destKnown || ship.aisActive) {
+  } else if (destKnown || isVerified) {
     dots.push('yellow', 'yellow');
   } else {
     dots.push('red');
@@ -27,7 +28,7 @@ function getStatusDots(ship) {
 }
 
 function StatusDots({ ship }) {
-  const dots = getStatusDots(ship);
+  const dots = getStatusLevel(ship);
   return (
     <span className="status-dots">
       {dots.map((color, i) => (
@@ -60,6 +61,7 @@ export default function InboundPanel({
   ships,
   selectedShipId,
   onSelectShip,
+  onToggleShipVerification,
   activeSector,
 }) {
   const sectorBoundary = activeSector ? SECTORS[activeSector]?.boundary : null;
@@ -123,7 +125,7 @@ export default function InboundPanel({
                     {destKnown ? ship.destination : 'unknown'}
                   </span>
                 </td>
-                <td className="eta-cell">{eta}</td>
+                <td className="status-cell">{eta}</td>
               </tr>
             );
           })}

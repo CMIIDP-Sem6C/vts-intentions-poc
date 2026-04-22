@@ -28,6 +28,43 @@ Open vervolgens [http://localhost:5173](http://localhost:5173) in je browser.
 
 > **Let op:** `npm run dev` kan problemen geven als het mappad speciale tekens bevat (zoals `&`). Gebruik in dat geval bovenstaand commando.
 
+### Database API (Neon Postgres)
+
+De app kan verificatie- en bestemmingsdata uit Postgres ophalen via een lokale API.
+
+1. Maak een `.env` bestand (zie `.env.example`) met:
+   - `DATABASE_URL`
+   - `PORT` (optioneel, standaard `3001`)
+2. Start de API:
+
+```bash
+npm run api
+```
+
+3. Start de frontend in een tweede terminal:
+
+```bash
+node ./node_modules/vite/bin/vite.js
+```
+
+De frontend pollt elke seconde `Verification` records via `/api/verifications`.
+
+### Verifications automatisch vullen
+
+Om automatisch records voor alle schepen uit `mockShips` toe te voegen (alleen als ze nog niet bestaan):
+
+```bash
+npm run bootstrap:verifications
+```
+
+Er is ook een endpoint beschikbaar:
+
+```bash
+POST /api/verifications/bootstrap
+```
+
+> Voor UPSERT in de API is een unieke constraint op `ship_id` nodig in tabel `Verification`.
+
 ## Bouwen voor productie
 
 ```bash
