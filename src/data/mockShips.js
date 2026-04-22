@@ -27,41 +27,35 @@
  *   4.4896   | 51.91343      |
  *   4.4930   | 51.91573      |  sector east
  *
- * Each active ship uses a subset of these points with a small lateral
- * offset (+north / -south) so every route is unique and stays on water.
+ * Traffic separation (keep starboard / rechts houden):
+ *   - Eastbound ships offset SOUTH (-lat) from centreline
+ *   - Westbound ships offset NORTH (+lat) from centreline
+ * Each ship uses a unique offset magnitude so routes don't overlap.
  */
 
 export const MOCK_SHIPS = [
   /* ================================================================
-     MICHIGAN  --  eastbound, triangle, offset +0.0004
+     MICHIGAN  --  eastbound, triangle, south side (-0.0006)
      ================================================================ */
   {
     id: 'michigan',
     name: 'Michigan',
     markerType: 'triangle',
-    shipType: 'Binnenvaart',
+    shipType: 'Pleziervaart',
     destination: 'Wijnhaven',
-    cargo: 'Steenkool',
+    cargo: 'Geen',
     aisActive: false,
     aisStatus: 'Geen signaal',
-    status: 'inbound',
-    speed: 6.0,
+    speed: 4.5,
     waypoints: [
-      [51.8947, 4.3346],
-      [51.8954, 4.3407],
-      [51.8980, 4.3501],
-      [51.8991, 4.3549],
-      [51.8999, 4.3646],
-      [51.8998, 4.3690],
-      [51.8988, 4.3761],
-      [51.8976, 4.3841],
-      [51.8969, 4.3912],
-      [51.8973, 4.3957],
-      [51.8986, 4.4028],
-      [51.9002, 4.4102],
-      [51.9014, 4.4158],
-      [51.9026, 4.4242],
-      [51.9024, 4.4352],
+      [51.8937, 4.3346],
+      [51.8970, 4.3501],
+      [51.8989, 4.3646],
+      [51.8966, 4.3841],
+      [51.8976, 4.4028],
+      [51.9004, 4.4158],
+      [51.9016, 4.4242],
+      [51.9014, 4.4352],
     ],
     operatorNotes: [
       { channel: 'VHF60', location: 'Waalhaven', time: '10m 05s geleden', note: 'Niks speciaals bij de Michigan, geen bijzonderheden.' },
@@ -70,7 +64,7 @@ export const MOCK_SHIPS = [
   },
 
   /* ================================================================
-     ONUS  --  westbound, hull, offset -0.0004
+     ONUS  --  westbound, hull, north side (+0.0007)
      ================================================================ */
   {
     id: 'onus',
@@ -81,24 +75,26 @@ export const MOCK_SHIPS = [
     cargo: 'Containers',
     aisActive: true,
     aisStatus: 'Actief',
-    status: 'inbound',
     speed: 7.0,
     waypoints: [
-      [51.9153, 4.4930],
-      [51.9130, 4.4896],
-      [51.9101, 4.4864],
-      [51.9074, 4.4837],
-      [51.9054, 4.4812],
-      [51.9035, 4.4786],
-      [51.9016, 4.4738],
-      [51.9008, 4.4708],
-      [51.8997, 4.4660],
-      [51.8990, 4.4612],
-      [51.8991, 4.4548],
-      [51.8996, 4.4482],
-      [51.9010, 4.4408],
-      [51.9016, 4.4352],
-      [51.9018, 4.4242],
+      [51.9164, 4.4930],
+      [51.9141, 4.4896],
+      [51.9112, 4.4864],
+      [51.9085, 4.4837],
+      [51.9046, 4.4786],
+      [51.9027, 4.4738],
+      [51.9008, 4.4660],
+      [51.9002, 4.4548],
+      [51.9007, 4.4482],
+      [51.9021, 4.4408],
+      [51.9027, 4.4352],
+      [51.9029, 4.4242],
+      [51.9017, 4.4158],
+      [51.8989, 4.4028],
+      [51.8979, 4.3841],
+      [51.9002, 4.3646],
+      [51.8983, 4.3501],
+      [51.8950, 4.3346],
     ],
     operatorNotes: [
       { channel: 'VHF60', location: 'Erasmusbrug', time: '5m 30s geleden', note: 'Onus vaart in konvooi richting Botlek, normale doorvaart.' },
@@ -106,38 +102,31 @@ export const MOCK_SHIPS = [
   },
 
   /* ================================================================
-     EMMA  --  eastbound, triangle, offset +0.0002
+     EMMA  --  eastbound, triangle, south side (-0.0008)
      ================================================================ */
   {
     id: 'emma',
     name: 'Emma',
     markerType: 'triangle',
-    shipType: 'Binnenvaart',
+    shipType: 'Pleziervaart',
     destination: 'Unknown',
     cargo: 'Onbekend',
     aisActive: false,
     aisStatus: 'Geen signaal',
-    status: 'inbound',
-    speed: 5.0,
+    speed: 4.0,
     waypoints: [
-      [51.8944, 4.3197],
-      [51.8945, 4.3346],
-      [51.8952, 4.3407],
-      [51.8978, 4.3501],
-      [51.8989, 4.3549],
-      [51.8997, 4.3646],
-      [51.8996, 4.3690],
-      [51.8986, 4.3761],
-      [51.8974, 4.3841],
-      [51.8967, 4.3912],
-      [51.8971, 4.3957],
-      [51.8984, 4.4028],
+      [51.8935, 4.3197],
+      [51.8935, 4.3346],
+      [51.8968, 4.3501],
+      [51.8987, 4.3646],
+      [51.8964, 4.3841],
+      [51.8974, 4.4028],
     ],
     operatorNotes: [],
   },
 
   /* ================================================================
-     SCENIC AMBER  --  westbound, hull, in-sector, offset -0.0002
+     SCENIC AMBER  --  westbound, hull, north side (+0.0009)
      ================================================================ */
   {
     id: 'scenic-amber',
@@ -148,21 +137,23 @@ export const MOCK_SHIPS = [
     cargo: 'Passagiers',
     aisActive: true,
     aisStatus: 'Actief',
-    status: 'in-sector',
-    speed: 4.5,
+    speed: 8.0,
     waypoints: [
-      [51.9056, 4.4812],
-      [51.9037, 4.4786],
-      [51.9018, 4.4738],
-      [51.9010, 4.4708],
-      [51.8999, 4.4660],
-      [51.8992, 4.4612],
-      [51.8993, 4.4548],
-      [51.8998, 4.4482],
-      [51.9012, 4.4408],
-      [51.9018, 4.4352],
-      [51.9020, 4.4242],
-      [51.9008, 4.4158],
+      [51.9068, 4.4812],
+      [51.9048, 4.4786],
+      [51.9029, 4.4738],
+      [51.9010, 4.4660],
+      [51.9004, 4.4548],
+      [51.9009, 4.4482],
+      [51.9023, 4.4408],
+      [51.9029, 4.4352],
+      [51.9031, 4.4242],
+      [51.9019, 4.4158],
+      [51.8991, 4.4028],
+      [51.8981, 4.3841],
+      [51.9004, 4.3646],
+      [51.8985, 4.3501],
+      [51.8952, 4.3346],
     ],
     operatorNotes: [
       { channel: 'VHF60', location: 'Katendrecht', time: '22m geleden', note: 'Scenic Amber vaart richting Botlek, passagiers aan boord.' },
@@ -170,7 +161,7 @@ export const MOCK_SHIPS = [
   },
 
   /* ================================================================
-     PIETER BOELE  --  eastbound, hull, in-sector, offset +0.0005
+     PIETER BOELE  --  eastbound, hull, south side (-0.0004)
      ================================================================ */
   {
     id: 'pieter-boele',
@@ -181,21 +172,21 @@ export const MOCK_SHIPS = [
     cargo: 'Zand',
     aisActive: true,
     aisStatus: 'Actief',
-    status: 'in-sector',
-    speed: 6.5,
+    speed: 7.5,
     waypoints: [
-      [51.9015, 4.4158],
-      [51.9027, 4.4242],
-      [51.9028, 4.4277],
-      [51.9025, 4.4352],
-      [51.9019, 4.4408],
-      [51.9005, 4.4482],
-      [51.9000, 4.4548],
-      [51.8999, 4.4612],
-      [51.9006, 4.4660],
-      [51.9017, 4.4708],
-      [51.9025, 4.4738],
-      [51.9044, 4.4786],
+      [51.9006, 4.4158],
+      [51.9018, 4.4242],
+      [51.9016, 4.4352],
+      [51.9010, 4.4408],
+      [51.8996, 4.4482],
+      [51.8991, 4.4548],
+      [51.8997, 4.4660],
+      [51.9016, 4.4738],
+      [51.9035, 4.4786],
+      [51.9074, 4.4837],
+      [51.9101, 4.4864],
+      [51.9130, 4.4896],
+      [51.9153, 4.4930],
     ],
     operatorNotes: [
       { channel: 'VHF81', location: 'Nieuwe Maas', time: '8m geleden', note: 'Pieter Boele op weg naar Moerdijk, geen bijzonderheden.' },
@@ -203,31 +194,28 @@ export const MOCK_SHIPS = [
   },
 
   /* ================================================================
-     NORDINA  --  westbound, triangle, in-sector, offset -0.0005
+     NORDINA  --  westbound, triangle, north side (+0.0005)
      ================================================================ */
   {
     id: 'nordina',
     name: 'Nordina',
     markerType: 'triangle',
-    shipType: 'Binnenvaart',
+    shipType: 'Pleziervaart',
     destination: 'Europoort',
-    cargo: 'Chemicalien',
+    cargo: 'Geen',
     aisActive: false,
     aisStatus: 'Geen signaal',
-    status: 'in-sector',
-    speed: 5.5,
+    speed: 3.5,
     waypoints: [
-      [51.8989, 4.4612],
-      [51.8990, 4.4548],
-      [51.8995, 4.4482],
-      [51.9009, 4.4408],
-      [51.9015, 4.4352],
-      [51.9017, 4.4242],
-      [51.9005, 4.4158],
-      [51.8993, 4.4102],
-      [51.8977, 4.4028],
-      [51.8964, 4.3957],
-      [51.8960, 4.3912],
+      [51.9005, 4.4612],
+      [51.9000, 4.4548],
+      [51.9005, 4.4482],
+      [51.9019, 4.4408],
+      [51.9025, 4.4352],
+      [51.9027, 4.4242],
+      [51.9015, 4.4158],
+      [51.8987, 4.4028],
+      [51.8977, 4.3841],
     ],
     operatorNotes: [],
   },

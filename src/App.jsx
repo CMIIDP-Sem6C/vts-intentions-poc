@@ -3,12 +3,14 @@ import AppLayout from "./components/layout/AppLayout";
 import VTSMap from "./components/map/VTSMap";
 import InboundPanel from "./components/panels/InboundPanel";
 import ShipInfoCard from "./components/panels/ShipInfoCard";
+import SectorSelect from './components/SectorSelect';
 import useShipSimulation from "./hooks/useShipSimulation";
 import { MOCK_SHIPS, MOORED_SHIPS } from "./data/mockShips";
 import { API_URL, ENDPOINT_DESTINATIONS } from "./utils/api";
 import "./App.css";
 
 export default function App() {
+  const [activeSector, setActiveSector] = useState(null);
   const simulatedShips = useShipSimulation(MOCK_SHIPS);
 
   const [selectedShipId, setSelectedShipId] = useState(null);
@@ -78,6 +80,10 @@ export default function App() {
     );
   }, []);
 
+  if (!activeSector) {
+    return <SectorSelect onSelect={setActiveSector} />;
+  }
+
   return (
     <AppLayout
       map={
@@ -89,6 +95,7 @@ export default function App() {
           selectedMooredId={selectedMooredId}
           onSelectMoored={handleSelectMoored}
           onUpdateMoored={handleUpdateMoored}
+          activeSector={activeSector}
         />
       }
       inboundPanel={
@@ -96,6 +103,7 @@ export default function App() {
           ships={ships}
           selectedShipId={selectedShipId}
           onSelectShip={handleSelectShip}
+          activeSector={activeSector}
         />
       }
       shipInfoCard={

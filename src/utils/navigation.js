@@ -106,3 +106,27 @@ export function remainingRouteDistance(waypoints, currentIndex, currentPosition)
   }
   return total;
 }
+
+/**
+ * Ray-casting point-in-polygon test.
+ * `point` is [lat, lng], `polygon` is an array of [lat, lng].
+ */
+export function pointInPolygon(point, polygon) {
+  const [y, x] = point;
+  let inside = false;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const [yi, xi] = polygon[i];
+    const [yj, xj] = polygon[j];
+    if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) {
+      inside = !inside;
+    }
+  }
+  return inside;
+}
+
+/**
+ * Check if any waypoint of a ship passes through a sector polygon.
+ */
+export function routePassesThroughSector(waypoints, sectorBoundary) {
+  return waypoints.some((wp) => pointInPolygon(wp, sectorBoundary));
+}

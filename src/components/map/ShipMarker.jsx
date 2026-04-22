@@ -1,13 +1,14 @@
-import { useMemo, useState, useCallback } from 'react';
-import { Marker, Polyline, Tooltip } from 'react-leaflet';
+import { useMemo, useState, useCallback, useRef } from 'react';
+import { Marker, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { getCourseVectorEnd } from '../../utils/navigation';
 
 const FILL = '#1B5E20';
 const FILL_SEL = '#2E7D32';
-const VECTOR_COLOR = '#D32F2F';
 const ROUTE_COLOR = '#E57373';
+const VECTOR_COLOR = '#D32F2F';
 const VECTOR_NM_PER_KNOT = 0.05;
+const DEFAULT_LABEL_OFFSET_PX = [14, 0];
 
 function createTriangleIcon(heading, isSelected) {
   const size = isSelected ? 20 : 16;
@@ -43,9 +44,30 @@ function createHullIcon(heading, isSelected) {
   return L.divIcon({ html: svg, className: 'ship-icon', iconSize: [size, size], iconAnchor: [half, half] });
 }
 
+function createLabelIcon(name) {
+  return L.divIcon({
+    html: `<span class="ship-label-text">${name}</span>`,
+    className: 'ship-label-icon',
+    iconSize: [0, 0],
+    iconAnchor: [0, 6],
+  });
+}
+
+function pixelOffsetToLatLng(map, origin, pxOffset) {
+  const originPx = map.latLngToContainerPoint(origin);
+  const targetPx = L.point(originPx.x + pxOffset[0], originPx.y + pxOffset[1]);
+  return map.containerPointToLatLng(targetPx);
+}
+
 export default function ShipMarker({ ship, isSelected, onSelect }) {
+  const map = useMap();
   const [hovered, setHovered] = useState(false);
-  const showTrack = isSelected || hovered;
+  const [labelOffsetPx, setLabelOffsetPx] = useState(DEFAULT_LABEL_OFFSET_PX);
+  const showOverlay = isSelected || hovered;
+  const labelRef = useRef(null);
+
+  const destKnown = ship.destination && ship.destination !== 'Unknown';
+  const hasIntentions = destKnown && ship.aisActive;
 
   const headingRounded = Math.round(ship.heading);
 
@@ -56,43 +78,66 @@ export default function ShipMarker({ ship, isSelected, onSelect }) {
     [headingRounded, ship.markerType, isSelected]
   );
 
-  const vectorLengthNm = ship.speed * VECTOR_NM_PER_KNOT;
+  const labelIcon = useMemo(() => createLabelIcon(ship.name), [ship.name]);
 
-  const vectorEnd = useMemo(
-    () => getCourseVectorEnd(ship.position, ship.heading, vectorLengthNm),
-    [ship.position, ship.heading, vectorLengthNm]
+  const labelPos = useMemo(
+    () => pixelOffsetToLatLng(map, ship.position, labelOffsetPx),
+    [map, ship.position, labelOffsetPx]
   );
+
+  const hasCustomOffset = labelOffsetPx[0] !== DEFAULT_LABEL_OFFSET_PX[0]
+    || labelOffsetPx[1] !== DEFAULT_LABEL_OFFSET_PX[1];
 
   const remainingRoute = useMemo(() => {
     if (!ship.waypoints || ship.currentWaypointIndex == null) return [];
     return [ship.position, ...ship.waypoints.slice(ship.currentWaypointIndex)];
   }, [ship.position, ship.waypoints, ship.currentWaypointIndex]);
 
+  const vectorEnd = useMemo(
+    () => getCourseVectorEnd(ship.position, ship.heading, ship.speed * VECTOR_NM_PER_KNOT),
+    [ship.position, ship.heading, ship.speed]
+  );
+
   const handleMouseOver = useCallback(() => setHovered(true), []);
   const handleMouseOut = useCallback(() => setHovered(false), []);
 
+  const handleLabelDragEnd = useCallback((e) => {
+    const newLatLng = e.target.getLatLng();
+    const shipPx = map.latLngToContainerPoint(ship.position);
+    const labelPx = map.latLngToContainerPoint(newLatLng);
+    setLabelOffsetPx([labelPx.x - shipPx.x, labelPx.y - shipPx.y]);
+  }, [map, ship.position]);
+
   return (
     <>
-      {showTrack && remainingRoute.length > 1 && (
+      {showOverlay && hasIntentions && remainingRoute.length > 1 && (
         <Polyline
           positions={remainingRoute}
           pathOptions={{
             color: ROUTE_COLOR,
             weight: 1.5,
-            opacity: 0.45,
-            dashArray: '4 6',
+            opacity: 0.6,
           }}
         />
       )}
 
-      <Polyline
-        positions={[ship.position, vectorEnd]}
-        pathOptions={{
-          color: VECTOR_COLOR,
-          weight: 2,
-          opacity: 0.75,
-        }}
-      />
+      {showOverlay && !hasIntentions && (
+        <Polyline
+          positions={[ship.position, vectorEnd]}
+          pathOptions={{
+            color: VECTOR_COLOR,
+            weight: 2,
+            opacity: 0.75,
+          }}
+        />
+      )}
+
+      {hasCustomOffset && (
+        <Polyline
+          positions={[ship.position, labelPos]}
+          pathOptions={{ color: '#555', weight: 0.5, opacity: 0.5 }}
+        />
+      )}
 
       <Marker
         position={ship.position}
@@ -102,11 +147,20 @@ export default function ShipMarker({ ship, isSelected, onSelect }) {
           mouseover: handleMouseOver,
           mouseout: handleMouseOut,
         }}
-      >
-        <Tooltip direction="right" offset={[10, 0]} permanent className="ship-name-tooltip">
-          {ship.name}
-        </Tooltip>
-      </Marker>
+      />
+
+      <Marker
+        ref={labelRef}
+        position={labelPos}
+        icon={labelIcon}
+        draggable
+        eventHandlers={{
+          dragend: handleLabelDragEnd,
+          click: () => onSelect(ship.id),
+          mouseover: handleMouseOver,
+          mouseout: handleMouseOut,
+        }}
+      />
     </>
   );
 }

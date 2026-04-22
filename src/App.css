@@ -1,4 +1,86 @@
 /* ==============================
+   Sector Select Screen
+   ============================== */
+
+.sector-select-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #1a1a1a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sector-select-card {
+  text-align: center;
+  padding: 48px 56px;
+  background: rgba(30, 30, 30, 0.95);
+  border-radius: 10px;
+  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sector-select-title {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  color: #ffffff;
+  margin: 0 0 6px;
+}
+
+.sector-select-subtitle {
+  font-size: 14px;
+  color: #999;
+  letter-spacing: 0.5px;
+  margin: 0 0 32px;
+}
+
+.sector-select-buttons {
+  display: flex;
+  gap: 20px;
+}
+
+.sector-select-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 28px 40px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 200px;
+}
+
+.sector-select-btn:hover {
+  background: rgba(255, 152, 0, 0.08);
+  border-color: #FF9800;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(255, 152, 0, 0.15);
+}
+
+.sector-select-btn:active {
+  transform: translateY(0);
+}
+
+.sector-btn-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+}
+
+.sector-btn-vhf {
+  font-size: 13px;
+  font-weight: 600;
+  color: #FF9800;
+  letter-spacing: 0.8px;
+}
+
+/* ==============================
    Layout
    ============================== */
 
@@ -91,10 +173,9 @@
   text-align: left;
   font-size: 11px;
   font-weight: 600;
-  color: #aaa;
-  padding: 4px 8px 8px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  letter-spacing: 0.3px;
+  color: #777;
+  padding: 6px 10px 8px;
+  letter-spacing: 0.4px;
 }
 
 .inbound-table tbody tr {
@@ -119,18 +200,19 @@
 }
 
 .inbound-row.selected {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .inbound-table td {
-  padding: 7px 8px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 10px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
   vertical-align: middle;
 }
 
 .ship-name-cell {
-  font-weight: 600;
+  font-weight: 700;
   color: #fff;
+  font-size: 14px;
 }
 
 .eta-cell {
@@ -140,12 +222,23 @@
 
 .dest-text {
   font-weight: 600;
-  font-style: italic;
 }
 
 .status-cell {
-  text-align: center;
   line-height: 1;
+}
+
+.status-dots {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.status-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
 }
 
 /* ==============================
@@ -535,4 +628,40 @@
   font-size: 9px;
   color: #777;
   letter-spacing: 0.3px;
+}
+
+.ship-label-icon {
+  background: transparent !important;
+  border: none !important;
+}
+
+.ship-label-text {
+  color: #C8E6C9;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  white-space: nowrap;
+  cursor: grab;
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.8), 0 0 6px rgba(0, 0, 0, 0.5);
+  user-select: none;
+}
+
+.ship-label-text:active {
+  cursor: grabbing;
+}
+
+.km-marker-tooltip {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #777 !important;
+  font-size: 9px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.5px !important;
+  padding: 0 !important;
+  font-family: 'Inter', 'Segoe UI', sans-serif !important;
+}
+
+.km-marker-tooltip::before {
+  display: none !important;
 }
