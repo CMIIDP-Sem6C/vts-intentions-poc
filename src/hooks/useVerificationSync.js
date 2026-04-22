@@ -2,6 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 const POLL_MS = 1000;
 
+function normalizeShipId(shipId) {
+  return String(shipId ?? '').trim().toLowerCase();
+}
+
 async function requestJson(url, options) {
   const response = await fetch(url, options);
   if (!response.ok) {
@@ -33,7 +37,14 @@ export default function useVerificationSync() {
   const byShipId = useMemo(() => {
     const map = {};
     rows.forEach((row) => {
-      map[row.ship_id] = row;
+      const rawShipId = row.ship_id;
+      const normalizedShipId = normalizeShipId(rawShipId);
+      if (rawShipId != null) {
+        map[rawShipId] = row;
+      }
+      if (normalizedShipId) {
+        map[normalizedShipId] = row;
+      }
     });
     return map;
   }, [rows]);
@@ -46,7 +57,10 @@ export default function useVerificationSync() {
     });
 
     setRows((prev) => {
-      const index = prev.findIndex((row) => row.ship_id === shipId);
+      const normalizedRequestedId = normalizeShipId(shipId);
+      const index = prev.findIndex(
+        (row) => normalizeShipId(row.ship_id) === normalizedRequestedId
+      );
       if (index === -1) return [...prev, saved];
       const next = [...prev];
       next[index] = saved;

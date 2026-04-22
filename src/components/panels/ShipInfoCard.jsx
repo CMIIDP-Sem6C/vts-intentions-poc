@@ -13,6 +13,7 @@ export default function ShipInfoCard({
   onSetDestination,
   onVerifyShip,
   verificationError,
+  destinations = [],
 }) {
   const [editDest, setEditDest] = useState('');
   const [scanning, setScanning] = useState(false);

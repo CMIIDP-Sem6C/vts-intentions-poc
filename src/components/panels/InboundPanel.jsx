@@ -15,10 +15,11 @@ const STATUS_COLORS = {
 
 function getStatusLevel(ship) {
   const destKnown = ship.destination && ship.destination !== 'Unknown';
+  const isVerified = Boolean(ship.verified);
   const dots = [];
-  if (destKnown && ship.aisActive) {
+  if (destKnown && isVerified) {
     dots.push('green', 'green', 'green');
-  } else if (destKnown || ship.aisActive) {
+  } else if (destKnown || isVerified) {
     dots.push('yellow', 'yellow');
   } else {
     dots.push('red');
@@ -124,13 +125,7 @@ export default function InboundPanel({
                     {destKnown ? ship.destination : 'unknown'}
                   </span>
                 </td>
-                <td className="status-cell">
-                  <StatusStar
-                    level={level}
-                    verified={Boolean(ship.verified)}
-                    onToggle={(nextVerified) => onToggleShipVerification(ship.id, nextVerified)}
-                  />
-                </td>
+                <td className="status-cell">{eta}</td>
               </tr>
             );
           })}

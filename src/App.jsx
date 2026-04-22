@@ -136,7 +136,6 @@ export default function App() {
           onSetDestination={handleSetDestination}
           onVerifyShip={handleVerifyShip}
           verificationError={verificationError}
-          onScanAIS={handleScanAIS}
           destinations={destinations}
         />
       }
