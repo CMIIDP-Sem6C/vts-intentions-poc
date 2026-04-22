@@ -1,4 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
+import TextAutocompleteInput from "../inputs/TextAutocompleteInput";
+import {
+  getStatusLevel,
+  STATUS_LABELS,
+  STATUS_CSS,
+  STATUS_COLORS,
+} from "../../utils/status";
 
 function getStatusLevel(ship) {
   if (ship.verified) return 'green';
@@ -27,24 +34,13 @@ export default function ShipInfoCard({
 }) {
   const [editDest, setEditDest] = useState('');
   const [scanning, setScanning] = useState(false);
-
-  useEffect(() => {
-    if (ship) {
-      setEditDest(ship.destination === 'Unknown' ? '' : ship.destination);
-      setScanning(false);
-    }
-  }, [ship?.id, ship?.destination]);
-
   if (!ship) return null;
 
   const level = getStatusLevel(ship);
 
-  const handleDestSubmit = () => {
-    const trimmed = editDest.trim();
-    if (trimmed && trimmed !== ship.destination) {
-      onSetDestination(ship.id, trimmed);
-    } else if (!trimmed && ship.destination !== 'Unknown') {
-      onSetDestination(ship.id, 'Unknown');
+  const handleDestSubmit = (newValue) => {
+    if (newValue !== ship.destination) {
+      onSetDestination(ship.id, newValue);
     }
   };
 
@@ -86,7 +82,14 @@ export default function ShipInfoCard({
               <rect x="10" y="20" width="100" height="25" rx="4" fill="#555" />
               <polygon points="110,32 125,32 120,20 110,20" fill="#666" />
               <rect x="30" y="12" width="20" height="10" rx="2" fill="#444" />
-              <line x1="40" y1="5" x2="40" y2="12" stroke="#777" strokeWidth="1.5" />
+              <line
+                x1="40"
+                y1="5"
+                x2="40"
+                y2="12"
+                stroke="#777"
+                strokeWidth="1.5"
+              />
             </svg>
           </div>
           <button className="vhf-btn">CONTACT VIA VHF</button>
@@ -95,18 +98,13 @@ export default function ShipInfoCard({
         <div className="ship-info-details">
           <div className="info-row">
             <span className="info-label">BESTEMMING</span>
-            <input
-              className={`dest-input ${level === 'red' ? 'dest-unknown' : ''}`}
-              value={editDest}
+            <TextAutocompleteInput
+              value={ship.destination === "Unknown" ? "" : ship.destination}
+              onSubmit={handleDestSubmit}
+              suggestions={destinations}
+              level={level}
+              style={{ color: STATUS_COLORS[level] }}
               placeholder="Onbekend - voer in..."
-              onChange={(e) => setEditDest(e.target.value)}
-              onBlur={handleDestSubmit}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  handleDestSubmit();
-                  e.target.blur();
-                }
-              }}
             />
           </div>
           <div className="info-row">
