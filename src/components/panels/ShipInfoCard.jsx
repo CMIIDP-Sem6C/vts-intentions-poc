@@ -7,24 +7,6 @@ import {
   STATUS_COLORS,
 } from "../../utils/status";
 
-function getStatusLevel(ship) {
-  if (ship.verified) return 'green';
-  const destKnown = ship.destination && ship.destination !== 'Unknown';
-  return destKnown ? 'yellow' : 'red';
-}
-
-const STATUS_LABELS = {
-  red: 'Onbekend',
-  yellow: 'Gedeeltelijk',
-  green: 'Geverifieerd',
-};
-
-const STATUS_CSS = {
-  red: 'status-red',
-  yellow: 'status-yellow',
-  green: 'status-ok',
-};
-
 export default function ShipInfoCard({
   ship,
   onClose,
