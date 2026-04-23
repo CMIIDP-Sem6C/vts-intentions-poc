@@ -49,6 +49,7 @@ export default function App() {
         ...ship,
         destination: verificationByShipId[ship.id]?.destination ?? ship.destination,
         verified: verificationByShipId[ship.id]?.verified ?? false,
+        aisActive: aisActiveMap[ship.id] ?? ship.aisActive,
       })),
     [simulatedShips, verificationByShipId, destinationMap, aisActiveMap],
   );
@@ -88,6 +89,15 @@ export default function App() {
       await updateVerification(id, { verified });
     } catch (_error) {
       // Polling loop will retry and show server error in UI.
+    }
+  }, [updateVerification]);
+
+  const handleResetShip = useCallback(async (id) => {
+    setAisActiveMap((prev) => ({ ...prev, [id]: false }));
+    try {
+      await updateVerification(id, { verified: false, destination: 'Unknown' });
+    } catch (_error) {
+      // DB down -> alleen lokaal gereset. Polling sync't DB zodra weer up.
     }
   }, [updateVerification]);
 
@@ -135,6 +145,7 @@ export default function App() {
           onClose={handleCloseInfo}
           onSetDestination={handleSetDestination}
           onVerifyShip={handleVerifyShip}
+          onResetShip={handleResetShip}
           verificationError={verificationError}
           destinations={destinations}
         />

@@ -13,6 +13,7 @@ export default function ShipInfoCard({
   onClose,
   onSetDestination,
   onVerifyShip,
+  onResetShip,
   verificationError,
   destinations = [],
 }) {
@@ -149,6 +150,17 @@ export default function ShipInfoCard({
           )}
         </div>
       </div>
+
+      {onResetShip && (
+        <button
+          className="reset-test-btn"
+          onClick={() => onResetShip(ship.id)}
+          type="button"
+          title="Zet dit schip terug naar rode status (testknop)"
+        >
+          reset status (test)
+        </button>
+      )}
     </div>
   );
 }
