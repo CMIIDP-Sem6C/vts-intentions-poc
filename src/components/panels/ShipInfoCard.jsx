@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import TextAutocompleteInput from "../inputs/TextAutocompleteInput";
+import Flag from "./Flag";
 import {
   getStatusLevel,
   STATUS_LABELS,
@@ -76,6 +77,19 @@ export default function ShipInfoCard({
             </svg>
           </div>
           <button className="vhf-btn">CONTACT VIA VHF</button>
+
+          {ship.nationality && (
+            <div className="ship-flag-row">
+              <Flag code={ship.nationality} />
+              <button
+                className="transcript-btn"
+                onClick={() => {}}
+                type="button"
+              >
+                TRANSCRIPT
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="ship-info-details">
