@@ -12,7 +12,6 @@ import "./App.css";
 
 export default function App() {
   const [activeSector, setActiveSector] = useState(null);
-  const simulatedShips = useShipSimulation(MOCK_SHIPS);
   const {
     verificationByShipId,
     updateVerification,
@@ -20,7 +19,6 @@ export default function App() {
   } = useVerificationSync();
 
   const [selectedShipId, setSelectedShipId] = useState(null);
-
   const [destinationMap, setDestinationMap] = useState({});
   const [aisActiveMap, setAisActiveMap] = useState(() => {
     const m = {};
@@ -29,6 +27,20 @@ export default function App() {
     });
     return m;
   });
+
+  const handleShipRestart = useCallback((id) => {
+    const original = MOCK_SHIPS.find((s) => s.id === id);
+    if (!original) return;
+    setAisActiveMap((prev) => ({ ...prev, [id]: original.aisActive }));
+    updateVerification(id, {
+      verified: false,
+      destination: original.destination,
+    }).catch(() => {
+      // DB down -> status sync't weer zodra API up is.
+    });
+  }, [updateVerification]);
+
+  const simulatedShips = useShipSimulation(MOCK_SHIPS, handleShipRestart);
 
   const [mooredShips, setMooredShips] = useState(() =>
     MOORED_SHIPS.map((ms) => ({ ...ms })),
