@@ -40,6 +40,7 @@ export const MOCK_SHIPS = [
   {
     id: 'michigan',
     name: 'Michigan',
+    nationality: 'DE',
     markerType: 'triangle',
     shipType: 'Pleziervaart',
     destination: 'Wijnhaven',
@@ -69,6 +70,7 @@ export const MOCK_SHIPS = [
   {
     id: 'onus',
     name: 'Onus',
+    nationality: 'NL',
     markerType: 'hull',
     shipType: 'Binnenvaart',
     destination: 'Botlek',
@@ -107,6 +109,7 @@ export const MOCK_SHIPS = [
   {
     id: 'emma',
     name: 'Emma',
+    nationality: 'BG',
     markerType: 'triangle',
     shipType: 'Pleziervaart',
     destination: 'Unknown',
@@ -131,6 +134,7 @@ export const MOCK_SHIPS = [
   {
     id: 'scenic-amber',
     name: 'Scenic Amber',
+    nationality: 'DE',
     markerType: 'hull',
     shipType: 'Zeevaart',
     destination: 'Botlek',
@@ -166,6 +170,7 @@ export const MOCK_SHIPS = [
   {
     id: 'pieter-boele',
     name: 'Pieter Boele',
+    nationality: 'NL',
     markerType: 'hull',
     shipType: 'Binnenvaart',
     destination: 'Moerdijk',
@@ -199,6 +204,7 @@ export const MOCK_SHIPS = [
   {
     id: 'nordina',
     name: 'Nordina',
+    nationality: 'BG',
     markerType: 'triangle',
     shipType: 'Pleziervaart',
     destination: 'Europoort',

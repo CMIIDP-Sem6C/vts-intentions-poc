@@ -12,7 +12,6 @@ import "./App.css";
 
 export default function App() {
   const [activeSector, setActiveSector] = useState(null);
-  const simulatedShips = useShipSimulation(MOCK_SHIPS);
   const {
     verificationByShipId,
     updateVerification,
@@ -20,7 +19,6 @@ export default function App() {
   } = useVerificationSync();
 
   const [selectedShipId, setSelectedShipId] = useState(null);
-
   const [destinationMap, setDestinationMap] = useState({});
   const [aisActiveMap, setAisActiveMap] = useState(() => {
     const m = {};
@@ -29,6 +27,20 @@ export default function App() {
     });
     return m;
   });
+
+  const handleShipRestart = useCallback((id) => {
+    const original = MOCK_SHIPS.find((s) => s.id === id);
+    if (!original) return;
+    setAisActiveMap((prev) => ({ ...prev, [id]: original.aisActive }));
+    updateVerification(id, {
+      verified: false,
+      destination: original.destination,
+    }).catch(() => {
+      // DB down -> status sync't weer zodra API up is.
+    });
+  }, [updateVerification]);
+
+  const simulatedShips = useShipSimulation(MOCK_SHIPS, handleShipRestart);
 
   const [mooredShips, setMooredShips] = useState(() =>
     MOORED_SHIPS.map((ms) => ({ ...ms })),
@@ -49,6 +61,7 @@ export default function App() {
         ...ship,
         destination: verificationByShipId[ship.id]?.destination ?? ship.destination,
         verified: verificationByShipId[ship.id]?.verified ?? false,
+        aisActive: aisActiveMap[ship.id] ?? ship.aisActive,
       })),
     [simulatedShips, verificationByShipId, destinationMap, aisActiveMap],
   );
@@ -88,6 +101,15 @@ export default function App() {
       await updateVerification(id, { verified });
     } catch (_error) {
       // Polling loop will retry and show server error in UI.
+    }
+  }, [updateVerification]);
+
+  const handleResetShip = useCallback(async (id) => {
+    setAisActiveMap((prev) => ({ ...prev, [id]: false }));
+    try {
+      await updateVerification(id, { verified: false, destination: 'Unknown' });
+    } catch (_error) {
+      // DB down -> alleen lokaal gereset. Polling sync't DB zodra weer up.
     }
   }, [updateVerification]);
 
@@ -135,6 +157,7 @@ export default function App() {
           onClose={handleCloseInfo}
           onSetDestination={handleSetDestination}
           onVerifyShip={handleVerifyShip}
+          onResetShip={handleResetShip}
           verificationError={verificationError}
           destinations={destinations}
         />

@@ -7,8 +7,9 @@ import {
 
 const TICK_MS = 150;
 const TIME_SCALE = 4;
+const RESTART_DELAY_MS = 30000;
 
-export default function useShipSimulation(initialShips) {
+export default function useShipSimulation(initialShips, onShipRestart) {
   const [ships, setShips] = useState(() =>
     initialShips.map((ship) => ({
       ...ship,
@@ -22,6 +23,12 @@ export default function useShipSimulation(initialShips) {
 
   const shipsRef = useRef(ships);
   shipsRef.current = ships;
+
+  const restartTimersRef = useRef({});
+  const onShipRestartRef = useRef(onShipRestart);
+  useEffect(() => {
+    onShipRestartRef.current = onShipRestart;
+  }, [onShipRestart]);
 
   const tick = useCallback(() => {
     setShips((prev) =>
@@ -76,6 +83,39 @@ export default function useShipSimulation(initialShips) {
     const interval = setInterval(tick, TICK_MS);
     return () => clearInterval(interval);
   }, [tick]);
+
+  useEffect(() => {
+    ships.forEach((ship) => {
+      if (!ship.arrived) return;
+      if (restartTimersRef.current[ship.id]) return;
+
+      restartTimersRef.current[ship.id] = setTimeout(() => {
+        delete restartTimersRef.current[ship.id];
+        setShips((prev) =>
+          prev.map((s) => {
+            if (s.id !== ship.id) return s;
+            return {
+              ...s,
+              position: [...s.waypoints[0]],
+              currentWaypointIndex: 1,
+              arrived: false,
+              heading: calculateHeading(s.waypoints[0], s.waypoints[1]),
+            };
+          })
+        );
+        if (onShipRestartRef.current) {
+          onShipRestartRef.current(ship.id);
+        }
+      }, RESTART_DELAY_MS);
+    });
+  }, [ships]);
+
+  useEffect(() => {
+    return () => {
+      Object.values(restartTimersRef.current).forEach((t) => clearTimeout(t));
+      restartTimersRef.current = {};
+    };
+  }, []);
 
   return ships;
 }

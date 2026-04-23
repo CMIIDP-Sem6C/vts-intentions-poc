@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import TextAutocompleteInput from "../inputs/TextAutocompleteInput";
+import Flag from "./Flag";
 import {
   getStatusLevel,
   STATUS_LABELS,
@@ -12,6 +13,7 @@ export default function ShipInfoCard({
   onClose,
   onSetDestination,
   onVerifyShip,
+  onResetShip,
   verificationError,
   destinations = [],
 }) {
@@ -76,6 +78,19 @@ export default function ShipInfoCard({
             </svg>
           </div>
           <button className="vhf-btn">CONTACT VIA VHF</button>
+
+          {ship.nationality && (
+            <div className="ship-flag-row">
+              <Flag code={ship.nationality} />
+              <button
+                className="transcript-btn"
+                onClick={() => {}}
+                type="button"
+              >
+                TRANSCRIPT
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="ship-info-details">
@@ -135,6 +150,17 @@ export default function ShipInfoCard({
           )}
         </div>
       </div>
+
+      {onResetShip && (
+        <button
+          className="reset-test-btn"
+          onClick={() => onResetShip(ship.id)}
+          type="button"
+          title="Zet dit schip terug naar rode status (testknop)"
+        >
+          reset status (test)
+        </button>
+      )}
     </div>
   );
 }
