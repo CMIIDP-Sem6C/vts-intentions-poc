@@ -22,6 +22,8 @@
  * @property {boolean} aisActive - Ship's AIS turned on/off
  * @property {"Geen signaal" | "Actief"} aisStatus - AIS status //This mirrors aisActive doesnt it??
  * @property {number} speed - Ship's speed
- * @property {Coordinates[]} - Ship's route to sail
+ * @property {Coordinates[]} waypoints - Ship's route to sail
+ * @property {Coordinates[]} [intentions] - Ship's intentions to show: OPTIONAL. If not intentions given, simulation assumes intentions to be equal to waypoints with no deviations
+ * @property {number | "unlimited" | null } intentionsShareTime- Time in minutes for which intentions to show. i.e 10 => Show the intentions from current location to 10 minutes into the future where ship will be
  * @property {OperatorNote[]} operatorNotes - Ship's messages and notes
  */
