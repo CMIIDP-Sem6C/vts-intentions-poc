@@ -66,6 +66,9 @@ class VerificationService:
     def _get_db_ship_id_for_app_ship_id(self, app_ship_id: str) -> Any:
         if not self._is_numeric_ship_id_column():
             return app_ship_id
+        s = str(app_ship_id).strip()
+        if s.isdigit():
+            return int(s)
         index = self._app_ship_ids().index(app_ship_id) if app_ship_id in self._app_ship_ids() else -1
         if index == -1:
             return None
@@ -74,9 +77,7 @@ class VerificationService:
     def _get_app_ship_id_from_db_ship_id(self, db_ship_id: Any) -> str | None:
         if not self._is_numeric_ship_id_column():
             return str(db_ship_id)
-        index = int(db_ship_id) - 1
-        ids = self._app_ship_ids()
-        return ids[index] if 0 <= index < len(ids) else None
+        return str(int(db_ship_id))
 
     def _row_as_dict(self, row: asyncpg.Record) -> dict[str, Any]:
         return {k: row[k] for k in row.keys()}

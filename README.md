@@ -44,13 +44,22 @@ De app kan verificatie- en bestemmingsdata uit Postgres ophalen via een lokale *
 npm run api
 ```
 
-3. Start de frontend in een tweede terminal:
+4. Start de frontend in een tweede terminal:
 
 ```bash
 node ./node_modules/vite/bin/vite.js
 ```
 
-De frontend pollt elke seconde `Verification` records via `/api/verifications`.
+De frontend pollt elke seconde `Verification` records via `/api/verifications`. Scenario-data komt van `GET /api/scenarios/{id}` (standaard `?scenario=1` in de URL).
+
+### Scenario's (database + events)
+
+Voer `sql/scenario_schema.sql` uit op Postgres (of gebruik je eigen tabellen; zet dan o.a. `VTS_TBL_EVENT` als je event-tabel bv. `Event` heet).
+
+- **`GET /api/scenarios`** — metadata van alle scenario's
+- **`GET /api/scenarios/{id}`** — volledige payload: `scenario` (incl. `start_coordinate`, `duration_seconds`), `ships` (met `waypoints` uit `route`), `intentions_by_ship_id`, `events` (gesorteerd op `trigger_time`)
+
+Ondersteunde event-typen in de frontend: `SpawnShip`, `HideIntention`, `ShowIntention` (subject `ship` + `subject_id` = database `ship.id`).
 
 ### Verifications automatisch vullen
 
@@ -80,11 +89,16 @@ De gebouwde bestanden staan dan in de `dist/` map.
 
 ```
 api/
-  main.py               FastAPI-app, zelfde routes als voorheen (/api/verifications)
-  service.py            asyncpg-queries + kolom-normalisatie (zoals Express-server)
-  mock_ships.py         id/destination voor bootstrap (houd gelijk met mockShips.js)
+  main.py               FastAPI-app: verificaties + scenario-endpoints
+  service.py            Verification-tabel (asyncpg)
+  scenario_service.py   Scenario / ship / intention / events
+  scenario_parse.py     JSON / route parsing voor Postgres-kolommen
+  mock_ships.py         Alleen nog voor bootstrap verifications (legacy)
   bootstrap_cli.py      npm run bootstrap:verifications
-requirements-api.txt    Python-dependencies voor de API
+sql/
+  scenario_schema.sql   Referentiescript tabellen + voorbeelddata
+tests/
+  test_scenario_parse.py
 src/
   components/
     map/

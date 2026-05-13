@@ -7,31 +7,35 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
+from api.scenario_service import ScenarioService
 from api.service import VerificationService
 
 load_dotenv()
 
 svc: VerificationService | None = None
+scenario_svc: ScenarioService | None = None
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global svc
+    global svc, scenario_svc
     dsn = os.environ.get("DATABASE_URL")
     if not dsn:
         print("DATABASE_URL is missing. Add it in your .env file.", file=sys.stderr)
         raise SystemExit(1)
     pool = await VerificationService.create_pool(dsn)
     svc = VerificationService(pool)
+    scenario_svc = ScenarioService(pool)
     await svc.load_verification_columns()
     try:
         yield
     finally:
         await pool.close()
         svc = None
+        scenario_svc = None
 
 
-app = FastAPI(title="VTS Verification API", lifespan=lifespan)
+app = FastAPI(title="VTS API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -46,6 +50,33 @@ def _service() -> VerificationService:
     if svc is None:
         raise HTTPException(503, "Service not ready")
     return svc
+
+
+def _scenario_service() -> ScenarioService:
+    if scenario_svc is None:
+        raise HTTPException(503, "Service not ready")
+    return scenario_svc
+
+
+@app.get("/api/scenarios")
+async def list_scenarios() -> list[dict[str, Any]]:
+    try:
+        return await _scenario_service().list_scenarios()
+    except Exception as e:
+        print("Failed to list scenarios:", e, file=sys.stderr)
+        raise HTTPException(500, "Failed to list scenarios") from e
+
+
+@app.get("/api/scenarios/{scenario_id}")
+async def get_scenario_bundle(scenario_id: int) -> dict[str, Any]:
+    try:
+        bundle = await _scenario_service().get_scenario_bundle(scenario_id)
+    except Exception as e:
+        print("Failed to load scenario:", e, file=sys.stderr)
+        raise HTTPException(500, "Failed to load scenario") from e
+    if not bundle:
+        raise HTTPException(404, "Scenario not found")
+    return bundle
 
 
 @app.get("/api/verifications")
