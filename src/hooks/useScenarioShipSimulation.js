@@ -58,6 +58,7 @@ export default function useScenarioShipSimulation(shipTemplatesById, spawnedShip
         const sid = String(id);
         if (prevById[sid]) return prevById[sid];
         const tmpl = templates[sid];
+        if (!templates[sid]) console.error("Template missing for ID:", sid, "Available:", Object.keys(templates));
         return buildInitialShip(tmpl);
       }).filter(Boolean);
     });

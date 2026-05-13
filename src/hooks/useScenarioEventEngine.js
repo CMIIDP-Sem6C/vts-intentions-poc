@@ -32,7 +32,9 @@ export default function useScenarioEventEngine({
       const { onSpawnShip: spawn, onHideIntention: hide, onShowIntention: show } = handlersRef.current;
 
       while (nextIndexRef.current < events.length) {
+        
         const ev = events[nextIndexRef.current];
+        console.log("Engine checking event:", ev.type, "at time:", ev.trigger_time);
         if (ev.trigger_time > elapsed) break;
         nextIndexRef.current += 1;
 

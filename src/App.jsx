@@ -61,6 +61,7 @@ export default function App() {
   }, [dataVersion]);
 
   const onSpawnShip = useCallback((shipId) => {
+    console.log("Spawn triggered for ID:", shipId);
     setSpawnedShipIds((p) => (p.includes(shipId) ? p : [...p, shipId]));
     const b = bundleRef.current;
     const hasIntentions = (b?.intentions_by_ship_id?.[shipId]?.length ?? 0) > 0;

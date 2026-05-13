@@ -33,6 +33,13 @@ const SECTOR_BORDER_STYLE = {
   opacity: 0.8,
 };
 
+const RADAR_STYLE = {
+  color: '#ff9800', // An orange/amber color typical for radar
+  fillColor: '#ff9800',
+  fillOpacity: 0.5,
+  weight: 1,
+};
+
 const INTENTION_STYLE = {
   color: '#4FC3F7',
   weight: 2,

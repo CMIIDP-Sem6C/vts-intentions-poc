@@ -7,6 +7,8 @@ import re
 from typing import Any
 
 
+import ast
+
 def parse_json_value(raw: Any) -> Any:
     if raw is None:
         return None
@@ -17,9 +19,14 @@ def parse_json_value(raw: Any) -> Any:
         if not s:
             return None
         try:
+            # Try strict JSON first
             return json.loads(s)
         except json.JSONDecodeError:
-            return _lenient_js_array(s)
+            try:
+                # Fallback to literal_eval for "text-format" arrays (handles single quotes/trailing commas)
+                return ast.literal_eval(s)
+            except (ValueError, SyntaxError):
+                return _lenient_js_array(s)
     return raw
 
 
