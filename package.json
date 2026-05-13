@@ -5,17 +5,13 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "api": "node server/index.js",
-    "bootstrap:verifications": "node server/bootstrap-verifications.js",
+    "api": "python -m api.main",
+    "bootstrap:verifications": "python -m api.bootstrap_cli",
     "build": "vite build",
     "preview": "vite preview"
   },
   "dependencies": {
-    "cors": "^2.8.6",
-    "dotenv": "^17.4.2",
-    "express": "^5.2.1",
     "leaflet": "^1.9.4",
-    "pg": "^8.20.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-leaflet": "^4.2.1"

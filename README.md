@@ -11,11 +11,13 @@ Een digitale weergave van een VTS-overlay (Vessel Traffic Services) voor het Rot
 ## Vereisten
 
 - [Node.js](https://nodejs.org/) v18 of hoger
+- [Python](https://www.python.org/) 3.11 of hoger (voor de verificatie-API)
 
 ## Installatie
 
 ```bash
 npm install
+pip install -r requirements-api.txt
 ```
 
 ## Starten
@@ -30,12 +32,13 @@ Open vervolgens [http://localhost:5173](http://localhost:5173) in je browser.
 
 ### Database API (Neon Postgres)
 
-De app kan verificatie- en bestemmingsdata uit Postgres ophalen via een lokale API.
+De app kan verificatie- en bestemmingsdata uit Postgres ophalen via een lokale **FastAPI**-service (`api/main.py`, **asyncpg**).
 
-1. Maak een `.env` bestand (zie `.env.example`) met:
+1. Maak een `.env` bestand met minimaal:
    - `DATABASE_URL`
    - `PORT` (optioneel, standaard `3001`)
-2. Start de API:
+2. Installeer Python-dependencies (eenmalig): `pip install -r requirements-api.txt`
+3. Start de API vanaf de projectroot (zodat `python -m api.main` het package `api` vindt):
 
 ```bash
 npm run api
@@ -76,6 +79,12 @@ De gebouwde bestanden staan dan in de `dist/` map.
 ## Projectstructuur
 
 ```
+api/
+  main.py               FastAPI-app, zelfde routes als voorheen (/api/verifications)
+  service.py            asyncpg-queries + kolom-normalisatie (zoals Express-server)
+  mock_ships.py         id/destination voor bootstrap (houd gelijk met mockShips.js)
+  bootstrap_cli.py      npm run bootstrap:verifications
+requirements-api.txt    Python-dependencies voor de API
 src/
   components/
     map/
@@ -100,6 +109,7 @@ src/
 ## Tech Stack
 
 - **React 18** (JavaScript)
+- **FastAPI** + **asyncpg** (verificatie-API)
 - **Vite** (bundler)
 - **Leaflet** + **react-leaflet** (kaart)
 - **Puppeteer** (screenshots)
