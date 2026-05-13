@@ -33,24 +33,27 @@
  * Each ship uses a unique offset magnitude so routes don't overlap.
  */
 
+/**
+ * @returns {Ship[]}
+ */
 export const MOCK_SHIPS = [
   /* ================================================================
      MICHIGAN  --  eastbound, triangle, south side (-0.0006)
      ================================================================ */
   {
-    id: 'michigan',
-    name: 'Michigan',
-    nationality: 'DE',
-    markerType: 'triangle',
-    shipType: 'Pleziervaart',
-    destination: 'Wijnhaven',
-    cargo: 'Geen',
+    id: "michigan",
+    name: "Michigan",
+    nationality: "DE",
+    markerType: "triangle",
+    shipType: "Pleziervaart",
+    destination: "Wijnhaven",
+    cargo: "Geen",
     aisActive: false,
-    aisStatus: 'Geen signaal',
+    aisStatus: "Geen signaal",
     speed: 4.5,
     waypoints: [
       [51.8937, 4.3346],
-      [51.8970, 4.3501],
+      [51.897, 4.3501],
       [51.8989, 4.3646],
       [51.8966, 4.3841],
       [51.8976, 4.4028],
@@ -59,8 +62,18 @@ export const MOCK_SHIPS = [
       [51.9014, 4.4352],
     ],
     operatorNotes: [
-      { channel: 'VHF60', location: 'Waalhaven', time: '10m 05s geleden', note: 'Niks speciaals bij de Michigan, geen bijzonderheden.' },
-      { channel: 'VHF81', location: 'Pernis', time: '1h 11m geleden', note: 'Michigan passeert Pernis, geen bijzonderheden.' },
+      {
+        channel: "VHF60",
+        location: "Waalhaven",
+        time: "10m 05s geleden",
+        note: "Niks speciaals bij de Michigan, geen bijzonderheden.",
+      },
+      {
+        channel: "VHF81",
+        location: "Pernis",
+        time: "1h 11m geleden",
+        note: "Michigan passeert Pernis, geen bijzonderheden.",
+      },
     ],
   },
 
@@ -68,24 +81,24 @@ export const MOCK_SHIPS = [
      ONUS  --  westbound, hull, north side (+0.0007)
      ================================================================ */
   {
-    id: 'onus',
-    name: 'Onus',
-    nationality: 'NL',
-    markerType: 'hull',
-    shipType: 'Binnenvaart',
-    destination: 'Botlek',
-    cargo: 'Containers',
+    id: "onus",
+    name: "Onus",
+    nationality: "NL",
+    markerType: "hull",
+    shipType: "Binnenvaart",
+    destination: "Botlek",
+    cargo: "Containers",
     aisActive: true,
-    aisStatus: 'Actief',
+    aisStatus: "Actief",
     speed: 7.0,
     waypoints: [
-      [51.9164, 4.4930],
+      [51.9164, 4.493],
       [51.9141, 4.4896],
       [51.9112, 4.4864],
       [51.9085, 4.4837],
       [51.9046, 4.4786],
       [51.9027, 4.4738],
-      [51.9008, 4.4660],
+      [51.9008, 4.466],
       [51.9002, 4.4548],
       [51.9007, 4.4482],
       [51.9021, 4.4408],
@@ -96,10 +109,15 @@ export const MOCK_SHIPS = [
       [51.8979, 4.3841],
       [51.9002, 4.3646],
       [51.8983, 4.3501],
-      [51.8950, 4.3346],
+      [51.895, 4.3346],
     ],
     operatorNotes: [
-      { channel: 'VHF60', location: 'Erasmusbrug', time: '5m 30s geleden', note: 'Onus vaart in konvooi richting Botlek, normale doorvaart.' },
+      {
+        channel: "VHF60",
+        location: "Erasmusbrug",
+        time: "5m 30s geleden",
+        note: "Onus vaart in konvooi richting Botlek, normale doorvaart.",
+      },
     ],
   },
 
@@ -107,15 +125,15 @@ export const MOCK_SHIPS = [
      EMMA  --  eastbound, triangle, south side (-0.0008)
      ================================================================ */
   {
-    id: 'emma',
-    name: 'Emma',
-    nationality: 'BG',
-    markerType: 'triangle',
-    shipType: 'Pleziervaart',
-    destination: 'Unknown',
-    cargo: 'Onbekend',
+    id: "emma",
+    name: "Emma",
+    nationality: "BG",
+    markerType: "triangle",
+    shipType: "Pleziervaart",
+    destination: "Unknown",
+    cargo: "Onbekend",
     aisActive: false,
-    aisStatus: 'Geen signaal',
+    aisStatus: "Geen signaal",
     speed: 4.0,
     waypoints: [
       [51.8935, 4.3197],
@@ -132,21 +150,21 @@ export const MOCK_SHIPS = [
      SCENIC AMBER  --  westbound, hull, north side (+0.0009)
      ================================================================ */
   {
-    id: 'scenic-amber',
-    name: 'Scenic Amber',
-    nationality: 'DE',
-    markerType: 'hull',
-    shipType: 'Zeevaart',
-    destination: 'Botlek',
-    cargo: 'Passagiers',
+    id: "scenic-amber",
+    name: "Scenic Amber",
+    nationality: "DE",
+    markerType: "hull",
+    shipType: "Zeevaart",
+    destination: "Botlek",
+    cargo: "Passagiers",
     aisActive: true,
-    aisStatus: 'Actief',
+    aisStatus: "Actief",
     speed: 8.0,
     waypoints: [
       [51.9068, 4.4812],
       [51.9048, 4.4786],
       [51.9029, 4.4738],
-      [51.9010, 4.4660],
+      [51.901, 4.466],
       [51.9004, 4.4548],
       [51.9009, 4.4482],
       [51.9023, 4.4408],
@@ -160,7 +178,12 @@ export const MOCK_SHIPS = [
       [51.8952, 4.3346],
     ],
     operatorNotes: [
-      { channel: 'VHF60', location: 'Katendrecht', time: '22m geleden', note: 'Scenic Amber vaart richting Botlek, passagiers aan boord.' },
+      {
+        channel: "VHF60",
+        location: "Katendrecht",
+        time: "22m geleden",
+        note: "Scenic Amber vaart richting Botlek, passagiers aan boord.",
+      },
     ],
   },
 
@@ -168,33 +191,38 @@ export const MOCK_SHIPS = [
      PIETER BOELE  --  eastbound, hull, south side (-0.0004)
      ================================================================ */
   {
-    id: 'pieter-boele',
-    name: 'Pieter Boele',
-    nationality: 'NL',
-    markerType: 'hull',
-    shipType: 'Binnenvaart',
-    destination: 'Moerdijk',
-    cargo: 'Zand',
+    id: "pieter-boele",
+    name: "Pieter Boele",
+    nationality: "NL",
+    markerType: "hull",
+    shipType: "Binnenvaart",
+    destination: "Moerdijk",
+    cargo: "Zand",
     aisActive: true,
-    aisStatus: 'Actief',
+    aisStatus: "Actief",
     speed: 7.5,
     waypoints: [
       [51.9006, 4.4158],
       [51.9018, 4.4242],
       [51.9016, 4.4352],
-      [51.9010, 4.4408],
+      [51.901, 4.4408],
       [51.8996, 4.4482],
       [51.8991, 4.4548],
-      [51.8997, 4.4660],
+      [51.8997, 4.466],
       [51.9016, 4.4738],
       [51.9035, 4.4786],
       [51.9074, 4.4837],
       [51.9101, 4.4864],
-      [51.9130, 4.4896],
-      [51.9153, 4.4930],
+      [51.913, 4.4896],
+      [51.9153, 4.493],
     ],
     operatorNotes: [
-      { channel: 'VHF81', location: 'Nieuwe Maas', time: '8m geleden', note: 'Pieter Boele op weg naar Moerdijk, geen bijzonderheden.' },
+      {
+        channel: "VHF81",
+        location: "Nieuwe Maas",
+        time: "8m geleden",
+        note: "Pieter Boele op weg naar Moerdijk, geen bijzonderheden.",
+      },
     ],
   },
 
@@ -202,19 +230,19 @@ export const MOCK_SHIPS = [
      NORDINA  --  westbound, triangle, north side (+0.0005)
      ================================================================ */
   {
-    id: 'nordina',
-    name: 'Nordina',
-    nationality: 'BG',
-    markerType: 'triangle',
-    shipType: 'Pleziervaart',
-    destination: 'Europoort',
-    cargo: 'Geen',
+    id: "nordina",
+    name: "Nordina",
+    nationality: "BG",
+    markerType: "triangle",
+    shipType: "Pleziervaart",
+    destination: "Europoort",
+    cargo: "Geen",
     aisActive: false,
-    aisStatus: 'Geen signaal',
+    aisStatus: "Geen signaal",
     speed: 3.5,
     waypoints: [
       [51.9005, 4.4612],
-      [51.9000, 4.4548],
+      [51.9, 4.4548],
       [51.9005, 4.4482],
       [51.9019, 4.4408],
       [51.9025, 4.4352],
@@ -244,42 +272,42 @@ export const MOCK_SHIPS = [
  */
 export const MOORED_SHIPS = [
   // --- Heysehaven (N-S basin, ships face ~E/W) ---
-  { id: 'mrd-1',  position: [51.8960, 4.4148], heading: 180, size: 'large'  },
-  { id: 'mrd-2',  position: [51.8945, 4.4162], heading: 0,   size: 'medium' },
+  { id: "mrd-1", position: [51.896, 4.4148], heading: 180, size: "large" },
+  { id: "mrd-2", position: [51.8945, 4.4162], heading: 0, size: "medium" },
 
   // --- 1e Eemhaven (N-S basin) ---
-  { id: 'mrd-3',  position: [51.8910, 4.4110], heading: 175, size: 'large'  },
-  { id: 'mrd-4',  position: [51.8895, 4.4128], heading: 5,   size: 'medium' },
+  { id: "mrd-3", position: [51.891, 4.411], heading: 175, size: "large" },
+  { id: "mrd-4", position: [51.8895, 4.4128], heading: 5, size: "medium" },
 
   // --- Eemhaven (large basin, extends south) ---
-  { id: 'mrd-5',  position: [51.8875, 4.4030], heading: 170, size: 'large'  },
-  { id: 'mrd-6',  position: [51.8860, 4.4045], heading: 350, size: 'large'  },
-  { id: 'mrd-7',  position: [51.8850, 4.4025], heading: 175, size: 'medium' },
+  { id: "mrd-5", position: [51.8875, 4.403], heading: 170, size: "large" },
+  { id: "mrd-6", position: [51.886, 4.4045], heading: 350, size: "large" },
+  { id: "mrd-7", position: [51.885, 4.4025], heading: 175, size: "medium" },
 
   // --- Prins Johan Frisohaven ---
-  { id: 'mrd-8',  position: [51.8855, 4.4175], heading: 0,   size: 'large'  },
-  { id: 'mrd-9',  position: [51.8842, 4.4160], heading: 180, size: 'medium' },
+  { id: "mrd-8", position: [51.8855, 4.4175], heading: 0, size: "large" },
+  { id: "mrd-9", position: [51.8842, 4.416], heading: 180, size: "medium" },
 
   // --- Waalhaven (very large basin) ---
-  { id: 'mrd-10', position: [51.8905, 4.4400], heading: 90,  size: 'large'  },
-  { id: 'mrd-11', position: [51.8888, 4.4430], heading: 270, size: 'large'  },
-  { id: 'mrd-12', position: [51.8870, 4.4410], heading: 90,  size: 'medium' },
-  { id: 'mrd-13', position: [51.8900, 4.4445], heading: 270, size: 'small'  },
+  { id: "mrd-10", position: [51.8905, 4.44], heading: 90, size: "large" },
+  { id: "mrd-11", position: [51.8888, 4.443], heading: 270, size: "large" },
+  { id: "mrd-12", position: [51.887, 4.441], heading: 90, size: "medium" },
+  { id: "mrd-13", position: [51.89, 4.4445], heading: 270, size: "small" },
 
   // --- Kortenoordsehaven ---
-  { id: 'mrd-14', position: [51.8985, 4.4445], heading: 90,  size: 'medium' },
-  { id: 'mrd-15', position: [51.8978, 4.4458], heading: 270, size: 'large'  },
+  { id: "mrd-14", position: [51.8985, 4.4445], heading: 90, size: "medium" },
+  { id: "mrd-15", position: [51.8978, 4.4458], heading: 270, size: "large" },
 
   // --- Schiehaven ---
-  { id: 'mrd-16', position: [51.9028, 4.4535], heading: 90,  size: 'medium' },
-  { id: 'mrd-17', position: [51.9020, 4.4548], heading: 270, size: 'small'  },
+  { id: "mrd-16", position: [51.9028, 4.4535], heading: 90, size: "medium" },
+  { id: "mrd-17", position: [51.902, 4.4548], heading: 270, size: "small" },
 
   // --- Merwehaven (north of river) ---
-  { id: 'mrd-18', position: [51.9082, 4.4170], heading: 180, size: 'large'  },
-  { id: 'mrd-19', position: [51.9070, 4.4190], heading: 0,   size: 'medium' },
+  { id: "mrd-18", position: [51.9082, 4.417], heading: 180, size: "large" },
+  { id: "mrd-19", position: [51.907, 4.419], heading: 0, size: "medium" },
 
   // --- Leuvehaven ---
-  { id: 'mrd-20', position: [51.9148, 4.4830], heading: 180, size: 'small'  },
+  { id: "mrd-20", position: [51.9148, 4.483], heading: 180, size: "small" },
 ];
 
 /**
@@ -287,14 +315,14 @@ export const MOORED_SHIPS = [
  * Offset ~0.0015 lat from centreline (north or south bank).
  */
 export const RADAR_CONTACTS = [
-  { id: 'rc-1',  position: [51.8945, 4.3520] },
-  { id: 'rc-2',  position: [51.9010, 4.3670] },
-  { id: 'rc-3',  position: [51.8955, 4.3880] },
-  { id: 'rc-4',  position: [51.9015, 4.4080] },
-  { id: 'rc-5',  position: [51.9038, 4.4300] },
-  { id: 'rc-6',  position: [51.8980, 4.4520] },
-  { id: 'rc-7',  position: [51.9015, 4.4640] },
-  { id: 'rc-8',  position: [51.9020, 4.4810] },
-  { id: 'rc-9',  position: [51.9070, 4.4860] },
-  { id: 'rc-10', position: [51.9175, 4.4940] },
+  { id: "rc-1", position: [51.8945, 4.352] },
+  { id: "rc-2", position: [51.901, 4.367] },
+  { id: "rc-3", position: [51.8955, 4.388] },
+  { id: "rc-4", position: [51.9015, 4.408] },
+  { id: "rc-5", position: [51.9038, 4.43] },
+  { id: "rc-6", position: [51.898, 4.452] },
+  { id: "rc-7", position: [51.9015, 4.464] },
+  { id: "rc-8", position: [51.902, 4.481] },
+  { id: "rc-9", position: [51.907, 4.486] },
+  { id: "rc-10", position: [51.9175, 4.494] },
 ];
