@@ -46,20 +46,20 @@ const SECTOR_BORDER_STYLE = {
   color: "#66BB6A",
   weight: 2,
   opacity: 0.8,
-};
+}; // this can be done with CSS i believe
 
 const RADAR_STYLE = {
   color: "#1B5E20",
   fillColor: "#2E7D32",
   fillOpacity: 0.85,
   weight: 1,
-};
+}; // this can be done with CSS i believe
 
-const MOORED_CONFIGS = {
-  small: { size: 20, path: "M 3,7.5 L 13,7.5 Q 17,10 13,12.5 L 3,12.5 Z" },
-  medium: { size: 28, path: "M 4,11 L 20,11 Q 25,14 20,17 L 4,17 Z" },
-  large: { size: 36, path: "M 4,14.5 L 28,14.5 Q 33,18 28,21.5 L 4,21.5 Z" },
-};
+// const MOORED_CONFIGS = {
+//   small: { size: 20, path: "M 3,7.5 L 13,7.5 Q 17,10 13,12.5 L 3,12.5 Z" },
+//   medium: { size: 28, path: "M 4,11 L 20,11 Q 25,14 20,17 L 4,17 Z" },
+//   large: { size: 36, path: "M 4,14.5 L 28,14.5 Q 33,18 28,21.5 L 4,21.5 Z" },
+// };
 
 // function createMooredIcon(heading, size, isSelected) {
 //   const cfg = MOORED_CONFIGS[size] || MOORED_CONFIGS.medium;
@@ -138,6 +138,14 @@ const MOORED_CONFIGS = {
 //   );
 // }
 
+/**
+ *
+ * @param {Ship[]} ships
+ * @param {*} selectedShipId
+ * @param {*} onSelectShip
+ * @param {*} activeSector,
+ * @returns {ForwardRefExoticComponent}
+ */
 export default function VTSMap({
   ships,
   selectedShipId,
