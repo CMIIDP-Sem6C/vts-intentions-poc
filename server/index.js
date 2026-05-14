@@ -4,6 +4,8 @@ import express from 'express';
 import pg from 'pg';
 import { MOCK_SHIPS } from '../src/data/mockShips.js';
 
+const SCENARIO_SHIP_ID_PREFIX = 'ship-';
+
 const { Pool } = pg;
 
 const app = express();
@@ -51,6 +53,10 @@ function isNumericShipIdColumn() {
 }
 
 function getDbShipIdForAppShipId(appShipId) {
+  if (typeof appShipId === 'string' && appShipId.startsWith(SCENARIO_SHIP_ID_PREFIX)) {
+    const num = Number(appShipId.slice(SCENARIO_SHIP_ID_PREFIX.length));
+    if (Number.isFinite(num)) return isNumericShipIdColumn() ? num : String(num);
+  }
   if (!isNumericShipIdColumn()) return appShipId;
   const index = APP_SHIP_IDS.indexOf(appShipId);
   if (index === -1) return null;
@@ -58,9 +64,8 @@ function getDbShipIdForAppShipId(appShipId) {
 }
 
 function getAppShipIdFromDbShipId(dbShipId) {
-  if (!isNumericShipIdColumn()) return String(dbShipId);
-  const index = Number(dbShipId) - 1;
-  return APP_SHIP_IDS[index] || null;
+  if (dbShipId == null) return null;
+  return `${SCENARIO_SHIP_ID_PREFIX}${dbShipId}`;
 }
 
 function normalizeRow(row) {
@@ -133,6 +138,146 @@ async function bootstrapVerificationRows() {
     skipped,
   };
 }
+
+function parseRouteText(routeText) {
+  if (!routeText || typeof routeText !== 'string') return [];
+  const cleaned = routeText.replace(/,\s*\]/g, ']').trim();
+  try {
+    const parsed = JSON.parse(cleaned);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter((pt) => Array.isArray(pt) && pt.length === 2)
+      .map((pt) => [Number(pt[0]), Number(pt[1])]);
+  } catch {
+    return [];
+  }
+}
+
+function parseStartCoordinate(text) {
+  if (!text || typeof text !== 'string') return null;
+  const cleaned = text.replace(/,\s*\]/g, ']').trim();
+  try {
+    const parsed = JSON.parse(cleaned);
+    if (Array.isArray(parsed) && parsed.length === 2 && typeof parsed[0] === 'number') {
+      return [Number(parsed[0]), Number(parsed[1])];
+    }
+    if (Array.isArray(parsed) && Array.isArray(parsed[0])) {
+      return [Number(parsed[0][0]), Number(parsed[0][1])];
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function normalizeScenarioRow(row) {
+  return {
+    id: row.id,
+    name: typeof row.name === 'string' ? row.name.trim() : row.name,
+    description: row.description,
+    time: row.time,
+    sector_id: row.sector_id,
+    start_coordinate: parseStartCoordinate(row.start_coordinate),
+  };
+}
+
+function normalizeShipRow(row) {
+  return {
+    id: `ship-${row.id}`,
+    dbId: row.id,
+    name: row.name,
+    nationality: row.nationality,
+    markerType: row.markertype || 'triangle',
+    shipType: row.shiptype,
+    destination: row.destination || 'Unknown',
+    cargo: row.cargo,
+    aisActive: Boolean(row.aisactive),
+    aisStatus: row.aisstatus,
+    speed: row.speed != null ? Number(row.speed) : 5,
+    waypoints: parseRouteText(row.route),
+    operatorNotes: [],
+    scenarioId: row.scenario_id,
+  };
+}
+
+function normalizeIntentionRow(row) {
+  return {
+    id: row.id,
+    shipId: `ship-${row.ship_id}`,
+    dbShipId: row.ship_id,
+    name: typeof row.name === 'string' ? row.name.trim() : row.name,
+    description: row.description,
+    route: parseRouteText(row.intention_route),
+  };
+}
+
+function normalizeEventRow(row) {
+  return {
+    id: row.id,
+    scenarioId: row.scenario_id,
+    type: row.type,
+    subjectType: row.subject_type,
+    subjectId: row.subject_id,
+    triggerTime: row.trigger_time,
+  };
+}
+
+app.get('/api/scenarios', async (_req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT id, name, description, time, sector_id, start_coordinate FROM "Scenario" ORDER BY id ASC'
+    );
+    res.json(result.rows.map(normalizeScenarioRow));
+  } catch (error) {
+    console.error('Failed to fetch scenarios:', error);
+    res.status(500).json({ error: 'Failed to fetch scenarios' });
+  }
+});
+
+app.get('/api/scenarios/:id', async (req, res) => {
+  const scenarioId = Number(req.params.id);
+  if (!Number.isFinite(scenarioId)) {
+    return res.status(400).json({ error: 'Invalid scenario id' });
+  }
+
+  try {
+    const scenarioResult = await pool.query(
+      'SELECT id, name, description, time, sector_id, start_coordinate FROM "Scenario" WHERE id = $1',
+      [scenarioId]
+    );
+    if (scenarioResult.rowCount === 0) {
+      return res.status(404).json({ error: 'Scenario not found' });
+    }
+    const scenario = normalizeScenarioRow(scenarioResult.rows[0]);
+
+    const shipsResult = await pool.query(
+      'SELECT * FROM "Ship" WHERE scenario_id = $1 ORDER BY id ASC',
+      [scenarioId]
+    );
+    const ships = shipsResult.rows.map(normalizeShipRow);
+    const shipDbIds = ships.map((s) => s.dbId);
+
+    let intentions = [];
+    if (shipDbIds.length > 0) {
+      const intentionResult = await pool.query(
+        'SELECT id, ship_id, intention_route, name, description FROM "Intention" WHERE ship_id = ANY($1::int[]) ORDER BY id ASC',
+        [shipDbIds]
+      );
+      intentions = intentionResult.rows.map(normalizeIntentionRow);
+    }
+
+    const eventsResult = await pool.query(
+      'SELECT id, scenario_id, type, subject_type, subject_id, trigger_time FROM "Event" WHERE scenario_id = $1 ORDER BY trigger_time ASC, id ASC',
+      [scenarioId]
+    );
+    const events = eventsResult.rows.map(normalizeEventRow);
+
+    res.json({ scenario, ships, intentions, events });
+  } catch (error) {
+    console.error('Failed to fetch scenario detail:', error);
+    res.status(500).json({ error: 'Failed to fetch scenario detail' });
+  }
+});
 
 app.get('/api/verifications', async (_req, res) => {
   try {
