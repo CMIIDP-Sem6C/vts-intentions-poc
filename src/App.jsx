@@ -134,14 +134,14 @@ export default function App() {
   //   setSelectedShipId(null);
   // }, []);
 
-  const handleUpdateMoored = useCallback((id, updates) => {
-    setMooredShips((prev) =>
-      prev.map((ms) => (ms.id === id ? { ...ms, ...updates } : ms)),
-    );
-  }, []);
+  // const handleUpdateMoored = useCallback((id, updates) => {
+  //   setMooredShips((prev) =>
+  //     prev.map((ms) => (ms.id === id ? { ...ms, ...updates } : ms)),
+  //   );
+  // }, []);
 
   if (!activeSector) {
-    return <SectorSelect onSelect={setActiveSector} />;
+    return <SectorSelect onSelect={(sector) => setActiveSector(sector)} />;
   }
 
   return (
@@ -154,7 +154,7 @@ export default function App() {
           // mooredShips={mooredShips}
           // selectedMooredId={selectedMooredId}
           // onSelectMoored={handleSelectMoored}
-          onUpdateMoored={handleUpdateMoored}
+          // onUpdateMoored={handleUpdateMoored}
           activeSector={activeSector}
         />
       }
