@@ -111,23 +111,40 @@ export default function ShipMarker({ ship, isSelected, onSelect }) {
 
   // find remaining route by intention or waypoints
   const remainingRoute = useMemo(() => {
+    // Use dynamicIntentionsPath if it exists and has more than one point
+    if (ship.dynamicIntentionsPath && ship.dynamicIntentionsPath.length > 1) {
+      return ship.dynamicIntentionsPath;
+    }
     if (hasIntentions && ship.currentIntentionsIndex != null) {
       return [
         ship.intentionsPosition,
         ...ship.intentions.slice(ship.currentIntentionsIndex),
       ];
     }
-    if (
-      !ship.intentions &&
-      ship.waypoints != null &&
-      ship.currentWaypointIndex != null
-    ) {
+
+    // For ships with no intentions but waypoints
+    if (ship.waypoints != null && ship.currentWaypointIndex != null) {
       return [
         ship.position,
         ...ship.waypoints.slice(ship.currentWaypointIndex),
       ];
-    } else return [];
-  }, [ship.position, ship.waypoints, ship.currentWaypointIndex]);
+    }
+    console.log(
+      "falling back on old logic: ",
+      ship.dynamicIntentionsPath,
+      ship.dynamicIntentionsPath.length,
+    );
+
+    return [];
+  }, [
+    ship.position,
+    ship.waypoints,
+    ship.currentWaypointIndex,
+    ship.dynamicIntentionsPath,
+    ship.intentionsPosition,
+    ship.intentions,
+    ship.currentIntentionsIndex,
+  ]);
 
   const vectorEnd = useMemo(
     () =>
