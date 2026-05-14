@@ -1,9 +1,29 @@
 import { useMemo } from 'react';
-import { MapContainer, TileLayer, Polyline, CircleMarker, Marker, Popup, Tooltip, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Polyline, CircleMarker, Tooltip, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { SECTORS, SECTOR_WATER_BOUNDARIES, WATERWAY_CENTERLINE, KM_MARKERS, TURNING_BASINS } from '../../data/sectors';
+import { calculateDistance } from '../../utils/navigation';
 import ShipMarker from './ShipMarker';
 import 'leaflet/dist/leaflet.css';
+
+function getRemainingIntentionRoute(route, shipPosition) {
+  if (!Array.isArray(route) || route.length < 2) return [];
+  if (!shipPosition) return route;
+
+  let nearestIdx = 0;
+  let minDist = Infinity;
+  for (let i = 0; i < route.length; i++) {
+    const d = calculateDistance(shipPosition, route[i]);
+    if (d < minDist) {
+      minDist = d;
+      nearestIdx = i;
+    }
+  }
+
+  const remaining = route.slice(nearestIdx + 1);
+  if (remaining.length === 0) return [];
+  return [shipPosition, ...remaining];
+}
 
 const ALL_SECTORS_BOUNDS = (() => {
   const allCoords = Object.values(SECTORS).flatMap((s) => s.boundary);
@@ -32,11 +52,19 @@ const SECTOR_BORDER_STYLE = {
   opacity: 0.8,
 };
 
+const INTENTION_STYLE = {
+  color: '#FFC107',
+  weight: 3,
+  opacity: 0.85,
+  dashArray: '6 6',
+};
+
 export default function VTSMap({
   ships,
   selectedShipId,
   onSelectShip,
   activeSector,
+  intentions = [],
 }) {
   const active = SECTORS[activeSector];
 
@@ -95,6 +123,21 @@ export default function VTSMap({
           </Tooltip>
         </CircleMarker>
       ))}
+
+      {intentions.map((intention) => {
+        const ship = ships.find(
+          (s) => s.dbId === intention.dbShipId || s.id === intention.shipId
+        );
+        const visibleRoute = getRemainingIntentionRoute(intention.route, ship?.position);
+        if (visibleRoute.length < 2) return null;
+        return (
+          <Polyline
+            key={`intention-${intention.id}`}
+            positions={visibleRoute}
+            pathOptions={INTENTION_STYLE}
+          />
+        );
+      })}
 
       {ships.map((ship) => (
         <ShipMarker
