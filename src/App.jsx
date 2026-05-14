@@ -4,44 +4,33 @@ import VTSMap from "./components/map/VTSMap";
 import InboundPanel from "./components/panels/InboundPanel";
 import ShipInfoCard from "./components/panels/ShipInfoCard";
 import useVerificationSync from './hooks/useVerificationSync';
+import ScenarioSelect from './components/ScenarioSelect';
 import SectorSelect from './components/SectorSelect';
-import useShipSimulation from "./hooks/useShipSimulation";
-import { MOCK_SHIPS } from "./data/mockShips";
+import useScenarioData from './hooks/useScenarioData';
+import useScenarioSimulation from './hooks/useScenarioSimulation';
 import { API_URL, ENDPOINT_DESTINATIONS } from "./utils/api";
 import "./App.css";
 
 export default function App() {
+  const [activeScenarioId, setActiveScenarioId] = useState(null);
   const [activeSector, setActiveSector] = useState(null);
+
   const {
     verificationByShipId,
     updateVerification,
     verificationError,
   } = useVerificationSync();
 
+  const { data: scenarioData, loading: scenarioLoading, error: scenarioError } =
+    useScenarioData(activeScenarioId);
+
+  const activeScenarioData = activeSector ? scenarioData : null;
+
+  const { ships: simulatedShips, visibleIntentions } =
+    useScenarioSimulation(activeScenarioData);
+
   const [selectedShipId, setSelectedShipId] = useState(null);
-  const [destinationMap, setDestinationMap] = useState({});
-  const [aisActiveMap, setAisActiveMap] = useState(() => {
-    const m = {};
-    MOCK_SHIPS.forEach((s) => {
-      m[s.id] = s.aisActive;
-    });
-    return m;
-  });
-
-  const handleShipRestart = useCallback((id) => {
-    const original = MOCK_SHIPS.find((s) => s.id === id);
-    if (!original) return;
-    setAisActiveMap((prev) => ({ ...prev, [id]: original.aisActive }));
-    updateVerification(id, {
-      verified: false,
-      destination: original.destination,
-    }).catch(() => {
-      // DB down -> status sync't weer zodra API up is.
-    });
-  }, [updateVerification]);
-
-  const simulatedShips = useShipSimulation(MOCK_SHIPS, handleShipRestart);
-
+  const [aisActiveMap, setAisActiveMap] = useState({});
   const [destinations, setDestinations] = useState([]);
 
   useEffect(() => {
@@ -51,6 +40,17 @@ export default function App() {
       .catch((err) => console.error("Failed to load destinations:", err));
   }, []);
 
+  useEffect(() => {
+    if (!scenarioData?.ships) return;
+    setAisActiveMap((prev) => {
+      const next = { ...prev };
+      scenarioData.ships.forEach((s) => {
+        if (!(s.id in next)) next[s.id] = s.aisActive;
+      });
+      return next;
+    });
+  }, [scenarioData]);
+
   const ships = useMemo(
     () =>
       simulatedShips.map((ship) => ({
@@ -59,7 +59,7 @@ export default function App() {
         verified: verificationByShipId[ship.id]?.verified ?? false,
         aisActive: aisActiveMap[ship.id] ?? ship.aisActive,
       })),
-    [simulatedShips, verificationByShipId, destinationMap, aisActiveMap],
+    [simulatedShips, verificationByShipId, aisActiveMap],
   );
 
   const selectedShip = useMemo(
@@ -104,12 +104,40 @@ export default function App() {
     try {
       await updateVerification(id, { verified: false, destination: 'Unknown' });
     } catch (_error) {
-      // DB down -> alleen lokaal gereset. Polling sync't DB zodra weer up.
+      // DB down -> alleen lokaal gereset.
     }
   }, [updateVerification]);
 
+  if (activeScenarioId == null) {
+    return <ScenarioSelect onSelect={setActiveScenarioId} />;
+  }
+
   if (!activeSector) {
     return <SectorSelect onSelect={setActiveSector} />;
+  }
+
+  if (scenarioLoading) {
+    return (
+      <div className="sector-select-overlay">
+        <div className="sector-select-card">
+          <h1 className="sector-select-title">VTS ROTTERDAM</h1>
+          <p className="sector-select-subtitle">Scenario laden...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (scenarioError) {
+    return (
+      <div className="sector-select-overlay">
+        <div className="sector-select-card">
+          <h1 className="sector-select-title">VTS ROTTERDAM</h1>
+          <p className="scenario-status scenario-status-error">
+            Scenario laden mislukt: {scenarioError}
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -120,6 +148,7 @@ export default function App() {
           selectedShipId={selectedShipId}
           onSelectShip={handleSelectShip}
           activeSector={activeSector}
+          intentions={visibleIntentions}
         />
       }
       inboundPanel={
