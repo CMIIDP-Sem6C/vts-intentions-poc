@@ -94,22 +94,20 @@ export default function useShipSimulation(initialShips, onShipRestart) {
   // Update dynamic intentions path based on intentionsShareTime
   const updateDynamicIntentions = useCallback(
     (ship) => {
-      if (!ship.intentions || ship.intentions.length <= 1 || ship.arrived) {
-        return [];
-      }
-
       const { intentionsShareTime } = ship;
 
       // If intentionsShareTime is null, don't show any intentions line
-      if (
-        intentionsShareTime === null ||
-        (!ship.intentions && (!ship.waypoints || ship.waypoints.length <= 1))
-      ) {
+      if (intentionsShareTime === null) {
         return [];
       }
 
-      // Determine the route source (intentions if available and valid, otherwise waypoints)
-      const hasValidIntentions = ship.intentions && ship.intentions.length > 1;
+      // Determine if we have valid intentions (not null, not empty, more than one point)
+      const hasValidIntentions =
+        ship.intentions &&
+        Array.isArray(ship.intentions) &&
+        ship.intentions.length > 1;
+
+      // Use intentions if valid, otherwise fall back to waypoints
       const routeSource = hasValidIntentions ? ship.intentions : ship.waypoints;
       const currentWaypointIndex = hasValidIntentions
         ? ship.currentIntentionsIndex
@@ -121,13 +119,15 @@ export default function useShipSimulation(initialShips, onShipRestart) {
       // If no valid route source, return empty path
       if (
         !routeSource ||
+        !Array.isArray(routeSource) ||
         routeSource.length <= 1 ||
-        currentWaypointIndex >= routeSource.length
+        currentWaypointIndex >= routeSource.length ||
+        ship.arrived
       ) {
         return [];
       }
 
-      // If intentionsShareTime is "complete", show the complete intentions route
+      // If intentionsShareTime is "complete", show the complete route
       if (intentionsShareTime === "complete") {
         return [currentPosition, ...routeSource.slice(currentWaypointIndex)];
       }
@@ -139,78 +139,49 @@ export default function useShipSimulation(initialShips, onShipRestart) {
         return [];
       }
 
-      // Start from current intentions position
+      // Start from current position
       const startPos = currentPosition;
-      const targetIndex = currentWaypointIndex;
+      const path = [startPos];
+      let remainingTime = minutes;
+      let currentIndex = currentWaypointIndex;
 
-      // If we have a valid target waypoint
-      if (targetIndex < routeSource.length) {
-        const target = routeSource[targetIndex];
-        const futurePos = calculateFuturePosition(
-          startPos,
-          ship.baseSpeed,
-          minutes,
-          target,
+      // Build the path for the specified time duration
+      while (currentIndex < routeSource.length && remainingTime > 0) {
+        const prevWaypoint =
+          currentIndex === currentWaypointIndex
+            ? startPos
+            : routeSource[currentIndex - 1];
+        const currentWaypoint = routeSource[currentIndex];
+        const segmentDistance = calculateDistance(
+          prevWaypoint,
+          currentWaypoint,
         );
+        const segmentTimeHours = segmentDistance / ship.baseSpeed;
+        const segmentTimeMinutes = segmentTimeHours * 60;
 
-        // If the future position reaches the target, include the target and potentially more waypoints
-        const distToTarget = calculateDistance(startPos, target);
-        const distanceInMinutes = ship.baseSpeed * (minutes / 60);
-
-        if (distanceInMinutes >= distToTarget) {
-          // We can reach the target, so include it
-          const path = [startPos, target];
-
-          // Calculate remaining time after reaching this target
-          const timeToTargetHours = distToTarget / ship.baseSpeed;
-          const remainingMinutes = minutes - timeToTargetHours * 60;
-
-          // If we have remaining time, add more waypoints
-          if (remainingMinutes > 0) {
-            let currentIndex = targetIndex + 1;
-            let currentTime = remainingMinutes;
-
-            while (currentIndex < routeSource.length && currentTime > 0) {
-              const prevWaypoint = routeSource[currentIndex - 1];
-              const currentWaypoint = routeSource[currentIndex];
-              const segmentDistance = calculateDistance(
-                prevWaypoint,
-                currentWaypoint,
-              );
-              const segmentTimeMinutes =
-                (segmentDistance / ship.baseSpeed) * 60;
-
-              if (segmentTimeMinutes <= currentTime) {
-                // We can complete this segment
-                path.push(currentWaypoint);
-                currentTime -= segmentTimeMinutes;
-              } else {
-                // We can only partially complete this segment
-                const remainingDistance = (currentTime / 60) * ship.baseSpeed;
-                const bearing = calculateHeading(prevWaypoint, currentWaypoint);
-                const partialPos = moveAlongBearing(
-                  prevWaypoint,
-                  bearing,
-                  remainingDistance,
-                );
-                path.push(partialPos);
-                currentTime = 0;
-              }
-
-              currentIndex++;
-            }
-          }
-
-          return path;
+        if (segmentTimeMinutes <= remainingTime) {
+          // We can complete this segment
+          path.push(currentWaypoint);
+          remainingTime -= segmentTimeMinutes;
         } else {
-          // We don't reach the target, so just show the future position
-          return [startPos, futurePos];
+          // We can only partially complete this segment
+          const remainingDistance = (remainingTime / 60) * ship.baseSpeed;
+          const bearing = calculateHeading(prevWaypoint, currentWaypoint);
+          const partialPos = moveAlongBearing(
+            prevWaypoint,
+            bearing,
+            remainingDistance,
+          );
+          path.push(partialPos);
+          remainingTime = 0;
         }
+
+        currentIndex++;
       }
 
-      return [];
+      return path;
     },
-    [calculateFuturePosition],
+    [calculateDistance, calculateHeading, moveAlongBearing],
   );
 
   const tick = useCallback(() => {

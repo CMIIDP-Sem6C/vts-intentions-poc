@@ -115,26 +115,11 @@ export default function ShipMarker({ ship, isSelected, onSelect }) {
     if (ship.dynamicIntentionsPath && ship.dynamicIntentionsPath.length > 1) {
       return ship.dynamicIntentionsPath;
     }
-    if (hasIntentions && ship.currentIntentionsIndex != null) {
-      return [
-        ship.intentionsPosition,
-        ...ship.intentions.slice(ship.currentIntentionsIndex),
-      ];
-    }
-
-    // For ships with no intentions but waypoints
-    if (ship.waypoints != null && ship.currentWaypointIndex != null) {
-      return [
-        ship.position,
-        ...ship.waypoints.slice(ship.currentWaypointIndex),
-      ];
-    }
     console.log(
       "falling back on old logic: ",
       ship.dynamicIntentionsPath,
       ship.dynamicIntentionsPath.length,
     );
-
     return [];
   }, [
     ship.position,
