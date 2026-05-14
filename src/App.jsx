@@ -6,7 +6,7 @@ import ShipInfoCard from "./components/panels/ShipInfoCard";
 import useVerificationSync from './hooks/useVerificationSync';
 import SectorSelect from './components/SectorSelect';
 import useShipSimulation from "./hooks/useShipSimulation";
-import { MOCK_SHIPS, MOORED_SHIPS } from "./data/mockShips";
+import { MOCK_SHIPS } from "./data/mockShips";
 import { API_URL, ENDPOINT_DESTINATIONS } from "./utils/api";
 import "./App.css";
 
@@ -42,10 +42,6 @@ export default function App() {
 
   const simulatedShips = useShipSimulation(MOCK_SHIPS, handleShipRestart);
 
-  const [mooredShips, setMooredShips] = useState(() =>
-    MOORED_SHIPS.map((ms) => ({ ...ms })),
-  );
-  const [selectedMooredId, setSelectedMooredId] = useState(null);
   const [destinations, setDestinations] = useState([]);
 
   useEffect(() => {
@@ -73,7 +69,6 @@ export default function App() {
 
   const handleSelectShip = useCallback((id) => {
     setSelectedShipId((prev) => (prev === id ? null : id));
-    setSelectedMooredId(null);
   }, []);
 
   const handleCloseInfo = useCallback(() => {
@@ -113,17 +108,6 @@ export default function App() {
     }
   }, [updateVerification]);
 
-  const handleSelectMoored = useCallback((id) => {
-    setSelectedMooredId((prev) => (prev === id ? null : id));
-    setSelectedShipId(null);
-  }, []);
-
-  const handleUpdateMoored = useCallback((id, updates) => {
-    setMooredShips((prev) =>
-      prev.map((ms) => (ms.id === id ? { ...ms, ...updates } : ms)),
-    );
-  }, []);
-
   if (!activeSector) {
     return <SectorSelect onSelect={setActiveSector} />;
   }
@@ -135,10 +119,6 @@ export default function App() {
           ships={ships}
           selectedShipId={selectedShipId}
           onSelectShip={handleSelectShip}
-          mooredShips={mooredShips}
-          selectedMooredId={selectedMooredId}
-          onSelectMoored={handleSelectMoored}
-          onUpdateMoored={handleUpdateMoored}
           activeSector={activeSector}
         />
       }
