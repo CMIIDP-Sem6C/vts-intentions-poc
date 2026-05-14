@@ -109,8 +109,8 @@ export default function ShipMarker({ ship, isSelected, onSelect }) {
     labelOffsetPx[0] !== DEFAULT_LABEL_OFFSET_PX[0] ||
     labelOffsetPx[1] !== DEFAULT_LABEL_OFFSET_PX[1];
 
-  // find remaining route by intention or waypoints
-  const remainingRoute = useMemo(() => {
+  // Generate the intentions to display
+  const intentionsToDisplay = useMemo(() => {
     // Use dynamicIntentionsPath if it exists and has more than one point
     if (ship.dynamicIntentionsPath && ship.dynamicIntentionsPath.length > 1) {
       return ship.dynamicIntentionsPath;
@@ -157,9 +157,9 @@ export default function ShipMarker({ ship, isSelected, onSelect }) {
   return (
     <>
       {/* Intention line */}
-      {showOverlay && remainingRoute.length > 1 && (
+      {showOverlay && intentionsToDisplay.length > 1 && (
         <Polyline
-          positions={remainingRoute}
+          positions={intentionsToDisplay}
           pathOptions={{
             color: hasIntentions ? INTENTIONS_COLOR : VECTOR_COLOR,
             weight: 1.5,
