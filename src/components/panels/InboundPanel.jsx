@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   calculateDistance,
   calculateETA,
@@ -64,6 +64,7 @@ export default function InboundPanel({
   onToggleShipVerification,
   activeSector,
 }) {
+  const [minimized, setMinimized] = useState(false);
   const sectorBoundary = activeSector ? SECTORS[activeSector]?.boundary : null;
 
   const inboundShips = useMemo(() => {
@@ -81,8 +82,27 @@ export default function InboundPanel({
       .filter((s) => s.currentlyInSector || s.routeEntersSector);
   }, [ships, sectorBoundary]);
 
+  if (minimized) {
+    return (
+      <button
+        className="panel inbound-panel-toggle"
+        onClick={() => setMinimized(false)}
+        title="Toon inbound vessels"
+      >
+        INBOUND ({inboundShips.length})
+      </button>
+    );
+  }
+
   return (
     <div className="panel inbound-panel">
+      <button
+        className="inbound-minimize-btn"
+        onClick={() => setMinimized(true)}
+        title="Verberg panel"
+      >
+        -
+      </button>
       <table className="inbound-table">
         <thead>
           <tr>

@@ -1,10 +1,42 @@
-import { useCallback, useMemo, useEffect } from 'react';
-import { MapContainer, TileLayer, Polyline, CircleMarker, Marker, Popup, Tooltip, useMap } from 'react-leaflet';
-import L from 'leaflet';
-import { SECTORS, SECTOR_WATER_BOUNDARIES, WATERWAY_CENTERLINE, KM_MARKERS, TURNING_BASINS } from '../../data/sectors';
-import { RADAR_CONTACTS } from '../../data/mockShips';
-import ShipMarker from './ShipMarker';
-import 'leaflet/dist/leaflet.css';
+import { useMemo } from "react";
+import {
+  MapContainer,
+  TileLayer,
+  Polyline,
+  CircleMarker,
+  Tooltip,
+  useMap,
+} from "react-leaflet";
+import L from "leaflet";
+import {
+  SECTORS,
+  SECTOR_WATER_BOUNDARIES,
+  WATERWAY_CENTERLINE,
+  KM_MARKERS,
+  TURNING_BASINS,
+} from "../../data/sectors";
+import { calculateDistance } from "../../utils/navigation";
+import ShipMarker from "./ShipMarker";
+import "leaflet/dist/leaflet.css";
+
+function getRemainingIntentionRoute(route, shipPosition) {
+  if (!Array.isArray(route) || route.length < 2) return [];
+  if (!shipPosition) return route;
+
+  let nearestIdx = 0;
+  let minDist = Infinity;
+  for (let i = 0; i < route.length; i++) {
+    const d = calculateDistance(shipPosition, route[i]);
+    if (d < minDist) {
+      minDist = d;
+      nearestIdx = i;
+    }
+  }
+
+  const remaining = route.slice(nearestIdx + 1);
+  if (remaining.length === 0) return [];
+  return [shipPosition, ...remaining];
+}
 
 const ALL_SECTORS_BOUNDS = (() => {
   const allCoords = Object.values(SECTORS).flatMap((s) => s.boundary);
@@ -13,7 +45,7 @@ const ALL_SECTORS_BOUNDS = (() => {
   const pad = 0.02;
   return L.latLngBounds(
     [Math.min(...lats) - pad, Math.min(...lngs) - pad * 2],
-    [Math.max(...lats) + pad, Math.max(...lngs) + pad * 2]
+    [Math.max(...lats) + pad, Math.max(...lngs) + pad * 2],
   );
 })();
 
@@ -28,130 +60,35 @@ function MapConstraints() {
 }
 
 const SECTOR_BORDER_STYLE = {
-  color: '#66BB6A',
+  color: "#66BB6A",
   weight: 2,
   opacity: 0.8,
 };
 
-const RADAR_STYLE = {
-  color: '#ff9800', // An orange/amber color typical for radar
-  fillColor: '#ff9800',
-  fillOpacity: 0.5,
-  weight: 1,
-};
-
 const INTENTION_STYLE = {
-  color: '#4FC3F7',
-  weight: 2,
-  opacity: 0.88,
-  dashArray: '10 8',
+  color: "#FFC107",
+  weight: 3,
+  opacity: 0.85,
+  dashArray: "6 6",
 };
-
-function MapScenarioView({ center, zoom }) {
-  const map = useMap();
-  useEffect(() => {
-    if (!center || center.length < 2) return;
-    const z = zoom != null ? zoom : map.getZoom();
-    map.setView(center, z, { animate: false });
-  }, [map, center, zoom]);
-  return null;
-}
-
-const MOORED_CONFIGS = {
-  small:  { size: 20, path: 'M 3,7.5 L 13,7.5 Q 17,10 13,12.5 L 3,12.5 Z' },
-  medium: { size: 28, path: 'M 4,11 L 20,11 Q 25,14 20,17 L 4,17 Z' },
-  large:  { size: 36, path: 'M 4,14.5 L 28,14.5 Q 33,18 28,21.5 L 4,21.5 Z' },
-};
-
-function createMooredIcon(heading, size, isSelected) {
-  const cfg = MOORED_CONFIGS[size] || MOORED_CONFIGS.medium;
-  const half = cfg.size / 2;
-  const fill = isSelected ? '#2E7D32' : '#1B5E20';
-  const stroke = isSelected ? '#FFFFFF' : 'rgba(0,0,0,0.35)';
-  const sw = isSelected ? 1.5 : 0.5;
-  const svg = `<svg width="${cfg.size}" height="${cfg.size}" viewBox="0 0 ${cfg.size} ${cfg.size}" xmlns="http://www.w3.org/2000/svg"><g transform="rotate(${heading}, ${half}, ${half})"><path d="${cfg.path}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/></g></svg>`;
-  return L.divIcon({
-    html: svg,
-    className: 'ship-icon',
-    iconSize: [cfg.size, cfg.size],
-    iconAnchor: [half, half],
-  });
-}
-
-function MooredShipMarker({ ship, isSelected, onSelect, onUpdate }) {
-  const handleDragEnd = useCallback((e) => {
-    const { lat, lng } = e.target.getLatLng();
-    onUpdate(ship.id, { position: [lat, lng] });
-  }, [ship.id, onUpdate]);
-
-  const rotate = useCallback((delta) => {
-    onUpdate(ship.id, { heading: ((ship.heading + delta) % 360 + 360) % 360 });
-  }, [ship.id, ship.heading, onUpdate]);
-
-  return (
-    <Marker
-      position={ship.position}
-      icon={createMooredIcon(ship.heading, ship.size, isSelected)}
-      draggable={isSelected}
-      eventHandlers={{
-        click: () => onSelect(ship.id),
-        dragend: handleDragEnd,
-      }}
-    >
-      {isSelected && (
-        <Popup
-          offset={[0, -10]}
-          closeButton={false}
-          className="moored-popup"
-          autoPan={false}
-        >
-          <div className="moored-controls">
-            <span className="moored-label">AFGEMEERD SCHIP</span>
-            <div className="moored-heading-row">
-              <button className="rotate-btn" onClick={() => rotate(-15)}>-15</button>
-              <button className="rotate-btn" onClick={() => rotate(-5)}>-5</button>
-              <span className="heading-display">{Math.round(ship.heading)}</span>
-              <button className="rotate-btn" onClick={() => rotate(5)}>+5</button>
-              <button className="rotate-btn" onClick={() => rotate(15)}>+15</button>
-            </div>
-            <span className="moored-hint">Versleep om te verplaatsen</span>
-          </div>
-        </Popup>
-      )}
-    </Marker>
-  );
-}
 
 export default function VTSMap({
   ships,
   selectedShipId,
   onSelectShip,
-  mooredShips,
-  selectedMooredId,
-  onSelectMoored,
-  onUpdateMoored,
   activeSector,
-  scenarioMapCenter,
-  scenarioMapZoom,
-  intentionLayers,
+  intentions = [],
 }) {
   const active = SECTORS[activeSector];
-  const initialCenter =
-    scenarioMapCenter && scenarioMapCenter.length >= 2
-      ? scenarioMapCenter
-      : active.center;
-  const initialZoom =
-    scenarioMapZoom != null ? scenarioMapZoom : active.zoom;
 
   return (
     <MapContainer
-      center={initialCenter}
-      zoom={initialZoom}
+      center={active.center}
+      zoom={active.zoom}
       className="vts-map"
       zoomControl={false}
     >
       <MapConstraints />
-      <MapScenarioView center={scenarioMapCenter} zoom={scenarioMapZoom} />
       <TileLayer
         attribution='&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
         url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png"
@@ -168,7 +105,7 @@ export default function VTSMap({
       <Polyline
         positions={WATERWAY_CENTERLINE}
         pathOptions={{
-          color: '#5a5a5a',
+          color: "#5a5a5a",
           weight: 1,
           opacity: 0.5,
         }}
@@ -179,9 +116,19 @@ export default function VTSMap({
           key={km.id}
           center={km.position}
           radius={2}
-          pathOptions={{ color: '#888', fillColor: '#888', fillOpacity: 1, weight: 0 }}
+          pathOptions={{
+            color: "#888",
+            fillColor: "#888",
+            fillOpacity: 1,
+            weight: 0,
+          }}
         >
-          <Tooltip direction="top" offset={[0, -4]} permanent className="km-marker-tooltip">
+          <Tooltip
+            direction="top"
+            offset={[0, -4]}
+            permanent
+            className="km-marker-tooltip"
+          >
             {km.label}
           </Tooltip>
         </CircleMarker>
@@ -192,48 +139,41 @@ export default function VTSMap({
           key={tb.id}
           center={tb.position}
           radius={8}
-          pathOptions={{ color: '#607D8B', fillColor: 'transparent', fillOpacity: 0, weight: 1, opacity: 0.6 }}
+          pathOptions={{
+            color: "#607D8B",
+            fillColor: "transparent",
+            fillOpacity: 0,
+            weight: 1,
+            opacity: 0.6,
+          }}
         >
-          <Tooltip direction="top" offset={[0, -8]} className="km-marker-tooltip">
+          <Tooltip
+            direction="top"
+            offset={[0, -8]}
+            className="km-marker-tooltip"
+          >
             {tb.label}
           </Tooltip>
         </CircleMarker>
       ))}
 
-      {(intentionLayers || [])
-        .filter((layer) => layer.visible && layer.positions?.length >= 2)
-        .map((layer) => (
+      {intentions.map((intention) => {
+        const ship = ships.find(
+          (s) => s.dbId === intention.dbShipId || s.id === intention.shipId,
+        );
+        const visibleRoute = getRemainingIntentionRoute(
+          intention.route,
+          ship?.position,
+        );
+        if (visibleRoute.length < 2) return null;
+        return (
           <Polyline
-            key={layer.key}
-            positions={layer.positions}
+            key={`intention-${intention.id}`}
+            positions={visibleRoute}
             pathOptions={INTENTION_STYLE}
-          >
-            {layer.name ? (
-              <Tooltip direction="center" className="km-marker-tooltip">
-                {layer.name}
-              </Tooltip>
-            ) : null}
-          </Polyline>
-        ))}
-
-      {RADAR_CONTACTS.map((rc) => (
-        <CircleMarker
-          key={rc.id}
-          center={rc.position}
-          radius={3}
-          pathOptions={RADAR_STYLE}
-        />
-      ))}
-
-      {mooredShips && mooredShips.map((ms) => (
-        <MooredShipMarker
-          key={ms.id}
-          ship={ms}
-          isSelected={ms.id === selectedMooredId}
-          onSelect={onSelectMoored}
-          onUpdate={onUpdateMoored}
-        />
-      ))}
+          />
+        );
+      })}
 
       {ships.map((ship) => (
         <ShipMarker
