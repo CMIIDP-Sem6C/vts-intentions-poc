@@ -80,21 +80,15 @@ export default function VTSMap({
   intentions = [],
 }) {
   const active = SECTORS[activeSector];
-  const initialCenter =
-    scenarioMapCenter && scenarioMapCenter.length >= 2
-      ? scenarioMapCenter
-      : active.center;
-  const initialZoom = scenarioMapZoom != null ? scenarioMapZoom : active.zoom;
 
   return (
     <MapContainer
-      center={initialCenter}
-      zoom={initialZoom}
+      center={active.center}
+      zoom={active.zoom}
       className="vts-map"
       zoomControl={false}
     >
       <MapConstraints />
-      <MapScenarioView center={scenarioMapCenter} zoom={scenarioMapZoom} />
       <TileLayer
         attribution='&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
         url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png"
