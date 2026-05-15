@@ -9,6 +9,7 @@ const TICK_MS = 150;
 const TIME_SCALE = 4;
 const AVOID_OFFSET_NM = 0.08;
 const AVOID_RAMP_PER_TICK = 0.0018;
+const AVOID_RETURN_EPSILON = 0.001;
 
 function initShip(ship) {
   const waypoints = Array.isArray(ship.waypoints) ? ship.waypoints : [];
@@ -102,6 +103,7 @@ export default function useScenarioSimulation(scenarioData) {
   const [elapsed, setElapsed] = useState(0);
   const [activeShips, setActiveShips] = useState([]);
   const [visibleIntentionIds, setVisibleIntentionIds] = useState(() => new Set());
+  const [pendingShowIntentionIds, setPendingShowIntentionIds] = useState(() => new Set());
 
   const processedEventIdsRef = useRef(new Set());
   const startTimestampRef = useRef(null);
@@ -110,6 +112,7 @@ export default function useScenarioSimulation(scenarioData) {
     setElapsed(0);
     setActiveShips([]);
     setVisibleIntentionIds(new Set());
+    setPendingShowIntentionIds(new Set());
     processedEventIdsRef.current = new Set();
     startTimestampRef.current = Date.now();
   }, [scenarioData]);
@@ -147,15 +150,24 @@ export default function useScenarioSimulation(scenarioData) {
         const targetIds = targets.map((t) => t.id);
         const affectedShipIds = [...new Set(targets.map((t) => t.dbShipId))];
 
-        setVisibleIntentionIds((prev) => {
-          const next = new Set(prev);
-          if (event.type === 'ShowIntention') {
-            targetIds.forEach((id) => next.add(id));
-          } else {
+        if (event.type === 'HideIntention') {
+          setVisibleIntentionIds((prev) => {
+            const next = new Set(prev);
             targetIds.forEach((id) => next.delete(id));
-          }
-          return next;
-        });
+            return next;
+          });
+          setPendingShowIntentionIds((prev) => {
+            const next = new Set(prev);
+            targetIds.forEach((id) => next.delete(id));
+            return next;
+          });
+        } else {
+          setPendingShowIntentionIds((prev) => {
+            const next = new Set(prev);
+            targetIds.forEach((id) => next.add(id));
+            return next;
+          });
+        }
 
         setActiveShips((prev) =>
           prev.map((s) => {
@@ -190,6 +202,35 @@ export default function useScenarioSimulation(scenarioData) {
 
     return () => clearInterval(interval);
   }, [ships, events, triggerEvent]);
+
+  useEffect(() => {
+    if (pendingShowIntentionIds.size === 0) return;
+    const toPromote = [];
+    pendingShowIntentionIds.forEach((intentionId) => {
+      const intention = (intentions || []).find((i) => i.id === intentionId);
+      if (!intention) return;
+      const ship = activeShips.find((s) => s.dbId === intention.dbShipId);
+      if (!ship) {
+        toPromote.push(intentionId);
+        return;
+      }
+      if (Math.abs(ship.avoidCurrent || 0) < AVOID_RETURN_EPSILON) {
+        toPromote.push(intentionId);
+      }
+    });
+
+    if (toPromote.length === 0) return;
+    setVisibleIntentionIds((prev) => {
+      const next = new Set(prev);
+      toPromote.forEach((id) => next.add(id));
+      return next;
+    });
+    setPendingShowIntentionIds((prev) => {
+      const next = new Set(prev);
+      toPromote.forEach((id) => next.delete(id));
+      return next;
+    });
+  }, [activeShips, pendingShowIntentionIds, intentions]);
 
   const visibleIntentions = useMemo(() => {
     if (!intentions) return [];
