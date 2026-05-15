@@ -7,8 +7,8 @@ import {
 
 const TICK_MS = 150;
 const TIME_SCALE = 4;
-const AVOID_OFFSET_NM = 0.08;
-const AVOID_RAMP_PER_TICK = 0.0018;
+const AVOID_OFFSET_NM = 0.04;
+const AVOID_RAMP_PER_TICK = 0.0014;
 const AVOID_RETURN_EPSILON = 0.001;
 
 function initShip(ship) {
