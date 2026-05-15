@@ -1,46 +1,104 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import AppLayout from "./components/layout/AppLayout";
 import VTSMap from "./components/map/VTSMap";
 import InboundPanel from "./components/panels/InboundPanel";
 import ShipInfoCard from "./components/panels/ShipInfoCard";
 import useVerificationSync from './hooks/useVerificationSync';
-import SectorSelect from './components/SectorSelect';
-import useShipSimulation from "./hooks/useShipSimulation";
-import { MOCK_SHIPS, MOORED_SHIPS } from "./data/mockShips";
+import useScenarioBundle from './hooks/useScenarioBundle';
+import useScenarioEventEngine from './hooks/useScenarioEventEngine';
+import useScenarioShipSimulation from './hooks/useScenarioShipSimulation';
+import { MOORED_SHIPS } from "./data/mockShips";
 import { API_URL, ENDPOINT_DESTINATIONS } from "./utils/api";
+import { resolveSectorKeyFromDbId } from "./utils/resolveSectorKey";
 import "./App.css";
 
+function readScenarioId() {
+  if (typeof window === 'undefined') return 1;
+  const raw = new URLSearchParams(window.location.search).get('scenario');
+  const n = parseInt(raw ?? '1', 10);
+  return Number.isFinite(n) && n > 0 ? n : 1;
+}
+
 export default function App() {
-  const [activeSector, setActiveSector] = useState(null);
+  const scenarioId = useMemo(() => readScenarioId(), []);
+  const { bundle, loading, error, reload, dataVersion } = useScenarioBundle(scenarioId);
+
   const {
     verificationByShipId,
     updateVerification,
     verificationError,
   } = useVerificationSync();
 
-  const [selectedShipId, setSelectedShipId] = useState(null);
-  const [destinationMap, setDestinationMap] = useState({});
-  const [aisActiveMap, setAisActiveMap] = useState(() => {
+  const activeSector = useMemo(() => {
+    if (!bundle?.scenario) return 'waalhaven';
+    return resolveSectorKeyFromDbId(bundle.scenario.sector_id);
+  }, [bundle]);
+
+  const scenarioCenter = bundle?.scenario?.start_coordinate ?? null;
+  const scenarioZoom = 14;
+
+  const shipTemplatesById = useMemo(() => {
+    if (!bundle?.ships) return {};
     const m = {};
-    MOCK_SHIPS.forEach((s) => {
-      m[s.id] = s.aisActive;
-    });
+    for (const s of bundle.ships) {
+      m[String(s.id)] = { ...s, id: String(s.id) };
+    }
     return m;
+  }, [bundle]);
+
+  const [selectedShipId, setSelectedShipId] = useState(null);
+  const [spawnedShipIds, setSpawnedShipIds] = useState([]);
+  const [intentionVisibleByShip, setIntentionVisibleByShip] = useState({});
+  const bundleRef = useRef(null);
+  useEffect(() => {
+    bundleRef.current = bundle;
+  }, [bundle]);
+
+  useEffect(() => {
+    setSpawnedShipIds([]);
+    setIntentionVisibleByShip({});
+    setSelectedShipId(null);
+  }, [dataVersion]);
+
+  const onSpawnShip = useCallback((shipId) => {
+    console.log("Spawn triggered for ID:", shipId);
+    setSpawnedShipIds((p) => (p.includes(shipId) ? p : [...p, shipId]));
+    const b = bundleRef.current;
+    const hasIntentions = (b?.intentions_by_ship_id?.[shipId]?.length ?? 0) > 0;
+    setIntentionVisibleByShip((prev) => ({ ...prev, [shipId]: hasIntentions }));
+  }, []);
+
+  const onHideIntention = useCallback((shipId) => {
+    setIntentionVisibleByShip((prev) => ({ ...prev, [shipId]: false }));
+  }, []);
+
+  const onShowIntention = useCallback((shipId) => {
+    setIntentionVisibleByShip((prev) => ({ ...prev, [shipId]: true }));
+  }, []);
+
+  useScenarioEventEngine({
+    events: bundle?.events ?? [],
+    resetKey: bundle ? `${bundle.scenario.id}:${dataVersion}` : `0:${dataVersion}`,
+    onSpawnShip,
+    onHideIntention,
+    onShowIntention,
   });
 
-  const handleShipRestart = useCallback((id) => {
-    const original = MOCK_SHIPS.find((s) => s.id === id);
-    if (!original) return;
-    setAisActiveMap((prev) => ({ ...prev, [id]: original.aisActive }));
-    updateVerification(id, {
-      verified: false,
-      destination: original.destination,
-    }).catch(() => {
-      // DB down -> status sync't weer zodra API up is.
-    });
-  }, [updateVerification]);
+  const simulatedShips = useScenarioShipSimulation(shipTemplatesById, spawnedShipIds);
 
-  const simulatedShips = useShipSimulation(MOCK_SHIPS, handleShipRestart);
+  const [aisActiveMap, setAisActiveMap] = useState({});
+
+  useEffect(() => {
+    if (!bundle?.ships) return;
+    setAisActiveMap((prev) => {
+      const next = { ...prev };
+      for (const s of bundle.ships) {
+        const id = String(s.id);
+        if (next[id] === undefined) next[id] = s.aisActive;
+      }
+      return next;
+    });
+  }, [bundle]);
 
   const [mooredShips, setMooredShips] = useState(() =>
     MOORED_SHIPS.map((ms) => ({ ...ms })),
@@ -63,8 +121,28 @@ export default function App() {
         verified: verificationByShipId[ship.id]?.verified ?? false,
         aisActive: aisActiveMap[ship.id] ?? ship.aisActive,
       })),
-    [simulatedShips, verificationByShipId, destinationMap, aisActiveMap],
+    [simulatedShips, verificationByShipId, aisActiveMap],
   );
+
+  const intentionLayers = useMemo(() => {
+    if (!bundle?.intentions_by_ship_id) return [];
+    const out = [];
+    for (const [shipId, intents] of Object.entries(bundle.intentions_by_ship_id)) {
+      const vis = intentionVisibleByShip[shipId] ?? false;
+      for (const it of intents) {
+        if (it.route?.length >= 2) {
+          out.push({
+            key: `${shipId}-${it.id}`,
+            shipId,
+            positions: it.route,
+            visible: vis,
+            name: it.name,
+          });
+        }
+      }
+    }
+    return out;
+  }, [bundle, intentionVisibleByShip]);
 
   const selectedShip = useMemo(
     () => ships.find((s) => s.id === selectedShipId) || null,
@@ -84,7 +162,7 @@ export default function App() {
     try {
       await updateVerification(id, { destination: dest, verified: true });
     } catch (_error) {
-      // Polling loop will retry and show server error in UI.
+      // Polling loop will retry.
     }
   }, [updateVerification]);
 
@@ -92,7 +170,7 @@ export default function App() {
     try {
       await updateVerification(id, { verified: true });
     } catch (_error) {
-      // Polling loop will retry and show server error in UI.
+      // Polling loop will retry.
     }
   }, [updateVerification]);
 
@@ -100,7 +178,7 @@ export default function App() {
     try {
       await updateVerification(id, { verified });
     } catch (_error) {
-      // Polling loop will retry and show server error in UI.
+      // Polling loop will retry.
     }
   }, [updateVerification]);
 
@@ -109,7 +187,7 @@ export default function App() {
     try {
       await updateVerification(id, { verified: false, destination: 'Unknown' });
     } catch (_error) {
-      // DB down -> alleen lokaal gereset. Polling sync't DB zodra weer up.
+      // DB down -> alleen lokaal gereset.
     }
   }, [updateVerification]);
 
@@ -124,8 +202,28 @@ export default function App() {
     );
   }, []);
 
-  if (!activeSector) {
-    return <SectorSelect onSelect={setActiveSector} />;
+  if (loading) {
+    return (
+      <div className="scenario-gate">
+        <p className="scenario-gate-title">Scenario laden…</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="scenario-gate">
+        <p className="scenario-gate-title">Scenario kon niet worden geladen</p>
+        <p className="scenario-gate-detail">{error}</p>
+        <button type="button" className="scenario-gate-btn" onClick={() => reload()}>
+          Opnieuw proberen
+        </button>
+      </div>
+    );
+  }
+
+  if (!bundle) {
+    return null;
   }
 
   return (
@@ -140,6 +238,9 @@ export default function App() {
           onSelectMoored={handleSelectMoored}
           onUpdateMoored={handleUpdateMoored}
           activeSector={activeSector}
+          scenarioMapCenter={scenarioCenter}
+          scenarioMapZoom={scenarioZoom}
+          intentionLayers={intentionLayers}
         />
       }
       inboundPanel={

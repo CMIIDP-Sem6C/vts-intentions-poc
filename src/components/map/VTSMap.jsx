@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useEffect } from 'react';
 import { MapContainer, TileLayer, Polyline, CircleMarker, Marker, Popup, Tooltip, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { SECTORS, SECTOR_WATER_BOUNDARIES, WATERWAY_CENTERLINE, KM_MARKERS, TURNING_BASINS } from '../../data/sectors';
@@ -34,11 +34,28 @@ const SECTOR_BORDER_STYLE = {
 };
 
 const RADAR_STYLE = {
-  color: '#1B5E20',
-  fillColor: '#2E7D32',
-  fillOpacity: 0.85,
+  color: '#ff9800', // An orange/amber color typical for radar
+  fillColor: '#ff9800',
+  fillOpacity: 0.5,
   weight: 1,
 };
+
+const INTENTION_STYLE = {
+  color: '#4FC3F7',
+  weight: 2,
+  opacity: 0.88,
+  dashArray: '10 8',
+};
+
+function MapScenarioView({ center, zoom }) {
+  const map = useMap();
+  useEffect(() => {
+    if (!center || center.length < 2) return;
+    const z = zoom != null ? zoom : map.getZoom();
+    map.setView(center, z, { animate: false });
+  }, [map, center, zoom]);
+  return null;
+}
 
 const MOORED_CONFIGS = {
   small:  { size: 20, path: 'M 3,7.5 L 13,7.5 Q 17,10 13,12.5 L 3,12.5 Z' },
@@ -114,17 +131,27 @@ export default function VTSMap({
   onSelectMoored,
   onUpdateMoored,
   activeSector,
+  scenarioMapCenter,
+  scenarioMapZoom,
+  intentionLayers,
 }) {
   const active = SECTORS[activeSector];
+  const initialCenter =
+    scenarioMapCenter && scenarioMapCenter.length >= 2
+      ? scenarioMapCenter
+      : active.center;
+  const initialZoom =
+    scenarioMapZoom != null ? scenarioMapZoom : active.zoom;
 
   return (
     <MapContainer
-      center={active.center}
-      zoom={active.zoom}
+      center={initialCenter}
+      zoom={initialZoom}
       className="vts-map"
       zoomControl={false}
     >
       <MapConstraints />
+      <MapScenarioView center={scenarioMapCenter} zoom={scenarioMapZoom} />
       <TileLayer
         attribution='&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
         url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png"
@@ -172,6 +199,22 @@ export default function VTSMap({
           </Tooltip>
         </CircleMarker>
       ))}
+
+      {(intentionLayers || [])
+        .filter((layer) => layer.visible && layer.positions?.length >= 2)
+        .map((layer) => (
+          <Polyline
+            key={layer.key}
+            positions={layer.positions}
+            pathOptions={INTENTION_STYLE}
+          >
+            {layer.name ? (
+              <Tooltip direction="center" className="km-marker-tooltip">
+                {layer.name}
+              </Tooltip>
+            ) : null}
+          </Polyline>
+        ))}
 
       {RADAR_CONTACTS.map((rc) => (
         <CircleMarker
