@@ -1,28 +1,36 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import AppLayout from "./components/layout/AppLayout";
 import VTSMap from "./components/map/VTSMap";
 import InboundPanel from "./components/panels/InboundPanel";
 import ShipInfoCard from "./components/panels/ShipInfoCard";
-import useVerificationSync from './hooks/useVerificationSync';
-import ScenarioSelect from './components/ScenarioSelect';
-import SectorSelect from './components/SectorSelect';
-import useScenarioData from './hooks/useScenarioData';
-import useScenarioSimulation from './hooks/useScenarioSimulation';
+import useVerificationSync from "./hooks/useVerificationSync";
+import ScenarioSelect from "./components/ScenarioSelect";
+import SectorSelect from "./components/SectorSelect";
+import useScenarioData from "./hooks/useScenarioData";
+import useScenarioSimulation from "./hooks/useScenarioSimulation";
 import { API_URL, ENDPOINT_DESTINATIONS } from "./utils/api";
+import { resolveSectorKeyFromDbId } from "./utils/resolveSectorKey";
 import "./App.css";
+
+function readScenarioId() {
+  if (typeof window === "undefined") return 1;
+  const raw = new URLSearchParams(window.location.search).get("scenario");
+  const n = parseInt(raw ?? "1", 10);
+  return Number.isFinite(n) && n > 0 ? n : 1;
+}
 
 export default function App() {
   const [activeScenarioId, setActiveScenarioId] = useState(null);
   const [activeSector, setActiveSector] = useState(null);
 
-  const {
-    verificationByShipId,
-    updateVerification,
-    verificationError,
-  } = useVerificationSync();
+  const { verificationByShipId, updateVerification, verificationError } =
+    useVerificationSync();
 
-  const { data: scenarioData, loading: scenarioLoading, error: scenarioError } =
-    useScenarioData(activeScenarioId);
+  const {
+    data: scenarioData,
+    loading: scenarioLoading,
+    error: scenarioError,
+  } = useScenarioData(activeScenarioId);
 
   const activeScenarioData = activeSector ? scenarioData : null;
 
@@ -55,7 +63,8 @@ export default function App() {
     () =>
       simulatedShips.map((ship) => ({
         ...ship,
-        destination: verificationByShipId[ship.id]?.destination ?? ship.destination,
+        destination:
+          verificationByShipId[ship.id]?.destination ?? ship.destination,
         verified: verificationByShipId[ship.id]?.verified ?? false,
         aisActive: aisActiveMap[ship.id] ?? ship.aisActive,
       })),
@@ -75,38 +84,54 @@ export default function App() {
     setSelectedShipId(null);
   }, []);
 
-  const handleSetDestination = useCallback(async (id, dest) => {
-    try {
-      await updateVerification(id, { destination: dest, verified: true });
-    } catch (_error) {
-      // Polling loop will retry and show server error in UI.
-    }
-  }, [updateVerification]);
+  const handleSetDestination = useCallback(
+    async (id, dest) => {
+      try {
+        await updateVerification(id, { destination: dest, verified: true });
+      } catch (_error) {
+        // Polling loop will retry.
+      }
+    },
+    [updateVerification],
+  );
 
-  const handleVerifyShip = useCallback(async (id) => {
-    try {
-      await updateVerification(id, { verified: true });
-    } catch (_error) {
-      // Polling loop will retry and show server error in UI.
-    }
-  }, [updateVerification]);
+  const handleVerifyShip = useCallback(
+    async (id) => {
+      try {
+        await updateVerification(id, { verified: true });
+      } catch (_error) {
+        // Polling loop will retry.
+      }
+    },
+    [updateVerification],
+  );
 
-  const handleToggleShipVerification = useCallback(async (id, verified) => {
-    try {
-      await updateVerification(id, { verified });
-    } catch (_error) {
-      // Polling loop will retry and show server error in UI.
-    }
-  }, [updateVerification]);
+  const handleToggleShipVerification = useCallback(
+    async (id, verified) => {
+      try {
+        await updateVerification(id, { verified });
+      } catch (_error) {
+        // Polling loop will retry.
+      }
+    },
+    [updateVerification],
+  );
 
-  const handleResetShip = useCallback(async (id) => {
-    setAisActiveMap((prev) => ({ ...prev, [id]: false }));
-    try {
-      await updateVerification(id, { verified: false, destination: 'Unknown' });
-    } catch (_error) {
-      // DB down -> alleen lokaal gereset.
-    }
-  }, [updateVerification]);
+  const handleResetShip = useCallback(
+    async (id) => {
+      setAisActiveMap((prev) => ({ ...prev, [id]: false }));
+      try {
+        await updateVerification(id, {
+          verified: false,
+          destination: "Unknown",
+        });
+      } catch (_error) {
+        // DB down -> alleen lokaal gereset.
+        // DB down -> alleen lokaal gereset.
+      }
+    },
+    [updateVerification],
+  );
 
   if (activeScenarioId == null) {
     return <ScenarioSelect onSelect={setActiveScenarioId} />;

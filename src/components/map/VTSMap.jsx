@@ -1,10 +1,23 @@
-import { useMemo } from 'react';
-import { MapContainer, TileLayer, Polyline, CircleMarker, Tooltip, useMap } from 'react-leaflet';
-import L from 'leaflet';
-import { SECTORS, SECTOR_WATER_BOUNDARIES, WATERWAY_CENTERLINE, KM_MARKERS, TURNING_BASINS } from '../../data/sectors';
-import { calculateDistance } from '../../utils/navigation';
-import ShipMarker from './ShipMarker';
-import 'leaflet/dist/leaflet.css';
+import { useMemo } from "react";
+import {
+  MapContainer,
+  TileLayer,
+  Polyline,
+  CircleMarker,
+  Tooltip,
+  useMap,
+} from "react-leaflet";
+import L from "leaflet";
+import {
+  SECTORS,
+  SECTOR_WATER_BOUNDARIES,
+  WATERWAY_CENTERLINE,
+  KM_MARKERS,
+  TURNING_BASINS,
+} from "../../data/sectors";
+import { calculateDistance } from "../../utils/navigation";
+import ShipMarker from "./ShipMarker";
+import "leaflet/dist/leaflet.css";
 
 function getRemainingIntentionRoute(route, shipPosition) {
   if (!Array.isArray(route) || route.length < 2) return [];
@@ -32,7 +45,7 @@ const ALL_SECTORS_BOUNDS = (() => {
   const pad = 0.02;
   return L.latLngBounds(
     [Math.min(...lats) - pad, Math.min(...lngs) - pad * 2],
-    [Math.max(...lats) + pad, Math.max(...lngs) + pad * 2]
+    [Math.max(...lats) + pad, Math.max(...lngs) + pad * 2],
   );
 })();
 
@@ -47,16 +60,16 @@ function MapConstraints() {
 }
 
 const SECTOR_BORDER_STYLE = {
-  color: '#66BB6A',
+  color: "#66BB6A",
   weight: 2,
   opacity: 0.8,
 };
 
 const INTENTION_STYLE = {
-  color: '#FFC107',
+  color: "#FFC107",
   weight: 3,
   opacity: 0.85,
-  dashArray: '6 6',
+  dashArray: "6 6",
 };
 
 export default function VTSMap({
@@ -67,15 +80,21 @@ export default function VTSMap({
   intentions = [],
 }) {
   const active = SECTORS[activeSector];
+  const initialCenter =
+    scenarioMapCenter && scenarioMapCenter.length >= 2
+      ? scenarioMapCenter
+      : active.center;
+  const initialZoom = scenarioMapZoom != null ? scenarioMapZoom : active.zoom;
 
   return (
     <MapContainer
-      center={active.center}
-      zoom={active.zoom}
+      center={initialCenter}
+      zoom={initialZoom}
       className="vts-map"
       zoomControl={false}
     >
       <MapConstraints />
+      <MapScenarioView center={scenarioMapCenter} zoom={scenarioMapZoom} />
       <TileLayer
         attribution='&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
         url="https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png"
@@ -92,7 +111,7 @@ export default function VTSMap({
       <Polyline
         positions={WATERWAY_CENTERLINE}
         pathOptions={{
-          color: '#5a5a5a',
+          color: "#5a5a5a",
           weight: 1,
           opacity: 0.5,
         }}
@@ -103,9 +122,19 @@ export default function VTSMap({
           key={km.id}
           center={km.position}
           radius={2}
-          pathOptions={{ color: '#888', fillColor: '#888', fillOpacity: 1, weight: 0 }}
+          pathOptions={{
+            color: "#888",
+            fillColor: "#888",
+            fillOpacity: 1,
+            weight: 0,
+          }}
         >
-          <Tooltip direction="top" offset={[0, -4]} permanent className="km-marker-tooltip">
+          <Tooltip
+            direction="top"
+            offset={[0, -4]}
+            permanent
+            className="km-marker-tooltip"
+          >
             {km.label}
           </Tooltip>
         </CircleMarker>
@@ -116,9 +145,19 @@ export default function VTSMap({
           key={tb.id}
           center={tb.position}
           radius={8}
-          pathOptions={{ color: '#607D8B', fillColor: 'transparent', fillOpacity: 0, weight: 1, opacity: 0.6 }}
+          pathOptions={{
+            color: "#607D8B",
+            fillColor: "transparent",
+            fillOpacity: 0,
+            weight: 1,
+            opacity: 0.6,
+          }}
         >
-          <Tooltip direction="top" offset={[0, -8]} className="km-marker-tooltip">
+          <Tooltip
+            direction="top"
+            offset={[0, -8]}
+            className="km-marker-tooltip"
+          >
             {tb.label}
           </Tooltip>
         </CircleMarker>
@@ -126,9 +165,12 @@ export default function VTSMap({
 
       {intentions.map((intention) => {
         const ship = ships.find(
-          (s) => s.dbId === intention.dbShipId || s.id === intention.shipId
+          (s) => s.dbId === intention.dbShipId || s.id === intention.shipId,
         );
-        const visibleRoute = getRemainingIntentionRoute(intention.route, ship?.position);
+        const visibleRoute = getRemainingIntentionRoute(
+          intention.route,
+          ship?.position,
+        );
         if (visibleRoute.length < 2) return null;
         return (
           <Polyline
