@@ -11,11 +11,13 @@ Een digitale weergave van een VTS-overlay (Vessel Traffic Services) voor het Rot
 ## Vereisten
 
 - [Node.js](https://nodejs.org/) v18 of hoger
+- [Python](https://www.python.org/) 3.11 of hoger (voor de verificatie-API)
 
 ## Installatie
 
 ```bash
 npm install
+pip install -r requirements-api.txt
 ```
 
 ## Starten
@@ -30,24 +32,34 @@ Open vervolgens [http://localhost:5173](http://localhost:5173) in je browser.
 
 ### Database API (Neon Postgres)
 
-De app kan verificatie- en bestemmingsdata uit Postgres ophalen via een lokale API.
+De app kan verificatie- en bestemmingsdata uit Postgres ophalen via een lokale **FastAPI**-service (`api/main.py`, **asyncpg**).
 
-1. Maak een `.env` bestand (zie `.env.example`) met:
+1. Maak een `.env` bestand met minimaal:
    - `DATABASE_URL`
    - `PORT` (optioneel, standaard `3001`)
-2. Start de API:
+2. Installeer Python-dependencies (eenmalig): `pip install -r requirements-api.txt`
+3. Start de API vanaf de projectroot (zodat `python -m api.main` het package `api` vindt):
 
 ```bash
 npm run api
 ```
 
-3. Start de frontend in een tweede terminal:
+4. Start de frontend in een tweede terminal:
 
 ```bash
 node ./node_modules/vite/bin/vite.js
 ```
 
-De frontend pollt elke seconde `Verification` records via `/api/verifications`.
+De frontend pollt elke seconde `Verification` records via `/api/verifications`. Scenario-data komt van `GET /api/scenarios/{id}` (standaard `?scenario=1` in de URL).
+
+### Scenario's (database + events)
+
+Voer `sql/scenario_schema.sql` uit op Postgres (of gebruik je eigen tabellen; zet dan o.a. `VTS_TBL_EVENT` als je event-tabel bv. `Event` heet).
+
+- **`GET /api/scenarios`** — metadata van alle scenario's
+- **`GET /api/scenarios/{id}`** — volledige payload: `scenario` (incl. `start_coordinate`, `duration_seconds`), `ships` (met `waypoints` uit `route`), `intentions_by_ship_id`, `events` (gesorteerd op `trigger_time`)
+
+Ondersteunde event-typen in de frontend: `SpawnShip`, `HideIntention`, `ShowIntention` (subject `ship` + `subject_id` = database `ship.id`).
 
 ### Verifications automatisch vullen
 
@@ -76,6 +88,17 @@ De gebouwde bestanden staan dan in de `dist/` map.
 ## Projectstructuur
 
 ```
+api/
+  main.py               FastAPI-app: verificaties + scenario-endpoints
+  service.py            Verification-tabel (asyncpg)
+  scenario_service.py   Scenario / ship / intention / events
+  scenario_parse.py     JSON / route parsing voor Postgres-kolommen
+  mock_ships.py         Alleen nog voor bootstrap verifications (legacy)
+  bootstrap_cli.py      npm run bootstrap:verifications
+sql/
+  scenario_schema.sql   Referentiescript tabellen + voorbeelddata
+tests/
+  test_scenario_parse.py
 src/
   components/
     map/
@@ -100,6 +123,7 @@ src/
 ## Tech Stack
 
 - **React 18** (JavaScript)
+- **FastAPI** + **asyncpg** (verificatie-API)
 - **Vite** (bundler)
 - **Leaflet** + **react-leaflet** (kaart)
 - **Puppeteer** (screenshots)
