@@ -2,7 +2,7 @@ node_modules/
 dist/
 .vite/
 *.local
-
+api/__pycache__/
 screenshot.js
 screenshot.png
 screenshot-clicked.png

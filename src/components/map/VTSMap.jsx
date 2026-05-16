@@ -1,26 +1,5 @@
 import { useCallback, useMemo } from "react";
-import {
-  MapContainer,
-  TileLayer,
-  Polyline,
-  CircleMarker,
-  Marker,
-  Popup,
-  Tooltip,
-  useMap,
-} from "react-leaflet";
-import L from "leaflet";
-import {
-  SECTORS,
-  SECTOR_WATER_BOUNDARIES,
-  WATERWAY_CENTERLINE,
-  KM_MARKERS,
-  TURNING_BASINS,
-} from "../../data/sectors";
-import { RADAR_CONTACTS } from "../../data/mockShips";
-import ShipMarker from "./ShipMarker";
 import "leaflet/dist/leaflet.css";
-import { useMemo } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -37,9 +16,8 @@ import {
   KM_MARKERS,
   TURNING_BASINS,
 } from "../../data/sectors";
+import ShipMarker from "./ShipMarker";
 import { calculateDistance } from "../../utils/navigation";
-import ShipMarker from "./ShipMarker";
-import "leaflet/dist/leaflet.css";
 
 function getRemainingIntentionRoute(route, shipPosition) {
   if (!Array.isArray(route) || route.length < 2) return [];
@@ -84,7 +62,6 @@ function MapConstraints() {
 
 const SECTOR_BORDER_STYLE = {
   color: "#66BB6A",
-  color: "#66BB6A",
   weight: 2,
   opacity: 0.8,
 }; // this can be done with CSS i believe
@@ -94,7 +71,7 @@ const INTENTION_STYLE = {
   weight: 3,
   opacity: 0.85,
   dashArray: "6 6",
-};
+}; // this can be done with CSS i believe
 
 /**
  *
