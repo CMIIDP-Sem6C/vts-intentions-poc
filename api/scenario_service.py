@@ -79,7 +79,7 @@ class ScenarioService:
         rows = await self.pool.fetch(
             f"""
             SELECT id, name, nationality, markertype, shiptype, destination, cargo,
-                   aisactive, aisstatus, speed, route, operatornotes, scenario_id
+                   aisactive, aisstatus, speed, route, operatornotes, scenario_id, intentions_share_time, intentions_show_complete, intentions_show_active
             FROM {st}
             WHERE {_qi(fk)} = $1
             ORDER BY id
@@ -107,6 +107,9 @@ class ScenarioService:
                     "waypoints": waypoints,
                     "operatorNotes": notes,
                     "scenarioId": r["scenario_id"],
+                    "intentionsShareTime": int(r["intentions_share_time"]) if r["intentions_share_time"] is not None else 10,
+                    "intentionsShowComplete": bool(r["intentions_show_complete"]),
+                    "intentionsShowActive" : bool(r["intentions_show_active"])
                 }
             )
         return out
@@ -172,6 +175,12 @@ class ScenarioService:
         ships = await self.get_ships_for_scenario(scenario_id)
         intentions = await self.get_intentions_for_scenario(scenario_id)
         events = await self.get_events_for_scenario(scenario_id)
+
+         # Merge intentions into their respective ships
+        for ship in ships:
+            ship_id = str(ship["id"])
+            ship["intentions"] = [intention["route"] for intention in intentions.get(ship_id, [])]
+
         return {
             "scenario": scenario,
             "ships": ships,

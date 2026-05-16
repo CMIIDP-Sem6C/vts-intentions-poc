@@ -1,17 +1,16 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import AppLayout from "./components/layout/AppLayout";
 import VTSMap from "./components/map/VTSMap";
-import InboundPanel from "./components/panels/InboundPanel";
-import ShipInfoCard from "./components/panels/ShipInfoCard";
-import useVerificationSync from "./hooks/useVerificationSync";
 import ScenarioSelect from "./components/ScenarioSelect";
 import SectorSelect from "./components/SectorSelect";
+import InboundPanel from "./components/panels/InboundPanel";
+import ShipInfoCard from "./components/panels/ShipInfoCard";
 import useScenarioData from "./hooks/useScenarioData";
+import useVerificationSync from "./hooks/useVerificationSync";
 import useScenarioSimulation from "./hooks/useScenarioSimulation";
-import useShipSimulation from "./hooks/useShipSimulation";
-import { MOCK_SHIPS } from "./data/mockShips";
 import { API_URL, ENDPOINT_DESTINATIONS } from "./utils/api";
 import { resolveSectorKeyFromDbId } from "./utils/resolveSectorKey";
+import { MOCK_SHIPS } from "./data/mockShips";
 import "./App.css";
 
 function readScenarioId() {
