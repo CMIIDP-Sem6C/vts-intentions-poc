@@ -962,3 +962,112 @@
 .scenario-gate-btn:hover {
   background: rgba(46, 125, 50, 0.55);
 }
+
+/* ==============================
+   Timeline Controls
+   ============================== */
+
+.bottom-bar {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1100;
+  pointer-events: auto;
+}
+
+.timeline-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 18px;
+  background: rgba(30, 30, 30, 0.94);
+  border-radius: 6px;
+  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  color: #e0e0e0;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  width: min(640px, calc(100vw - 48px));
+}
+
+.timeline-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  color: #e0e0e0;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.timeline-btn:hover {
+  background: rgba(255, 152, 0, 0.15);
+  border-color: #ff9800;
+  color: #ffffff;
+}
+
+.timeline-play-btn {
+  background: rgba(255, 152, 0, 0.18);
+  border-color: rgba(255, 152, 0, 0.35);
+}
+
+.timeline-time {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: #ffffff;
+  min-width: 44px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.timeline-duration {
+  color: #999;
+  font-weight: 500;
+}
+
+.timeline-slider {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: linear-gradient(
+    to right,
+    #ff9800 0%,
+    #ff9800 var(--timeline-progress, 0%),
+    rgba(255, 255, 255, 0.12) var(--timeline-progress, 0%),
+    rgba(255, 255, 255, 0.12) 100%
+  );
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+  margin: 0;
+}
+
+.timeline-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #ff9800;
+  cursor: pointer;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+}
+
+.timeline-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #ff9800;
+  cursor: pointer;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+}

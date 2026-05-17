@@ -1,4 +1,4 @@
-export default function AppLayout({ map, inboundPanel, shipInfoCard }) {
+export default function AppLayout({ map, inboundPanel, shipInfoCard, bottomBar }) {
   return (
     <div className="app-layout">
       <div className="map-container">{map}</div>
@@ -6,6 +6,7 @@ export default function AppLayout({ map, inboundPanel, shipInfoCard }) {
         <div className="left-panels">{inboundPanel}</div>
         <div className="right-panels">{shipInfoCard}</div>
       </div>
+      {bottomBar ? <div className="bottom-bar">{bottomBar}</div> : null}
     </div>
   );
 }

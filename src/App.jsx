@@ -6,6 +6,7 @@ import ShipInfoCard from "./components/panels/ShipInfoCard";
 import useVerificationSync from "./hooks/useVerificationSync";
 import ScenarioSelect from "./components/ScenarioSelect";
 import SectorSelect from "./components/SectorSelect";
+import TimelineControls from "./components/panels/TimelineControls";
 import useScenarioData from "./hooks/useScenarioData";
 import useScenarioSimulation from "./hooks/useScenarioSimulation";
 import { API_URL, ENDPOINT_DESTINATIONS } from "./utils/api";
@@ -34,8 +35,17 @@ export default function App() {
 
   const activeScenarioData = activeSector ? scenarioData : null;
 
-  const { ships: simulatedShips, visibleIntentions } =
-    useScenarioSimulation(activeScenarioData);
+  const {
+    ships: simulatedShips,
+    visibleIntentions,
+    simTime,
+    duration,
+    isPlaying,
+    play,
+    pause,
+    seek,
+    restart,
+  } = useScenarioSimulation(activeScenarioData);
 
   const [selectedShipId, setSelectedShipId] = useState(null);
   const [aisActiveMap, setAisActiveMap] = useState({});
@@ -217,6 +227,17 @@ export default function App() {
           onResetShip={handleResetShip}
           verificationError={verificationError}
           destinations={destinations}
+        />
+      }
+      bottomBar={
+        <TimelineControls
+          simTime={simTime}
+          duration={duration}
+          isPlaying={isPlaying}
+          onPlay={play}
+          onPause={pause}
+          onSeek={seek}
+          onRestart={restart}
         />
       }
     />

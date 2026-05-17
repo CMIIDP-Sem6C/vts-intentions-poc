@@ -1,59 +1,121 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   calculateDistance,
   calculateHeading,
   moveAlongBearing,
 } from '../utils/navigation';
 
-const TICK_MS = 150;
+const TICK_MS = 100;
 const TIME_SCALE = 4;
 
-function initShip(ship) {
-  const waypoints = Array.isArray(ship.waypoints) ? ship.waypoints : [];
-  const first = waypoints[0];
-  const second = waypoints[1];
-  const initialHeading = first && second ? calculateHeading(first, second) : 0;
-  const initialPos = first ? [...first] : [0, 0];
-  return {
-    ...ship,
-    position: initialPos,
-    currentWaypointIndex: waypoints.length > 1 ? 1 : 0,
-    baseSpeed: ship.speed || 5,
-    arrived: false,
-    heading: initialHeading,
-  };
+function totalRouteDistanceNm(waypoints) {
+  if (!Array.isArray(waypoints) || waypoints.length < 2) return 0;
+  let total = 0;
+  for (let i = 0; i < waypoints.length - 1; i++) {
+    total += calculateDistance(waypoints[i], waypoints[i + 1]);
+  }
+  return total;
 }
 
-function applyMovement(ship) {
-  if (ship.arrived) return ship;
-  const target = ship.waypoints[ship.currentWaypointIndex];
-  if (!target) return { ...ship, arrived: true };
+function shipTravelSeconds(ship) {
+  const totalNm = totalRouteDistanceNm(ship.waypoints);
+  const speed = ship.speed || 5;
+  if (speed <= 0) return 0;
+  return (totalNm / speed) * 3600 / TIME_SCALE;
+}
 
-  const distToTarget = calculateDistance(ship.position, target);
-  const headingToTarget = calculateHeading(ship.position, target);
-
-  const hoursPerTick = (TICK_MS / 1000) * (TIME_SCALE / 3600);
-  const moveDistNm = ship.baseSpeed * hoursPerTick;
-
-  if (moveDistNm >= distToTarget) {
-    const nextIndex = ship.currentWaypointIndex + 1;
-    if (nextIndex >= ship.waypoints.length) {
-      return { ...ship, position: [...target], arrived: true };
+function getSpawnTimes(events) {
+  const map = new Map();
+  for (const event of events || []) {
+    if (event.type === 'SpawnShip') {
+      const t = event.triggerTime ?? 0;
+      const existing = map.get(event.subjectId);
+      if (existing == null || t < existing) map.set(event.subjectId, t);
     }
-    const nextTarget = ship.waypoints[nextIndex];
+  }
+  return map;
+}
+
+function computeShipState(ship, spawnTime, t) {
+  const waypoints = ship.waypoints || [];
+  if (waypoints.length === 0) return null;
+  if (t < spawnTime) return null;
+
+  const baseSpeed = ship.speed || 5;
+
+  if (waypoints.length < 2) {
     return {
-      ...ship,
-      position: [...target],
-      currentWaypointIndex: nextIndex,
-      heading: calculateHeading(target, nextTarget),
+      position: [...waypoints[0]],
+      heading: 0,
+      currentWaypointIndex: 0,
+      arrived: true,
+      baseSpeed,
     };
   }
 
+  const travelSec = t - spawnTime;
+  let remaining = baseSpeed * (travelSec * TIME_SCALE / 3600);
+
+  for (let i = 0; i < waypoints.length - 1; i++) {
+    const segDist = calculateDistance(waypoints[i], waypoints[i + 1]);
+    const heading = calculateHeading(waypoints[i], waypoints[i + 1]);
+    if (remaining <= segDist) {
+      const position =
+        remaining <= 0
+          ? [...waypoints[i]]
+          : moveAlongBearing(waypoints[i], heading, remaining);
+      return {
+        position,
+        heading,
+        currentWaypointIndex: i + 1,
+        arrived: false,
+        baseSpeed,
+      };
+    }
+    remaining -= segDist;
+  }
+
+  const last = waypoints[waypoints.length - 1];
+  const prev = waypoints[waypoints.length - 2];
   return {
-    ...ship,
-    position: moveAlongBearing(ship.position, headingToTarget, moveDistNm),
-    heading: headingToTarget,
+    position: [...last],
+    heading: calculateHeading(prev, last),
+    currentWaypointIndex: waypoints.length - 1,
+    arrived: true,
+    baseSpeed,
   };
+}
+
+function computeIntentionVisibility(events, ships, intentions, t) {
+  const visible = new Set();
+  if (!events) return visible;
+
+  const sorted = [...events].sort(
+    (a, b) => (a.triggerTime ?? 0) - (b.triggerTime ?? 0)
+  );
+
+  for (const event of sorted) {
+    if ((event.triggerTime ?? 0) > t) break;
+
+    if (event.type === 'SpawnShip') {
+      const ship = (ships || []).find((s) => s.dbId === event.subjectId);
+      if (!ship) continue;
+      (intentions || [])
+        .filter((i) => i.dbShipId === ship.dbId)
+        .forEach((i) => visible.add(i.id));
+    } else if (event.type === 'ShowIntention' || event.type === 'HideIntention') {
+      const intention = (intentions || []).find((i) => i.id === event.subjectId);
+      const targets = intention
+        ? [intention]
+        : (intentions || []).filter((i) => i.dbShipId === event.subjectId);
+      if (event.type === 'ShowIntention') {
+        targets.forEach((it) => visible.add(it.id));
+      } else {
+        targets.forEach((it) => visible.delete(it.id));
+      }
+    }
+  }
+  return visible;
 }
 
 export default function useScenarioSimulation(scenarioData) {
@@ -61,98 +123,98 @@ export default function useScenarioSimulation(scenarioData) {
   const events = scenarioData?.events || null;
   const intentions = scenarioData?.intentions || null;
 
-  const [elapsed, setElapsed] = useState(0);
-  const [activeShips, setActiveShips] = useState([]);
-  const [visibleIntentionIds, setVisibleIntentionIds] = useState(() => new Set());
+  const spawnTimes = useMemo(() => getSpawnTimes(events), [events]);
 
-  const processedEventIdsRef = useRef(new Set());
-  const startTimestampRef = useRef(null);
+  const duration = useMemo(() => {
+    let max = 0;
+    for (const event of events || []) {
+      const tt = event.triggerTime ?? 0;
+      if (tt > max) max = tt;
+    }
+    for (const ship of ships || []) {
+      const spawn = spawnTimes.get(ship.dbId) ?? 0;
+      const arrival = spawn + shipTravelSeconds(ship);
+      if (arrival > max) max = arrival;
+    }
+    return Math.max(1, Math.ceil(max + 5));
+  }, [ships, events, spawnTimes]);
+
+  const [simTime, setSimTime] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(true);
 
   useEffect(() => {
-    setElapsed(0);
-    setActiveShips([]);
-    setVisibleIntentionIds(new Set());
-    processedEventIdsRef.current = new Set();
-    startTimestampRef.current = Date.now();
+    setSimTime(0);
+    setIsPlaying(true);
   }, [scenarioData]);
 
-  const intentionsForShip = useCallback(
-    (dbShipId) => (intentions || []).filter((i) => i.dbShipId === dbShipId),
-    [intentions]
-  );
-
-  const triggerEvent = useCallback(
-    (event) => {
-      if (!event) return;
-
-      if (event.type === 'SpawnShip') {
-        const ship = (ships || []).find((s) => s.dbId === event.subjectId);
-        if (!ship) return;
-        setActiveShips((prev) => {
-          if (prev.some((s) => s.id === ship.id)) return prev;
-          return [...prev, initShip(ship)];
-        });
-        const shipIntentionIds = intentionsForShip(ship.dbId).map((i) => i.id);
-        if (shipIntentionIds.length > 0) {
-          setVisibleIntentionIds((prev) => {
-            const next = new Set(prev);
-            shipIntentionIds.forEach((id) => next.add(id));
-            return next;
-          });
-        }
-      } else if (event.type === 'ShowIntention' || event.type === 'HideIntention') {
-        const intention = (intentions || []).find((i) => i.id === event.subjectId);
-        const targets = intention
-          ? [intention]
-          : (intentions || []).filter((i) => i.dbShipId === event.subjectId);
-
-        const targetIds = targets.map((t) => t.id);
-
-        setVisibleIntentionIds((prev) => {
-          const next = new Set(prev);
-          if (event.type === 'HideIntention') {
-            targetIds.forEach((id) => next.delete(id));
-          } else {
-            targetIds.forEach((id) => next.add(id));
-          }
-          return next;
-        });
-      }
-    },
-    [ships, intentions, intentionsForShip]
-  );
-
   useEffect(() => {
-    if (!ships || !events) return;
-    startTimestampRef.current = Date.now();
+    if (!isPlaying) return;
+    let last = Date.now();
     const interval = setInterval(() => {
-      const start = startTimestampRef.current || Date.now();
-      const seconds = Math.floor((Date.now() - start) / 1000);
-      setElapsed(seconds);
-
-      events.forEach((event) => {
-        if (processedEventIdsRef.current.has(event.id)) return;
-        if (event.triggerTime != null && event.triggerTime <= seconds) {
-          processedEventIdsRef.current.add(event.id);
-          triggerEvent(event);
+      const now = Date.now();
+      const dt = (now - last) / 1000;
+      last = now;
+      setSimTime((prev) => {
+        const next = prev + dt;
+        if (next >= duration) {
+          setIsPlaying(false);
+          return duration;
         }
+        return next;
       });
-
-      setActiveShips((prev) => prev.map(applyMovement));
     }, TICK_MS);
-
     return () => clearInterval(interval);
-  }, [ships, events, triggerEvent]);
+  }, [isPlaying, duration]);
+
+  const activeShips = useMemo(() => {
+    if (!ships) return [];
+    return ships
+      .map((ship) => {
+        const spawn = spawnTimes.get(ship.dbId);
+        if (spawn == null) return null;
+        const state = computeShipState(ship, spawn, simTime);
+        if (!state) return null;
+        return { ...ship, ...state };
+      })
+      .filter(Boolean);
+  }, [ships, spawnTimes, simTime]);
 
   const visibleIntentions = useMemo(() => {
-    if (!intentions) return [];
-    return intentions.filter((i) => visibleIntentionIds.has(i.id));
-  }, [intentions, visibleIntentionIds]);
+    const visibleIds = computeIntentionVisibility(events, ships, intentions, simTime);
+    return (intentions || []).filter((i) => visibleIds.has(i.id));
+  }, [events, ships, intentions, simTime]);
+
+  const seek = useCallback(
+    (t) => {
+      const clamped = Math.max(0, Math.min(duration, t));
+      setSimTime(clamped);
+    },
+    [duration]
+  );
+
+  const play = useCallback(() => {
+    setSimTime((prev) => (prev >= duration ? 0 : prev));
+    setIsPlaying(true);
+  }, [duration]);
+
+  const pause = useCallback(() => {
+    setIsPlaying(false);
+  }, []);
+
+  const restart = useCallback(() => {
+    setSimTime(0);
+    setIsPlaying(true);
+  }, []);
 
   return {
     ships: activeShips,
     visibleIntentions,
-    elapsed,
-    scenarioDuration: scenarioData?.scenario?.time ?? null,
+    simTime,
+    duration,
+    isPlaying,
+    play,
+    pause,
+    seek,
+    restart,
   };
 }
