@@ -4,6 +4,7 @@ import {
   calculateHeading,
   moveAlongBearing,
 } from "../utils/navigation";
+import { useDynamicIntentionsDisplay } from "../utils/dynamicIntentionsDisplay";
 
 const TICK_MS = 150;
 const TIME_SCALE = 4;
@@ -17,7 +18,6 @@ function initShip(ship) {
   const second = waypoints[1];
   const initialHeading = first && second ? calculateHeading(first, second) : 0;
   const initialPos = first ? [...first] : [0, 0];
-  console.log(ship);
   return {
     ...ship,
     position: initialPos,
@@ -30,7 +30,10 @@ function initShip(ship) {
     avoidCurrent: 0,
     displayPosition: initialPos,
     prevDisplayPosition: initialPos,
-    intentionsPosition: ship.intentions ? [...ship.intentions[0]] : null,
+    intentionsPosition:
+      ship.intentions && ship.intentions.length > 0
+        ? [...ship.intentions[0]]
+        : null,
     currentIntentionsIndex: 1,
     dynamicIntentionsPath: [],
   };
@@ -128,6 +131,7 @@ export default function useScenarioSimulation(scenarioData) {
 
   const processedEventIdsRef = useRef(new Set());
   const startTimestampRef = useRef(null);
+  const { updateDynamicIntentions } = useDynamicIntentionsDisplay();
 
   useEffect(() => {
     setElapsed(0);
@@ -163,48 +167,16 @@ export default function useScenarioSimulation(scenarioData) {
         event.type === "ShowIntention" ||
         event.type === "HideIntention"
       ) {
-        console.log(event);
-        const intention = (intentions || []).find(
-          (intention) => intention.id === event.subjectId,
-        );
-        const targets = intention
-          ? [intention]
-          : (intentions || []).filter(
-              (intention) => intention.dbShipId === event.subjectId,
-            );
-
-        const targetIds = targets.map((target) => target.id);
-        const affectedShipIds = [
-          ...new Set(targets.map((target) => target.dbShipId)),
-        ];
-
-        if (event.type === "HideIntention") {
-          setVisibleIntentionIds((prev) => {
-            const next = new Set(prev);
-            targetIds.forEach((id) => next.delete(id));
-            return next;
-          });
-          setPendingShowIntentionIds((prev) => {
-            const next = new Set(prev);
-            targetIds.forEach((id) => next.delete(id));
-            return next;
-          });
-        } else {
-          setPendingShowIntentionIds((prev) => {
-            const next = new Set(prev);
-            targetIds.forEach((id) => next.add(id));
-            return next;
-          });
-        }
-
-        setActiveShips((prev) =>
-          prev.map((ship) => {
-            if (!affectedShipIds.includes(ship.dbId)) return ship;
-            const avoidTarget =
-              event.type === "HideIntention" ? AVOID_OFFSET_NM : 0;
-            return { ...ship, avoidTarget };
-          }),
-        );
+        const isShow = event.type === "ShowIntention";
+        setActiveShips((prev) => {
+          const found = prev.find((ship) => ship.id === event.subjectId);
+          if (!found) return prev; // ship not yet active, bail out
+          return prev.map((ship) =>
+            ship.id === event.subjectId
+              ? { ...ship, intentionsShowActive: isShow } // don't mutate, spread
+              : ship,
+          );
+        });
       }
     },
     [ships, intentions],
@@ -231,6 +203,33 @@ export default function useScenarioSimulation(scenarioData) {
 
     return () => clearInterval(interval);
   }, [ships, events, triggerEvent]);
+
+  // Update dynamic intentions paths for each ship
+  useEffect(() => {
+    setActiveShips((prev) => {
+      const updatedShips = prev.map((ship) => {
+        const result = updateDynamicIntentions(ship);
+        return {
+          ...ship,
+          dynamicIntentionsPath: result.path,
+          intentionsPosition: result.intentionsPosition,
+          currentIntentionsIndex: result.currentIntentionsIndex,
+        };
+      });
+
+      const hasChanges = updatedShips.some((updated, i) => {
+        const prevPath = prev[i].dynamicIntentionsPath;
+        const newPath = updated.dynamicIntentionsPath;
+        if (prevPath.length !== newPath.length) return true;
+        for (let j = 0; j < newPath.length; j++) {
+          if (prevPath[j] !== newPath[j]) return true;
+        }
+        return false;
+      });
+
+      return hasChanges ? updatedShips : prev;
+    });
+  }, [updateDynamicIntentions, elapsed]);
 
   useEffect(() => {
     if (pendingShowIntentionIds.size === 0) return;

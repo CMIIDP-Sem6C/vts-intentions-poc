@@ -51,6 +51,56 @@ export function calculateIntentionsProgress(ship, waypointDistanceTraveled) {
   return intentionsPath;
 }
 
+// Finds the nearest point on the route path to the ship's actual position,
+// rather than deriving position from distance-traveled on waypoints.
+function getIntentionsCursor(ship, routeSource) {
+  if (!routeSource || routeSource.length <= 1) {
+    return { cursorPos: ship.position, cursorIndex: 0 };
+  }
+
+  let bestDist = Infinity;
+  let bestPos = ship.position;
+  let bestIndex = 1;
+
+  for (let i = 1; i < routeSource.length; i++) {
+    const { point, t } = nearestPointOnSegment(
+      ship.position,
+      routeSource[i - 1],
+      routeSource[i],
+    );
+    const dist = calculateDistance(ship.position, point);
+    if (dist < bestDist) {
+      bestDist = dist;
+      bestPos = point;
+      // If t === 1 the ship is at the end of this segment, so the
+      // "remaining" route starts at the *next* waypoint (i + 1).
+      bestIndex = t >= 1 ? i + 1 : i;
+    }
+  }
+
+  return { cursorPos: bestPos, cursorIndex: bestIndex };
+}
+
+// Projects `pos` onto the segment [a, b] and returns the clamped
+// nearest point plus the interpolation parameter t ∈ [0, 1].
+function nearestPointOnSegment(pos, a, b) {
+  const dx = b[0] - a[0];
+  const dy = b[1] - a[1];
+  const lenSq = dx * dx + dy * dy;
+
+  if (lenSq === 0) return { point: [...a], t: 0 };
+
+  const t = Math.max(
+    0,
+    Math.min(1, ((pos[0] - a[0]) * dx + (pos[1] - a[1]) * dy) / lenSq),
+  );
+
+  return {
+    point: [a[0] + t * dx, a[1] + t * dy],
+    t,
+  };
+}
+
 export function useDynamicIntentionsDisplay() {
   const updateDynamicIntentions = useCallback((ship) => {
     const {
@@ -59,56 +109,73 @@ export function useDynamicIntentionsDisplay() {
       intentionsShowComplete,
     } = ship;
 
-    if (intentionsShowActive) {
-      return [];
-    }
-
     const hasValidIntentions =
       ship.intentions &&
       Array.isArray(ship.intentions) &&
       ship.intentions.length > 1;
 
     const routeSource = hasValidIntentions ? ship.intentions : ship.waypoints;
-    const currentWaypointIndex = hasValidIntentions
-      ? ship.currentIntentionsIndex
-      : ship.currentWaypointIndex;
-    const currentPosition = hasValidIntentions
-      ? ship.intentionsPosition
-      : ship.position;
+
+    const { cursorPos, cursorIndex } = getIntentionsCursor(ship, routeSource);
+
+    if (!intentionsShowActive) {
+      // Still compute cursor so position stays in sync, but return empty path
+      const hasValidIntentions =
+        ship.intentions &&
+        Array.isArray(ship.intentions) &&
+        ship.intentions.length > 1;
+      const routeSource = hasValidIntentions ? ship.intentions : ship.waypoints;
+      const { cursorPos, cursorIndex } = getIntentionsCursor(ship, routeSource);
+      return {
+        path: [],
+        intentionsPosition: cursorPos,
+        currentIntentionsIndex: cursorIndex,
+      };
+    }
 
     if (
       !routeSource ||
       !Array.isArray(routeSource) ||
       routeSource.length <= 1 ||
-      currentWaypointIndex >= routeSource.length ||
+      cursorIndex >= routeSource.length ||
       ship.arrived
     ) {
-      return [];
+      return {
+        path: [],
+        intentionsPosition: cursorPos,
+        currentIntentionsIndex: cursorIndex,
+      };
     }
 
     if (intentionsShowComplete) {
-      return [currentPosition, ...routeSource.slice(currentWaypointIndex)];
+      return {
+        path: [cursorPos, ...routeSource.slice(cursorIndex)],
+        intentionsPosition: cursorPos,
+        currentIntentionsIndex: cursorIndex,
+      };
     }
 
     const minutes = Number(intentionsShareTime);
     if (isNaN(minutes) || minutes <= 0) {
-      return [];
+      return {
+        path: [],
+        intentionsPosition: cursorPos,
+        currentIntentionsIndex: cursorIndex,
+      };
     }
 
-    const startPos = currentPosition;
-    const path = [startPos];
+    const path = [cursorPos];
     let remainingTime = minutes;
-    let currentIndex = currentWaypointIndex;
+    let currentIndex = cursorIndex;
 
     while (currentIndex < routeSource.length && remainingTime > 0) {
       const prevWaypoint =
-        currentIndex === currentWaypointIndex
-          ? startPos
+        currentIndex === cursorIndex
+          ? cursorPos
           : routeSource[currentIndex - 1];
       const currentWaypoint = routeSource[currentIndex];
       const segmentDistance = calculateDistance(prevWaypoint, currentWaypoint);
-      const segmentTimeHours = segmentDistance / ship.baseSpeed;
-      const segmentTimeMinutes = segmentTimeHours * 60;
+      const segmentTimeMinutes = (segmentDistance / ship.baseSpeed) * 60;
 
       if (segmentTimeMinutes <= remainingTime) {
         path.push(currentWaypoint);
@@ -116,19 +183,17 @@ export function useDynamicIntentionsDisplay() {
       } else {
         const remainingDistance = (remainingTime / 60) * ship.baseSpeed;
         const bearing = calculateHeading(prevWaypoint, currentWaypoint);
-        const partialPos = moveAlongBearing(
-          prevWaypoint,
-          bearing,
-          remainingDistance,
-        );
-        path.push(partialPos);
+        path.push(moveAlongBearing(prevWaypoint, bearing, remainingDistance));
         remainingTime = 0;
       }
-
       currentIndex++;
     }
 
-    return path;
+    return {
+      path,
+      intentionsPosition: cursorPos,
+      currentIntentionsIndex: cursorIndex,
+    };
   }, []);
 
   return { updateDynamicIntentions };
