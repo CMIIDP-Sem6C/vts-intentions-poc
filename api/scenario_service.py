@@ -179,7 +179,13 @@ class ScenarioService:
          # Merge intentions into their respective ships
         for ship in ships:
             ship_id = str(ship["id"])
-            ship["intentions"] = [intention["route"] for intention in intentions.get(ship_id, [])]
+            ship_intentions = intentions.get(ship_id, [])
+
+            # Get the route directly from the first (and only) intention
+            if ship_intentions:
+                ship["intentions"] = ship_intentions[0]["route"]
+            else:
+                ship["intentions"] = []
 
         return {
             "scenario": scenario,
