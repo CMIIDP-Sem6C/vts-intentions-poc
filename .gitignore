@@ -3,13 +3,17 @@ dist/
 .vite/
 *.local
 
-screenshot.js
-screenshot.png
-screenshot-clicked.png
-screenshots/
-server/inspect-db.js
-server/update-scaramucci-speed.js
-server/fix-scenario-data.js
+screenshot*.js
+screenshot*.png
+screenshots*/
+server/inspect-*.js
+server/seed-*.js
+server/tweak-*.js
+server/update-*.js
+server/fix-*.js
+
+__pycache__/
+*.pyc
 
 .DS_Store
 Thumbs.db
