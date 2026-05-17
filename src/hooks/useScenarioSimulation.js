@@ -7,9 +7,6 @@ import {
 
 const TICK_MS = 150;
 const TIME_SCALE = 4;
-const AVOID_OFFSET_NM = 0.04;
-const AVOID_RAMP_PER_TICK = 0.0014;
-const AVOID_RETURN_EPSILON = 0.001;
 
 function initShip(ship) {
   const waypoints = Array.isArray(ship.waypoints) ? ship.waypoints : [];
@@ -24,18 +21,11 @@ function initShip(ship) {
     baseSpeed: ship.speed || 5,
     arrived: false,
     heading: initialHeading,
-    baseHeading: initialHeading,
-    avoidTarget: 0,
-    avoidCurrent: 0,
-    displayPosition: initialPos,
-    prevDisplayPosition: initialPos,
   };
 }
 
 function applyMovement(ship) {
-  if (ship.arrived) {
-    return computeDisplay(ship);
-  }
+  if (ship.arrived) return ship;
   const target = ship.waypoints[ship.currentWaypointIndex];
   if (!target) return { ...ship, arrived: true };
 
@@ -45,53 +35,24 @@ function applyMovement(ship) {
   const hoursPerTick = (TICK_MS / 1000) * (TIME_SCALE / 3600);
   const moveDistNm = ship.baseSpeed * hoursPerTick;
 
-  let nextShip;
   if (moveDistNm >= distToTarget) {
     const nextIndex = ship.currentWaypointIndex + 1;
     if (nextIndex >= ship.waypoints.length) {
-      nextShip = { ...ship, position: [...target], arrived: true, baseHeading: ship.baseHeading };
-    } else {
-      const nextTarget = ship.waypoints[nextIndex];
-      const nextBaseHeading = calculateHeading(target, nextTarget);
-      nextShip = {
-        ...ship,
-        position: [...target],
-        currentWaypointIndex: nextIndex,
-        baseHeading: nextBaseHeading,
-      };
+      return { ...ship, position: [...target], arrived: true };
     }
-  } else {
-    const newPosition = moveAlongBearing(ship.position, headingToTarget, moveDistNm);
-    nextShip = { ...ship, position: newPosition, baseHeading: headingToTarget };
+    const nextTarget = ship.waypoints[nextIndex];
+    return {
+      ...ship,
+      position: [...target],
+      currentWaypointIndex: nextIndex,
+      heading: calculateHeading(target, nextTarget),
+    };
   }
-
-  return computeDisplay(nextShip);
-}
-
-function computeDisplay(ship) {
-  const target = ship.avoidTarget || 0;
-  const current = ship.avoidCurrent || 0;
-  let nextOffset = current;
-  if (target > current) nextOffset = Math.min(target, current + AVOID_RAMP_PER_TICK);
-  else if (target < current) nextOffset = Math.max(target, current - AVOID_RAMP_PER_TICK);
-
-  const perpHeading = (ship.baseHeading - 90 + 360) % 360;
-  const displayPosition = nextOffset === 0
-    ? [...ship.position]
-    : moveAlongBearing(ship.position, perpHeading, nextOffset);
-
-  const prev = ship.displayPosition || displayPosition;
-  const movedNm = calculateDistance(prev, displayPosition);
-  const visualHeading = movedNm > 0.0001
-    ? calculateHeading(prev, displayPosition)
-    : ship.heading ?? ship.baseHeading;
 
   return {
     ...ship,
-    avoidCurrent: nextOffset,
-    displayPosition,
-    prevDisplayPosition: prev,
-    heading: visualHeading,
+    position: moveAlongBearing(ship.position, headingToTarget, moveDistNm),
+    heading: headingToTarget,
   };
 }
 
@@ -103,7 +64,6 @@ export default function useScenarioSimulation(scenarioData) {
   const [elapsed, setElapsed] = useState(0);
   const [activeShips, setActiveShips] = useState([]);
   const [visibleIntentionIds, setVisibleIntentionIds] = useState(() => new Set());
-  const [pendingShowIntentionIds, setPendingShowIntentionIds] = useState(() => new Set());
 
   const processedEventIdsRef = useRef(new Set());
   const startTimestampRef = useRef(null);
@@ -112,7 +72,6 @@ export default function useScenarioSimulation(scenarioData) {
     setElapsed(0);
     setActiveShips([]);
     setVisibleIntentionIds(new Set());
-    setPendingShowIntentionIds(new Set());
     processedEventIdsRef.current = new Set();
     startTimestampRef.current = Date.now();
   }, [scenarioData]);
@@ -148,34 +107,16 @@ export default function useScenarioSimulation(scenarioData) {
           : (intentions || []).filter((i) => i.dbShipId === event.subjectId);
 
         const targetIds = targets.map((t) => t.id);
-        const affectedShipIds = [...new Set(targets.map((t) => t.dbShipId))];
 
-        if (event.type === 'HideIntention') {
-          setVisibleIntentionIds((prev) => {
-            const next = new Set(prev);
+        setVisibleIntentionIds((prev) => {
+          const next = new Set(prev);
+          if (event.type === 'HideIntention') {
             targetIds.forEach((id) => next.delete(id));
-            return next;
-          });
-          setPendingShowIntentionIds((prev) => {
-            const next = new Set(prev);
-            targetIds.forEach((id) => next.delete(id));
-            return next;
-          });
-        } else {
-          setPendingShowIntentionIds((prev) => {
-            const next = new Set(prev);
+          } else {
             targetIds.forEach((id) => next.add(id));
-            return next;
-          });
-        }
-
-        setActiveShips((prev) =>
-          prev.map((s) => {
-            if (!affectedShipIds.includes(s.dbId)) return s;
-            const avoidTarget = event.type === 'HideIntention' ? AVOID_OFFSET_NM : 0;
-            return { ...s, avoidTarget };
-          })
-        );
+          }
+          return next;
+        });
       }
     },
     [ships, intentions, intentionsForShip]
@@ -203,51 +144,13 @@ export default function useScenarioSimulation(scenarioData) {
     return () => clearInterval(interval);
   }, [ships, events, triggerEvent]);
 
-  useEffect(() => {
-    if (pendingShowIntentionIds.size === 0) return;
-    const toPromote = [];
-    pendingShowIntentionIds.forEach((intentionId) => {
-      const intention = (intentions || []).find((i) => i.id === intentionId);
-      if (!intention) return;
-      const ship = activeShips.find((s) => s.dbId === intention.dbShipId);
-      if (!ship) {
-        toPromote.push(intentionId);
-        return;
-      }
-      if (Math.abs(ship.avoidCurrent || 0) < AVOID_RETURN_EPSILON) {
-        toPromote.push(intentionId);
-      }
-    });
-
-    if (toPromote.length === 0) return;
-    setVisibleIntentionIds((prev) => {
-      const next = new Set(prev);
-      toPromote.forEach((id) => next.add(id));
-      return next;
-    });
-    setPendingShowIntentionIds((prev) => {
-      const next = new Set(prev);
-      toPromote.forEach((id) => next.delete(id));
-      return next;
-    });
-  }, [activeShips, pendingShowIntentionIds, intentions]);
-
   const visibleIntentions = useMemo(() => {
     if (!intentions) return [];
     return intentions.filter((i) => visibleIntentionIds.has(i.id));
   }, [intentions, visibleIntentionIds]);
 
-  const renderedShips = useMemo(
-    () =>
-      activeShips.map((s) => ({
-        ...s,
-        position: s.displayPosition || s.position,
-      })),
-    [activeShips]
-  );
-
   return {
-    ships: renderedShips,
+    ships: activeShips,
     visibleIntentions,
     elapsed,
     scenarioDuration: scenarioData?.scenario?.time ?? null,
