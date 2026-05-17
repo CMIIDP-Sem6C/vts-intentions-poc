@@ -5,7 +5,6 @@ import { getCourseVectorEnd } from '../../utils/navigation';
 
 const FILL = '#1B5E20';
 const FILL_SEL = '#2E7D32';
-const ROUTE_COLOR = '#E57373';
 const VECTOR_COLOR = '#D32F2F';
 const VECTOR_NM_PER_KNOT = 0.05;
 const DEFAULT_LABEL_OFFSET_PX = [14, 0];
@@ -66,9 +65,6 @@ export default function ShipMarker({ ship, isSelected, onSelect }) {
   const showOverlay = isSelected || hovered;
   const labelRef = useRef(null);
 
-  const destKnown = ship.destination && ship.destination !== 'Unknown';
-  const hasIntentions = destKnown && ship.aisActive;
-
   const headingRounded = Math.round(ship.heading);
 
   const icon = useMemo(
@@ -88,11 +84,6 @@ export default function ShipMarker({ ship, isSelected, onSelect }) {
   const hasCustomOffset = labelOffsetPx[0] !== DEFAULT_LABEL_OFFSET_PX[0]
     || labelOffsetPx[1] !== DEFAULT_LABEL_OFFSET_PX[1];
 
-  const remainingRoute = useMemo(() => {
-    if (!ship.waypoints || ship.currentWaypointIndex == null) return [];
-    return [ship.position, ...ship.waypoints.slice(ship.currentWaypointIndex)];
-  }, [ship.position, ship.waypoints, ship.currentWaypointIndex]);
-
   const vectorEnd = useMemo(
     () => getCourseVectorEnd(ship.position, ship.heading, ship.speed * VECTOR_NM_PER_KNOT),
     [ship.position, ship.heading, ship.speed]
@@ -110,18 +101,7 @@ export default function ShipMarker({ ship, isSelected, onSelect }) {
 
   return (
     <>
-      {showOverlay && hasIntentions && remainingRoute.length > 1 && (
-        <Polyline
-          positions={remainingRoute}
-          pathOptions={{
-            color: ROUTE_COLOR,
-            weight: 1.5,
-            opacity: 0.6,
-          }}
-        />
-      )}
-
-      {showOverlay && !hasIntentions && (
+      {showOverlay && (
         <Polyline
           positions={[ship.position, vectorEnd]}
           pathOptions={{
