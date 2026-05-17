@@ -87,6 +87,9 @@
 .scenario-select-card {
   min-width: 460px;
   max-width: 560px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .scenario-status {
@@ -104,6 +107,25 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  overflow-y: auto;
+  padding-right: 6px;
+  margin-right: -6px;
+  flex: 1;
+  min-height: 0;
+}
+
+.scenario-select-rows::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scenario-select-rows::-webkit-scrollbar-thumb {
+  background: rgba(255, 152, 0, 0.4);
+  border-radius: 3px;
+}
+
+.scenario-select-rows::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 3px;
 }
 
 .scenario-select-row {
