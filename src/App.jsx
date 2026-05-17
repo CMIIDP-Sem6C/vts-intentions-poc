@@ -77,16 +77,25 @@ export default function App() {
   );
 
   const scenarioFocus = useMemo(() => {
-    const samples = [];
+    const points = [];
     for (const s of scenarioData?.ships || []) {
-      if (Array.isArray(s.waypoints)) {
-        samples.push(...s.waypoints.slice(0, 4));
+      if (Array.isArray(s.waypoints) && s.waypoints.length > 0) {
+        points.push(...s.waypoints.slice(0, 5));
       }
     }
-    if (samples.length === 0) return null;
-    const lat = samples.reduce((a, w) => a + w[0], 0) / samples.length;
-    const lng = samples.reduce((a, w) => a + w[1], 0) / samples.length;
-    return { center: [lat, lng], zoom: 15 };
+    if (points.length === 0) return null;
+    const lats = points.map((p) => p[0]);
+    const lngs = points.map((p) => p[1]);
+    const minLat = Math.min(...lats);
+    const maxLat = Math.max(...lats);
+    const minLng = Math.min(...lngs);
+    const maxLng = Math.max(...lngs);
+    const center = [(minLat + maxLat) / 2, (minLng + maxLng) / 2];
+    const latSpan = maxLat - minLat;
+    const lngSpan = maxLng - minLng;
+    const span = Math.max(latSpan, lngSpan * 0.62);
+    const zoom = span > 0.05 ? 13 : span > 0.025 ? 14 : 15;
+    return { center, zoom };
   }, [scenarioData]);
 
   const handleSelectShip = useCallback((id) => {
