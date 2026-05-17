@@ -76,6 +76,19 @@ export default function App() {
     [ships, selectedShipId],
   );
 
+  const scenarioFocus = useMemo(() => {
+    const samples = [];
+    for (const s of scenarioData?.ships || []) {
+      if (Array.isArray(s.waypoints)) {
+        samples.push(...s.waypoints.slice(0, 4));
+      }
+    }
+    if (samples.length === 0) return null;
+    const lat = samples.reduce((a, w) => a + w[0], 0) / samples.length;
+    const lng = samples.reduce((a, w) => a + w[1], 0) / samples.length;
+    return { center: [lat, lng], zoom: 15 };
+  }, [scenarioData]);
+
   const handleSelectShip = useCallback((id) => {
     setSelectedShipId((prev) => (prev === id ? null : id));
   }, []);
@@ -174,6 +187,7 @@ export default function App() {
           onSelectShip={handleSelectShip}
           activeSector={activeSector}
           intentions={visibleIntentions}
+          scenarioFocus={scenarioFocus}
         />
       }
       inboundPanel={

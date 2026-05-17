@@ -78,13 +78,16 @@ export default function VTSMap({
   onSelectShip,
   activeSector,
   intentions = [],
+  scenarioFocus = null,
 }) {
   const active = SECTORS[activeSector];
+  const initialCenter = scenarioFocus?.center ?? active.center;
+  const initialZoom = scenarioFocus?.zoom ?? active.zoom;
 
   return (
     <MapContainer
-      center={active.center}
-      zoom={active.zoom}
+      center={initialCenter}
+      zoom={initialZoom}
       className="vts-map"
       zoomControl={false}
     >
