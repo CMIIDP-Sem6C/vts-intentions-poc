@@ -181,7 +181,6 @@ class ScenarioService:
             ship_id = str(ship["id"])
             ship_intentions = intentions.get(ship_id, [])
 
-            # Get the route directly from the first (and only) intention
             if ship_intentions:
                 ship["intentions"] = ship_intentions[0]["route"]
             else:
