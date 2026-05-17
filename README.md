@@ -8,6 +8,8 @@ Een digitale weergave van een VTS-overlay (Vessel Traffic Services) voor het Rot
 
 ![Schip Info Panel](docs/vts-ship-info.png)
 
+![Scenario uitwijken op DB-route](docs/vts-scenario-uitwijken.png)
+
 ## Vereisten
 
 - [Node.js](https://nodejs.org/) v18 of hoger
@@ -101,22 +103,28 @@ tests/
   test_scenario_parse.py
 src/
   components/
+    ScenarioSelect.jsx    Startup overlay: kies een scenario uit de DB
+    SectorSelect.jsx      Vervolg overlay: kies VTS-sector (Eemhaven / Waalhaven)
     map/
-      VTSMap.jsx          Leaflet kaart met sector-overlay, moored ships, radar contacts
-      ShipMarker.jsx      Triangle + hull scheepsiconen met koersvector en tracklines
+      VTSMap.jsx          Leaflet kaart met sector-overlay, ships en intention-lines
+      ShipMarker.jsx      Triangle + hull scheepsiconen met richtingsvector op hover
     panels/
-      InboundPanel.jsx    Lijst inkomende schepen met status kleuren (rood/geel/groen)
+      InboundPanel.jsx    Lijst inkomende schepen met status kleuren (rood/geel/groen) + minimize
       ShipInfoCard.jsx    Detail-panel met editable bestemming en AIS scan functie
+      Flag.jsx            Vlaggen voor scheepsnationaliteit
+    inputs/
+      TextAutocompleteInput.jsx
     layout/
       AppLayout.jsx       Fullscreen layout met overlay-panels
   data/
-    mockShips.js          Scheepsdata met OSM-coordinaten Nieuwe Maas, moored ships, radar contacts
-    sectors.js            Sectorgrenzen Nieuwe Maas (Pernis - Erasmusbrug)
+    sectors.js            Sectorgrenzen Nieuwe Maas (Eemhaven / Waalhaven), centerline, km-markers
   hooks/
-    useShipSimulation.js  Simuleert scheepsbewegingen langs waypoints met route reversal
+    useScenarioData.js          Haalt scenario bundle (ships, intentions, events) op
+    useScenarioSimulation.js    Driver: spawnt schepen op trigger_time, beweegt ze langs DB-route, regelt intentie zichtbaarheid (HideIntention/ShowIntention)
+    useVerificationSync.js      Polling sync voor verificaties met de API
   utils/
     navigation.js         Haversine, heading, ETA berekeningen
-  App.jsx                 Hoofdcomponent met state management
+  App.jsx                 Hoofdcomponent met scenario- en sector-selectie state
   App.css                 Tidalis-stijl donker VTS-thema
 ```
 
@@ -131,15 +139,14 @@ src/
 
 ## Functionaliteiten
 
-- Interactieve kaart van het Nieuwe Maas VTS-sector (Rotterdam)
-- 6 gesimuleerde schepen met realistische vaarroutes (OSM-coordinaten)
-- Twee typen scheepsmarkers: driehoekige pijltjes en langwerpige vrachtschepen
-- Afgemeerde schepen in echte havenbassins (Waalhaven, Eemhaven, Merwehaven, etc.)
-- Radar contacts langs de oevers
-- Tracklines alleen zichtbaar bij hover of selectie, richtingsvector altijd zichtbaar
+- Scenario-selector als startscherm: scenario's komen uit de database (`/api/scenarios`)
+- Sector-selector na scenario-keuze: kies VTS-sector Eemhaven of Waalhaven (Rotterdam, Nieuwe Maas)
+- Database-gedreven scheepssimulatie: ships spawnen op `trigger_time` events, volgen `route` waypoints uit de DB
+- Intentie-lijnen (declared route) per ship, dynamisch in/uit te schakelen via `HideIntention` / `ShowIntention` events
+- Reeds-gevaren deel van de intentie-lijn wordt automatisch afgesneden voorbij de huidige scheepspositie
+- Twee typen scheepsmarkers: driehoekige pijltjes (klein/snel) en langwerpige vrachtschepen
+- Korte rode richtingsvector op hover voor elk schip
+- Inbound vessel panel met ETA naar sector-grens, filtert op actieve sector, minimaliseerbaar voor screenshots
 - Status kleursysteem: rood (onbekend), geel (gedeeltelijk), groen (volledig bekend)
-- VTS operator kan bestemming invoeren en AIS status scannen
-- Draggable en roteerbare afgemeerde schepen
+- VTS operator kan bestemming invoeren en AIS status scannen via het detail-panel
 - Tidalis-gebaseerde visuele stijl met warm kleurfilter
-
-TBA
