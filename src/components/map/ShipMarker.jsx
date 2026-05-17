@@ -109,17 +109,16 @@ export default function ShipMarker({ ship, isSelected, onSelect }) {
     labelOffsetPx[0] !== DEFAULT_LABEL_OFFSET_PX[0] ||
     labelOffsetPx[1] !== DEFAULT_LABEL_OFFSET_PX[1];
 
-  // Generate the intentions to display
   const intentionsToDisplay = useMemo(() => {
+    if (!ship.intentionsShowActive) return [];
     // Use dynamicIntentionsPath if it exists and has more than one point
-    if (ship.dynamicIntentionsPath && ship.dynamicIntentionsPath.length > 1) {
+    if (
+      ship.intentionsShowActive &&
+      ship.dynamicIntentionsPath &&
+      ship.dynamicIntentionsPath.length > 1
+    ) {
       return ship.dynamicIntentionsPath;
     }
-    console.log(
-      "falling back on old logic: ",
-      ship.dynamicIntentionsPath,
-      ship.dynamicIntentionsPath.length,
-    );
     return [];
   }, [
     ship.position,
@@ -129,6 +128,7 @@ export default function ShipMarker({ ship, isSelected, onSelect }) {
     ship.intentionsPosition,
     ship.intentions,
     ship.currentIntentionsIndex,
+    ship.intentionsShowActive,
   ]);
 
   const vectorEnd = useMemo(
