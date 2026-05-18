@@ -7,6 +7,7 @@ const FILL = '#1B5E20';
 const FILL_SEL = '#2E7D32';
 const VECTOR_COLOR = '#D32F2F';
 const VECTOR_NM_PER_KNOT = 0.05;
+const VECTOR_MAX_NM = 0.25;
 const DEFAULT_LABEL_OFFSET_PX = [14, 0];
 
 function createTriangleIcon(heading, isSelected) {
@@ -85,7 +86,12 @@ export default function ShipMarker({ ship, isSelected, onSelect }) {
     || labelOffsetPx[1] !== DEFAULT_LABEL_OFFSET_PX[1];
 
   const vectorEnd = useMemo(
-    () => getCourseVectorEnd(ship.position, ship.heading, ship.speed * VECTOR_NM_PER_KNOT),
+    () =>
+      getCourseVectorEnd(
+        ship.position,
+        ship.heading,
+        Math.min(ship.speed * VECTOR_NM_PER_KNOT, VECTOR_MAX_NM)
+      ),
     [ship.position, ship.heading, ship.speed]
   );
 
