@@ -14,6 +14,14 @@ server/fix-*.js
 
 __pycache__/
 *.pyc
+api/__pycache__/
+screenshot.js
+screenshot.png
+screenshot-clicked.png
+screenshots/
+server/inspect-db.js
+server/update-scaramucci-speed.js
+server/fix-scenario-data.js
 
 .DS_Store
 Thumbs.db

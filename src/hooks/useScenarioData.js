@@ -1,20 +1,16 @@
-import { useEffect, useState } from 'react';
-
-const SHIP_ID_PREFIX = 'ship-';
-
-function toAppShipId(dbId) {
-  return `${SHIP_ID_PREFIX}${dbId}`;
-}
+import { useEffect, useState } from "react";
 
 function normalizeShip(rawShip) {
   if (!rawShip) return null;
-  if (typeof rawShip.id === 'string' && rawShip.id.startsWith(SHIP_ID_PREFIX)) {
-    return { ...rawShip, dbId: rawShip.dbId ?? Number(rawShip.id.slice(SHIP_ID_PREFIX.length)) };
+  if (typeof rawShip.id === "string" && rawShip.id.startsWith(SHIP_ID_PREFIX)) {
+    return {
+      ...rawShip,
+      dbId: rawShip.dbId ?? Number(rawShip.id.slice(SHIP_ID_PREFIX.length)),
+    };
   }
-  const dbId = typeof rawShip.id === 'number' ? rawShip.id : Number(rawShip.id);
+  const dbId = typeof rawShip.id === "number" ? rawShip.id : Number(rawShip.id);
   return {
     ...rawShip,
-    id: toAppShipId(dbId),
     dbId,
   };
 }
@@ -22,9 +18,8 @@ function normalizeShip(rawShip) {
 function normalizeIntentionEntry(entry, dbShipId) {
   return {
     id: entry.id,
-    shipId: toAppShipId(dbShipId),
     dbShipId,
-    name: typeof entry.name === 'string' ? entry.name.trim() : entry.name,
+    name: typeof entry.name === "string" ? entry.name.trim() : entry.name,
     description: entry.description,
     route: Array.isArray(entry.route) ? entry.route : [],
   };
@@ -44,7 +39,9 @@ function normalizeIntentions(rawIntentions) {
   Object.entries(rawIntentions).forEach(([shipIdKey, entries]) => {
     const dbShipId = Number(shipIdKey);
     if (!Array.isArray(entries)) return;
-    entries.forEach((entry) => out.push(normalizeIntentionEntry(entry, dbShipId)));
+    entries.forEach((entry) =>
+      out.push(normalizeIntentionEntry(entry, dbShipId)),
+    );
   });
   return out;
 }
@@ -72,7 +69,7 @@ function normalizeBundle(payload) {
   if (!payload) return null;
   const ships = (payload.ships || []).map(normalizeShip).filter(Boolean);
   const intentions = normalizeIntentions(
-    payload.intentions ?? payload.intentions_by_ship_id
+    payload.intentions ?? payload.intentions_by_ship_id,
   );
   const events = (payload.events || []).map(normalizeEvent);
   return {
