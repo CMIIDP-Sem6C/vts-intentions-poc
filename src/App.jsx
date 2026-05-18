@@ -1,24 +1,16 @@
-import { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import AppLayout from "./components/layout/AppLayout";
 import VTSMap from "./components/map/VTSMap";
 import ScenarioSelect from "./components/ScenarioSelect";
 import SectorSelect from "./components/SectorSelect";
+import TimelineControls from "./components/panels/TimelineControls";
 import InboundPanel from "./components/panels/InboundPanel";
 import ShipInfoCard from "./components/panels/ShipInfoCard";
 import useScenarioData from "./hooks/useScenarioData";
 import useVerificationSync from "./hooks/useVerificationSync";
 import useScenarioSimulation from "./hooks/useScenarioSimulation";
 import { API_URL, ENDPOINT_DESTINATIONS } from "./utils/api";
-import { resolveSectorKeyFromDbId } from "./utils/resolveSectorKey";
-import { MOCK_SHIPS } from "./data/mockShips";
 import "./App.css";
-
-function readScenarioId() {
-  if (typeof window === "undefined") return 1;
-  const raw = new URLSearchParams(window.location.search).get("scenario");
-  const n = parseInt(raw ?? "1", 10);
-  return Number.isFinite(n) && n > 0 ? n : 1;
-}
 
 export default function App() {
   const [activeScenarioId, setActiveScenarioId] = useState(null);
@@ -35,8 +27,16 @@ export default function App() {
 
   const activeScenarioData = activeSector ? scenarioData : null;
 
-  const { ships: simulatedShips, visibleIntentions } =
-    useScenarioSimulation(activeScenarioData);
+  const {
+    ships: simulatedShips,
+    simTime,
+    duration,
+    isPlaying,
+    play,
+    pause,
+    seek,
+    restart,
+  } = useScenarioSimulation(activeScenarioData);
 
   const [selectedShipId, setSelectedShipId] = useState(null);
   const [aisActiveMap, setAisActiveMap] = useState({});
@@ -76,6 +76,28 @@ export default function App() {
     () => ships.find((s) => s.id === selectedShipId) || null,
     [ships, selectedShipId],
   );
+
+  const scenarioFocus = useMemo(() => {
+    const points = [];
+    for (const s of scenarioData?.ships || []) {
+      if (Array.isArray(s.waypoints) && s.waypoints.length > 0) {
+        points.push(...s.waypoints.slice(0, 5));
+      }
+    }
+    if (points.length === 0) return null;
+    const lats = points.map((p) => p[0]);
+    const lngs = points.map((p) => p[1]);
+    const minLat = Math.min(...lats);
+    const maxLat = Math.max(...lats);
+    const minLng = Math.min(...lngs);
+    const maxLng = Math.max(...lngs);
+    const center = [(minLat + maxLat) / 2, (minLng + maxLng) / 2];
+    const latSpan = maxLat - minLat;
+    const lngSpan = maxLng - minLng;
+    const span = Math.max(latSpan, lngSpan * 0.62);
+    const zoom = span > 0.05 ? 13 : span > 0.025 ? 14 : 15;
+    return { center, zoom };
+  }, [scenarioData]);
 
   const handleSelectShip = useCallback((id) => {
     setSelectedShipId((prev) => (prev === id ? null : id));
@@ -165,30 +187,6 @@ export default function App() {
     );
   }
 
-  if (scenarioLoading) {
-    return (
-      <div className="sector-select-overlay">
-        <div className="sector-select-card">
-          <h1 className="sector-select-title">VTS ROTTERDAM</h1>
-          <p className="sector-select-subtitle">Scenario laden...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (scenarioError) {
-    return (
-      <div className="sector-select-overlay">
-        <div className="sector-select-card">
-          <h1 className="sector-select-title">VTS ROTTERDAM</h1>
-          <p className="scenario-status scenario-status-error">
-            Scenario laden mislukt: {scenarioError}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <AppLayout
       map={
@@ -197,7 +195,7 @@ export default function App() {
           selectedShipId={selectedShipId}
           onSelectShip={handleSelectShip}
           activeSector={activeSector}
-          intentions={visibleIntentions}
+          scenarioFocus={scenarioFocus}
         />
       }
       inboundPanel={
@@ -218,6 +216,17 @@ export default function App() {
           onResetShip={handleResetShip}
           verificationError={verificationError}
           destinations={destinations}
+        />
+      }
+      bottomBar={
+        <TimelineControls
+          simTime={simTime}
+          duration={duration}
+          isPlaying={isPlaying}
+          onPlay={play}
+          onPause={pause}
+          onSeek={seek}
+          onRestart={restart}
         />
       }
     />

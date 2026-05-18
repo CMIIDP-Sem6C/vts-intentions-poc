@@ -2,12 +2,6 @@ import { useEffect, useState } from "react";
 
 function normalizeShip(rawShip) {
   if (!rawShip) return null;
-  if (typeof rawShip.id === "string" && rawShip.id.startsWith(SHIP_ID_PREFIX)) {
-    return {
-      ...rawShip,
-      dbId: rawShip.dbId ?? Number(rawShip.id.slice(SHIP_ID_PREFIX.length)),
-    };
-  }
   const dbId = typeof rawShip.id === "number" ? rawShip.id : Number(rawShip.id);
   return {
     ...rawShip,
@@ -30,7 +24,6 @@ function normalizeIntentions(rawIntentions) {
   if (Array.isArray(rawIntentions)) {
     return rawIntentions.map((i) => ({
       ...i,
-      shipId: i.shipId ?? toAppShipId(i.dbShipId ?? i.ship_id),
       dbShipId: i.dbShipId ?? Number(i.ship_id),
       route: Array.isArray(i.route) ? i.route : [],
     }));

@@ -1,11 +1,5 @@
 import { useEffect, useState } from 'react';
 
-const PLACEHOLDER_SCENARIOS = [
-  { id: -2, name: 'Scenario 2', description: 'Nog niet beschikbaar' },
-  { id: -3, name: 'Scenario 3', description: 'Nog niet beschikbaar' },
-  { id: -4, name: 'Scenario 4', description: 'Nog niet beschikbaar' },
-];
-
 export default function ScenarioSelect({ onSelect }) {
   const [scenarios, setScenarios] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,10 +29,6 @@ export default function ScenarioSelect({ onSelect }) {
     };
   }, []);
 
-  const availableIds = new Set(scenarios.map((s) => s.id));
-  const placeholders = PLACEHOLDER_SCENARIOS.filter((p) => !availableIds.has(p.id));
-  const rows = [...scenarios, ...placeholders].slice(0, 4);
-
   return (
     <div className="sector-select-overlay">
       <div className="sector-select-card scenario-select-card">
@@ -53,14 +43,13 @@ export default function ScenarioSelect({ onSelect }) {
         )}
 
         <div className="scenario-select-rows">
-          {rows.map((sc) => {
-            const isAvailable = sc.id > 0;
+          {scenarios.map((sc) => {
+            const duration = sc.time ?? sc.duration_seconds;
             return (
               <button
                 key={sc.id}
-                className={`scenario-select-row ${isAvailable ? '' : 'disabled'}`}
-                onClick={() => isAvailable && onSelect(sc.id)}
-                disabled={!isAvailable}
+                className="scenario-select-row"
+                onClick={() => onSelect(sc.id)}
               >
                 <div className="scenario-row-main">
                   <span className="scenario-row-name">
@@ -71,14 +60,8 @@ export default function ScenarioSelect({ onSelect }) {
                   )}
                 </div>
                 <div className="scenario-row-meta">
-                  {isAvailable ? (
-                    <>
-                      {sc.time != null && <span>{sc.time}s</span>}
-                      <span className="scenario-row-arrow">{'->'}</span>
-                    </>
-                  ) : (
-                    <span className="scenario-row-locked">VERGRENDELD</span>
-                  )}
+                  {duration != null && <span>{duration}s</span>}
+                  <span className="scenario-row-arrow">{'->'}</span>
                 </div>
               </button>
             );
