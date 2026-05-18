@@ -1,7 +1,8 @@
 export function getStatusLevel(ship) {
   const destKnown = ship.destination && ship.destination !== "Unknown";
-  if (destKnown && ship.aisActive) return "green";
-  if (destKnown || ship.aisActive) return "yellow";
+  const isVerified = Boolean(ship.verified);
+  if (destKnown && isVerified) return "green";
+  if (destKnown || isVerified) return "yellow";
   return "red";
 }
 
@@ -21,6 +22,12 @@ export const STATUS_COLORS = {
   red: "#F44336",
   yellow: "#FF9800",
   green: "#4CAF50",
+};
+
+export const STATUS_DOT_COUNT = {
+  red: 1,
+  yellow: 2,
+  green: 3,
 };
 
 export function StatusStar({ level }) {

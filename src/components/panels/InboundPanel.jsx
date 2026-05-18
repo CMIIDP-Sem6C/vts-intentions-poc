@@ -6,36 +6,23 @@ import {
   pointInPolygon,
 } from '../../utils/navigation';
 import { SECTORS } from '../../data/sectors';
-
-const STATUS_COLORS = {
-  red: '#F44336',
-  yellow: '#FF9800',
-  green: '#4CAF50',
-};
-
-function getStatusLevel(ship) {
-  const destKnown = ship.destination && ship.destination !== 'Unknown';
-  const isVerified = Boolean(ship.verified);
-  const dots = [];
-  if (destKnown && isVerified) {
-    dots.push('green', 'green', 'green');
-  } else if (destKnown || isVerified) {
-    dots.push('yellow', 'yellow');
-  } else {
-    dots.push('red');
-  }
-  return dots;
-}
+import {
+  getStatusLevel,
+  STATUS_COLORS,
+  STATUS_DOT_COUNT,
+} from '../../utils/status';
 
 function StatusDots({ ship }) {
-  const dots = getStatusLevel(ship);
+  const level = getStatusLevel(ship);
+  const count = STATUS_DOT_COUNT[level];
+  const color = STATUS_COLORS[level];
   return (
     <span className="status-dots">
-      {dots.map((color, i) => (
+      {Array.from({ length: count }).map((_, i) => (
         <span
           key={i}
           className="status-dot"
-          style={{ background: STATUS_COLORS[color] }}
+          style={{ background: color }}
         />
       ))}
     </span>
