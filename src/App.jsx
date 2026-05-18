@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import AppLayout from "./components/layout/AppLayout";
 import VTSMap from "./components/map/VTSMap";
 import ScenarioSelect from "./components/ScenarioSelect";
@@ -10,16 +10,7 @@ import useScenarioData from "./hooks/useScenarioData";
 import useVerificationSync from "./hooks/useVerificationSync";
 import useScenarioSimulation from "./hooks/useScenarioSimulation";
 import { API_URL, ENDPOINT_DESTINATIONS } from "./utils/api";
-import { resolveSectorKeyFromDbId } from "./utils/resolveSectorKey";
-import { MOCK_SHIPS } from "./data/mockShips";
 import "./App.css";
-
-function readScenarioId() {
-  if (typeof window === "undefined") return 1;
-  const raw = new URLSearchParams(window.location.search).get("scenario");
-  const n = parseInt(raw ?? "1", 10);
-  return Number.isFinite(n) && n > 0 ? n : 1;
-}
 
 export default function App() {
   const [activeScenarioId, setActiveScenarioId] = useState(null);
@@ -38,7 +29,6 @@ export default function App() {
 
   const {
     ships: simulatedShips,
-    visibleIntentions,
     simTime,
     duration,
     isPlaying,
@@ -197,30 +187,6 @@ export default function App() {
     );
   }
 
-  if (scenarioLoading) {
-    return (
-      <div className="sector-select-overlay">
-        <div className="sector-select-card">
-          <h1 className="sector-select-title">VTS ROTTERDAM</h1>
-          <p className="sector-select-subtitle">Scenario laden...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (scenarioError) {
-    return (
-      <div className="sector-select-overlay">
-        <div className="sector-select-card">
-          <h1 className="sector-select-title">VTS ROTTERDAM</h1>
-          <p className="scenario-status scenario-status-error">
-            Scenario laden mislukt: {scenarioError}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <AppLayout
       map={
@@ -229,7 +195,6 @@ export default function App() {
           selectedShipId={selectedShipId}
           onSelectShip={handleSelectShip}
           activeSector={activeSector}
-          intentions={visibleIntentions}
           scenarioFocus={scenarioFocus}
         />
       }

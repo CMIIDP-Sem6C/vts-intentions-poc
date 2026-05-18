@@ -17,26 +17,6 @@ import {
   TURNING_BASINS,
 } from "../../data/sectors";
 import ShipMarker from "./ShipMarker";
-import { calculateDistance } from "../../utils/navigation";
-
-function getRemainingIntentionRoute(route, shipPosition) {
-  if (!Array.isArray(route) || route.length < 2) return [];
-  if (!shipPosition) return route;
-
-  let nearestIdx = 0;
-  let minDist = Infinity;
-  for (let i = 0; i < route.length; i++) {
-    const d = calculateDistance(shipPosition, route[i]);
-    if (d < minDist) {
-      minDist = d;
-      nearestIdx = i;
-    }
-  }
-
-  const remaining = route.slice(nearestIdx + 1);
-  if (remaining.length === 0) return [];
-  return [shipPosition, ...remaining];
-}
 
 const ALL_SECTORS_BOUNDS = (() => {
   const allCoords = Object.values(SECTORS).flatMap((s) => s.boundary);
@@ -66,13 +46,6 @@ const SECTOR_BORDER_STYLE = {
   opacity: 0.8,
 }; // this can be done with CSS i believe
 
-const INTENTION_STYLE = {
-  color: "#FFC107",
-  weight: 3,
-  opacity: 0.85,
-  dashArray: "6 6",
-}; // this can be done with CSS i believe
-
 /**
  *
  * @param {Ship[]} ships
@@ -86,7 +59,6 @@ export default function VTSMap({
   selectedShipId,
   onSelectShip,
   activeSector,
-  intentions = [],
   scenarioFocus = null,
 }) {
   const active = SECTORS[activeSector];

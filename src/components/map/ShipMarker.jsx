@@ -191,7 +191,7 @@ export default function ShipMarker({ ship, isSelected, onSelect }) {
         position={ship.position}
         icon={icon}
         eventHandlers={{
-          click: () => onSelect(ship.id),
+          click: () => {console.log(ship);onSelect(ship.id)},
           mouseover: handleMouseOver,
           mouseout: handleMouseOut,
         }}
@@ -204,7 +204,7 @@ export default function ShipMarker({ ship, isSelected, onSelect }) {
         draggable
         eventHandlers={{
           dragend: handleLabelDragEnd,
-          click: () => onSelect(ship.id),
+          click: () => {console.log(ship);onSelect(ship.id)},
           mouseover: handleMouseOver,
           mouseout: handleMouseOut,
         }}
