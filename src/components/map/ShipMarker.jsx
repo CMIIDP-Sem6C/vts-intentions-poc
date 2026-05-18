@@ -2,7 +2,7 @@ import { useMemo, useState, useCallback, useRef } from "react";
 import { Marker, Polyline, useMap } from "react-leaflet";
 import L from "leaflet";
 import { getCourseVectorEnd } from "../../utils/navigation";
-import { STATUS_COLORS } from "../../utils/status";
+import { STATUS_COLORS, getStatusLevel } from "../../utils/status";
 
 const FILL = "#1B5E20";
 const FILL_SEL = "#2E7D32";
@@ -35,19 +35,21 @@ function createTriangleIcon(heading, isSelected) {
   });
 }
 
-function createHullIcon(heading, isSelected) {
+function createHullIcon(heading, isSelected, ship) {
   const size = isSelected ? 38 : 32;
   const half = size / 2;
-  const fill = isSelected ? FILL_SEL : FILL;
-  const stroke = isSelected ? "#FFFFFF" : "rgba(0,0,0,0.45)";
-  const sw = isSelected ? 1.3 : 0.5;
+  const shipFill = isSelected ? FILL_SEL : FILL;
+  const strokeColor = isSelected ? "#FFFFFF" : "rgba(0,0,0,0.45)";
+  const strokeWidth = isSelected ? 1.3 : 0.5;
+  const level = getStatusLevel(ship);
+  const statusFill = STATUS_COLORS[level];
 
   const rot = heading - 90;
-  const svg = `<svg width="${size}" height="${size}" viewBox="0 0 36 36" xmlns="http://www.w3.org/2000/svg">
-    <g transform="rotate(${rot}, 18, 18)">
-      <path d="M 4,14.5 L 28,14.5 Q 33,18 28,21.5 L 4,21.5 Z"
-        fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/>
-    </g></svg>`;
+  const svg = `<svg  width="${size}" height="${size}" viewBox="0 0 34 12" xmlns="http://www.w3.org/2000/svg">
+    <g transform="rotate(${rot}, 17, 6)">
+    <path d="M24.1797 1L24.3477 1.0625H24.3486L24.3496 1.06348C24.3507 1.0639 24.3525 1.06468 24.3545 1.06543C24.3587 1.06699 24.3653 1.06838 24.373 1.07129C24.3885 1.07707 24.4107 1.08582 24.4395 1.09668C24.4975 1.11863 24.5821 1.15069 24.6875 1.19141C24.8983 1.27283 25.1953 1.38978 25.542 1.53125C26.2318 1.81271 27.1334 2.19853 27.9473 2.60547C28.3236 2.79366 28.7865 3.01009 29.2861 3.24414C29.7795 3.47527 30.3051 3.72187 30.7832 3.96094C31.2546 4.19666 31.7143 4.44142 32.0654 4.67188C32.2375 4.78482 32.4223 4.91968 32.5752 5.07129C32.652 5.14754 32.7451 5.25251 32.8242 5.38477C32.9012 5.51331 33 5.72614 33 6C33 6.37499 32.8083 6.63576 32.7373 6.72656C32.6427 6.84738 32.5347 6.94664 32.4473 7.01953C32.2683 7.16863 32.0436 7.31743 31.8184 7.45508C31.3596 7.73543 30.7667 8.04729 30.1973 8.33203C29.6227 8.61933 29.0502 8.88917 28.623 9.08691C28.4091 9.18596 28.2307 9.26755 28.1055 9.32422C28.0431 9.35241 27.9939 9.37444 27.96 9.38965C27.9433 9.39712 27.9299 9.40322 27.9209 9.40723C27.9164 9.40922 27.9125 9.41105 27.9102 9.41211C27.909 9.41264 27.9079 9.41279 27.9072 9.41309L27.9062 9.41406L27.8936 9.41895L24.3936 10.9189L24.2051 11H1V1H24.1797Z" fill="${shipFill}" stroke="${strokeColor}" stroke-width="${strokeWidth}"/>
+    <path d="M24 2C24 2 25.9379 2.71895 27.5 3.5C29.0621 4.28105 32 5.5 32 6C32 6.5 27.5 8.5 27.5 8.5L24 10H20V2H24Z" fill="${statusFill}"/>
+  </g></svg>`;
 
   return L.divIcon({
     html: svg,
@@ -94,8 +96,8 @@ export default function ShipMarker({ ship, isSelected, onSelect }) {
   const icon = useMemo(
     () =>
       ship.markerType === "hull"
-        ? createHullIcon(headingRounded, isSelected)
-        : createTriangleIcon(headingRounded, isSelected),
+        ? createHullIcon(headingRounded, isSelected, ship)
+        : createTriangleIcon(headingRounded, isSelected, ship),
     [headingRounded, ship.markerType, isSelected],
   );
 
@@ -137,9 +139,9 @@ export default function ShipMarker({ ship, isSelected, onSelect }) {
       getCourseVectorEnd(
         ship.position,
         ship.heading,
-        Math.min(ship.speed * VECTOR_NM_PER_KNOT, VECTOR_MAX_NM)
+        Math.min(ship.speed * VECTOR_NM_PER_KNOT, VECTOR_MAX_NM),
       ),
-    [ship.position, ship.heading, ship.speed]
+    [ship.position, ship.heading, ship.speed],
   );
 
   const handleMouseOver = useCallback(() => setHovered(true), []);
