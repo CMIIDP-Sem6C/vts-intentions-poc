@@ -1,15 +1,16 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import AppLayout from "./components/layout/AppLayout";
 import VTSMap from "./components/map/VTSMap";
-import InboundPanel from "./components/panels/InboundPanel";
-import ShipInfoCard from "./components/panels/ShipInfoCard";
-import useVerificationSync from "./hooks/useVerificationSync";
 import ScenarioSelect from "./components/ScenarioSelect";
 import SectorSelect from "./components/SectorSelect";
+import InboundPanel from "./components/panels/InboundPanel";
+import ShipInfoCard from "./components/panels/ShipInfoCard";
 import useScenarioData from "./hooks/useScenarioData";
+import useVerificationSync from "./hooks/useVerificationSync";
 import useScenarioSimulation from "./hooks/useScenarioSimulation";
 import { API_URL, ENDPOINT_DESTINATIONS } from "./utils/api";
 import { resolveSectorKeyFromDbId } from "./utils/resolveSectorKey";
+import { MOCK_SHIPS } from "./data/mockShips";
 import "./App.css";
 
 function readScenarioId() {
@@ -127,7 +128,6 @@ export default function App() {
         });
       } catch (_error) {
         // DB down -> alleen lokaal gereset.
-        // DB down -> alleen lokaal gereset.
       }
     },
     [updateVerification],
@@ -138,7 +138,31 @@ export default function App() {
   }
 
   if (!activeSector) {
-    return <SectorSelect onSelect={setActiveSector} />;
+    return <SectorSelect onSelect={(sector) => setActiveSector(sector)} />;
+  }
+
+  if (scenarioLoading) {
+    return (
+      <div className="sector-select-overlay">
+        <div className="sector-select-card">
+          <h1 className="sector-select-title">VTS ROTTERDAM</h1>
+          <p className="sector-select-subtitle">Scenario laden...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (scenarioError) {
+    return (
+      <div className="sector-select-overlay">
+        <div className="sector-select-card">
+          <h1 className="sector-select-title">VTS ROTTERDAM</h1>
+          <p className="scenario-status scenario-status-error">
+            Scenario laden mislukt: {scenarioError}
+          </p>
+        </div>
+      </div>
+    );
   }
 
   if (scenarioLoading) {

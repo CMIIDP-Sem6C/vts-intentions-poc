@@ -1,4 +1,5 @@
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
+import "leaflet/dist/leaflet.css";
 import {
   MapContainer,
   TileLayer,
@@ -15,9 +16,8 @@ import {
   KM_MARKERS,
   TURNING_BASINS,
 } from "../../data/sectors";
-import { calculateDistance } from "../../utils/navigation";
 import ShipMarker from "./ShipMarker";
-import "leaflet/dist/leaflet.css";
+import { calculateDistance } from "../../utils/navigation";
 
 function getRemainingIntentionRoute(route, shipPosition) {
   if (!Array.isArray(route) || route.length < 2) return [];
@@ -46,6 +46,7 @@ const ALL_SECTORS_BOUNDS = (() => {
   return L.latLngBounds(
     [Math.min(...lats) - pad, Math.min(...lngs) - pad * 2],
     [Math.max(...lats) + pad, Math.max(...lngs) + pad * 2],
+    [Math.max(...lats) + pad, Math.max(...lngs) + pad * 2],
   );
 })();
 
@@ -63,15 +64,23 @@ const SECTOR_BORDER_STYLE = {
   color: "#66BB6A",
   weight: 2,
   opacity: 0.8,
-};
+}; // this can be done with CSS i believe
 
 const INTENTION_STYLE = {
   color: "#FFC107",
   weight: 3,
   opacity: 0.85,
   dashArray: "6 6",
-};
+}; // this can be done with CSS i believe
 
+/**
+ *
+ * @param {Ship[]} ships
+ * @param {*} selectedShipId
+ * @param {*} onSelectShip
+ * @param {*} activeSector,
+ * @returns {ForwardRefExoticComponent}
+ */
 export default function VTSMap({
   ships,
   selectedShipId,
@@ -156,24 +165,6 @@ export default function VTSMap({
           </Tooltip>
         </CircleMarker>
       ))}
-
-      {intentions.map((intention) => {
-        const ship = ships.find(
-          (s) => s.dbId === intention.dbShipId || s.id === intention.shipId,
-        );
-        const visibleRoute = getRemainingIntentionRoute(
-          intention.route,
-          ship?.position,
-        );
-        if (visibleRoute.length < 2) return null;
-        return (
-          <Polyline
-            key={`intention-${intention.id}`}
-            positions={visibleRoute}
-            pathOptions={INTENTION_STYLE}
-          />
-        );
-      })}
 
       {ships.map((ship) => (
         <ShipMarker
