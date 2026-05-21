@@ -79,7 +79,7 @@ class ScenarioService:
         rows = await self.pool.fetch(
             f"""
             SELECT id, name, nationality, markertype, shiptype, destination, cargo,
-                   aisactive, aisstatus, speed, route, operatornotes, scenario_id, intentions_share_time, intentions_show_complete, intentions_show_active
+                   aisactive, aisstatus, speed, route, operatornotes, scenario_id, intentions_share_time, intentions_show_complete, intentions_show_active, shortname
             FROM {st}
             WHERE {_qi(fk)} = $1
             ORDER BY id
@@ -96,6 +96,7 @@ class ScenarioService:
                 {
                     "id": r["id"],
                     "name": r["name"],
+                    "shortname": r["shortname"],
                     "nationality": r["nationality"],
                     "markerType": (r["markertype"] or "triangle").lower(),
                     "shipType": r["shiptype"],

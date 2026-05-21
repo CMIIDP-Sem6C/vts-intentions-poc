@@ -57,9 +57,19 @@ function createHullIcon(heading, isSelected) {
   });
 }
 
-function createLabelIcon(name) {
+function createLabelIcon(
+  name,
+  intentions = false,
+  verified = false,
+  pilot = false,
+  ais = false,
+  notes = false,
+) {
+  const verifiedIcon = `<svg width="6" height="6" viewBox="0 0 6 6" fill="none" xmlns="http://www.w3.org/2000/svg">
+<circle cx="2.74382" cy="2.74382" r="2.74382" fill="${STATUS_COLORS["green"]}"/>
+</svg>`;
   return L.divIcon({
-    html: `<span class="ship-label-text">${name}</span>`,
+    html: `<span class="ship-label-text">${verified ? verifiedIcon : ""}${intentions ? "#" : ""}${pilot ? "+" : ""}${name}${ais ? "+" : ""}${notes ? "#" : ""}</span>`,
     className: "ship-label-icon",
     iconSize: [0, 0],
     iconAnchor: [0, 6],
@@ -99,7 +109,17 @@ export default function ShipMarker({ ship, isSelected, onSelect }) {
     [headingRounded, ship.markerType, isSelected],
   );
 
-  const labelIcon = useMemo(() => createLabelIcon(ship.name), [ship.name]);
+  const labelIcon = useMemo(
+    () =>
+      createLabelIcon(
+        ship.shortname.toUpperCase(),
+        ship.intentionsShowActive,
+        ship.verified,
+        ship.shipType === "Zeevaart",
+        ship.aisActive,
+      ),
+    [ship.name],
+  );
 
   const labelPos = useMemo(
     () => pixelOffsetToLatLng(map, ship.position, labelOffsetPx),
@@ -137,9 +157,9 @@ export default function ShipMarker({ ship, isSelected, onSelect }) {
       getCourseVectorEnd(
         ship.position,
         ship.heading,
-        Math.min(ship.speed * VECTOR_NM_PER_KNOT, VECTOR_MAX_NM)
+        Math.min(ship.speed * VECTOR_NM_PER_KNOT, VECTOR_MAX_NM),
       ),
-    [ship.position, ship.heading, ship.speed]
+    [ship.position, ship.heading, ship.speed],
   );
 
   const handleMouseOver = useCallback(() => setHovered(true), []);

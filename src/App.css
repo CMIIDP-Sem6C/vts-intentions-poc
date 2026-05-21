@@ -57,7 +57,7 @@
 
 .sector-select-btn:hover {
   background: rgba(255, 152, 0, 0.08);
-  border-color: #FF9800;
+  border-color: #ff9800;
   transform: translateY(-2px);
   box-shadow: 0 4px 20px rgba(255, 152, 0, 0.15);
 }
@@ -76,7 +76,7 @@
 .sector-btn-vhf {
   font-size: 13px;
   font-weight: 600;
-  color: #FF9800;
+  color: #ff9800;
   letter-spacing: 0.8px;
 }
 
@@ -100,7 +100,7 @@
 }
 
 .scenario-status-error {
-  color: #F44336;
+  color: #f44336;
 }
 
 .scenario-select-rows {
@@ -145,7 +145,7 @@
 
 .scenario-select-row:hover:not(.disabled) {
   background: rgba(255, 152, 0, 0.08);
-  border-color: #FF9800;
+  border-color: #ff9800;
   transform: translateX(2px);
   box-shadow: 0 4px 20px rgba(255, 152, 0, 0.12);
 }
@@ -183,13 +183,13 @@
   gap: 12px;
   font-size: 13px;
   font-weight: 600;
-  color: #FF9800;
+  color: #ff9800;
   letter-spacing: 0.5px;
 }
 
 .scenario-row-arrow {
   font-size: 16px;
-  color: #FF9800;
+  color: #ff9800;
 }
 
 .scenario-row-locked {
@@ -407,7 +407,9 @@
   align-items: center;
   justify-content: center;
   border-radius: 4px;
-  transition: background 0.15s ease, transform 0.15s ease;
+  transition:
+    background 0.15s ease,
+    transform 0.15s ease;
 }
 
 .verify-star-btn:hover {
@@ -608,11 +610,13 @@
   cursor: pointer;
   padding: 2px 6px;
   opacity: 0.55;
-  transition: color 0.15s, opacity 0.15s;
+  transition:
+    color 0.15s,
+    opacity 0.15s;
 }
 
 .reset-test-btn:hover {
-  color: #F44336;
+  color: #f44336;
   opacity: 1;
 }
 
@@ -889,14 +893,20 @@
 }
 
 .ship-label-text {
-  color: #C8E6C9;
+  color: #c8e6c9;
   font-size: 11px;
   font-weight: 600;
-  font-family: 'Inter', 'Segoe UI', sans-serif;
+  font-family: "Inter", "Segoe UI", sans-serif;
   white-space: nowrap;
   cursor: grab;
-  text-shadow: 0 0 3px rgba(0, 0, 0, 0.8), 0 0 6px rgba(0, 0, 0, 0.5);
+  text-shadow:
+    0 0 3px rgba(0, 0, 0, 0.8),
+    0 0 6px rgba(0, 0, 0, 0.5);
   user-select: none;
+  vertical-align: center;
+}
+.ship-label-text svg {
+  margin-inline-end: 1px;
 }
 
 .ship-label-text:active {
@@ -912,7 +922,7 @@
   font-weight: 600 !important;
   letter-spacing: 0.5px !important;
   padding: 0 !important;
-  font-family: 'Inter', 'Segoe UI', sans-serif !important;
+  font-family: "Inter", "Segoe UI", sans-serif !important;
 }
 
 .km-marker-tooltip::before {
@@ -930,7 +940,7 @@
   gap: 16px;
   background: #141414;
   color: #e0e0e0;
-  font-family: 'Inter', 'Segoe UI', sans-serif;
+  font-family: "Inter", "Segoe UI", sans-serif;
   padding: 24px;
   text-align: center;
 }
@@ -1004,7 +1014,10 @@
   cursor: pointer;
   padding: 0;
   flex-shrink: 0;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
 }
 
 .timeline-btn:hover {
