@@ -2,7 +2,7 @@ import { useMemo, useState, useCallback, useRef } from "react";
 import { Marker, Polyline, useMap } from "react-leaflet";
 import L from "leaflet";
 import { getCourseVectorEnd } from "../../utils/navigation";
-import { STATUS_COLORS } from "../../utils/status";
+import { STATUS } from "../../utils/status";
 
 const FILL = "#1B5E20";
 const FILL_SEL = "#2E7D32";
@@ -57,9 +57,18 @@ function createHullIcon(heading, isSelected) {
   });
 }
 
-function createLabelIcon(name) {
+function createLabelIcon(ship, expandLabel) {
+  const hasDimensions =
+    ship.length !== undefined ||
+    ship.width !== undefined ||
+    ship.depth !== undefined;
+  const verifiedIcon = `<svg width="6" height="6" viewBox="0 0 6 6" fill="none" xmlns="http://www.w3.org/2000/svg">
+<circle cx="2.74382" cy="2.74382" r="2.74382" fill="${STATUS[ship.status].color}"/>
+</svg>`;
+  const labelTitle = `<span class="ship-label-text">${ship.status === "green" ? verifiedIcon : ""}${ship.intentionsShowActive ? "#" : ""}${ship.shipType === "Zeevaart" ? "+" : ""}${ship.shortname.toUpperCase()}${ship.aisActive ? "+" : ""}${ship.operatorNotes && ship.operatorNotes.length > 0 ? "#" : ""} ${expandLabel ? ship.name : ""}</span>`;
+  const labelExpandedInfo = `${hasDimensions ? `<span class="ship-label-text">${ship.length ?? "NaN"}m ${ship.widht ?? "NaN"}m ${ship.depth ?? "NaN"}dm</span>` : ""}<span class="ship-label-text">${ship.speed ?? "NaN"}kn ${ship.baseHeading.toFixed(1) ?? "NaN"}° ${ship.rateOfTurn !== undefined ? `${ship.rateOfTurn}°/min` : ""}</span><span class="ship-label-text">${ship.shipType === "Zeevaart" ? "Z" : "B"} ${ship.destination} ${ship.status === "green" ? verifiedIcon : ""}</span>`;
   return L.divIcon({
-    html: `<span class="ship-label-text">${name}</span>`,
+    html: `<div class="ship-label-container">${labelTitle}${expandLabel ? labelExpandedInfo : ""}</div>`,
     className: "ship-label-icon",
     iconSize: [0, 0],
     iconAnchor: [0, 6],
@@ -83,6 +92,7 @@ export default function ShipMarker({ ship, isSelected, onSelect }) {
   const map = useMap();
   const [hovered, setHovered] = useState(false);
   const [labelOffsetPx, setLabelOffsetPx] = useState(DEFAULT_LABEL_OFFSET_PX);
+  const [expandLabel, setExpandLabel] = useState(false);
   const showOverlay = isSelected || hovered;
   const labelRef = useRef(null);
 
@@ -99,7 +109,19 @@ export default function ShipMarker({ ship, isSelected, onSelect }) {
     [headingRounded, ship.markerType, isSelected],
   );
 
-  const labelIcon = useMemo(() => createLabelIcon(ship.name), [ship.name]);
+  const labelIcon = useMemo(
+    () => createLabelIcon(ship, expandLabel),
+    [
+      ship.name,
+      ship.speed,
+      ship.baseHeading,
+      ship.destination,
+      ship.intentionsShowActive,
+      ship.operatorNotes,
+      ship.verified,
+      expandLabel,
+    ],
+  );
 
   const labelPos = useMemo(
     () => pixelOffsetToLatLng(map, ship.position, labelOffsetPx),
@@ -137,9 +159,9 @@ export default function ShipMarker({ ship, isSelected, onSelect }) {
       getCourseVectorEnd(
         ship.position,
         ship.heading,
-        Math.min(ship.speed * VECTOR_NM_PER_KNOT, VECTOR_MAX_NM)
+        Math.min(ship.speed * VECTOR_NM_PER_KNOT, VECTOR_MAX_NM),
       ),
-    [ship.position, ship.heading, ship.speed]
+    [ship.position, ship.heading, ship.speed],
   );
 
   const handleMouseOver = useCallback(() => setHovered(true), []);
@@ -204,7 +226,10 @@ export default function ShipMarker({ ship, isSelected, onSelect }) {
         draggable
         eventHandlers={{
           dragend: handleLabelDragEnd,
-          click: () => onSelect(ship.id),
+          click: () => {
+            setExpandLabel((currentExpandLabel) => !currentExpandLabel);
+            //onSelect(ship.id);
+          },
           mouseover: handleMouseOver,
           mouseout: handleMouseOut,
         }}

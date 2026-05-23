@@ -4,38 +4,18 @@ import {
   calculateETA,
   formatETA,
   pointInPolygon,
-} from '../../utils/navigation';
-import { SECTORS } from '../../data/sectors';
-
-const STATUS_COLORS = {
-  red: '#F44336',
-  yellow: '#FF9800',
-  green: '#4CAF50',
-};
-
-function getStatusLevel(ship) {
-  const destKnown = ship.destination && ship.destination !== 'Unknown';
-  const isVerified = Boolean(ship.verified);
-  const dots = [];
-  if (destKnown && isVerified) {
-    dots.push('green', 'green', 'green');
-  } else if (destKnown || isVerified) {
-    dots.push('yellow', 'yellow');
-  } else {
-    dots.push('red');
-  }
-  return dots;
-}
+} from "../../utils/navigation";
+import { STATUS } from "../../utils/status";
+import { SECTORS } from "../../data/sectors";
 
 function StatusDots({ ship }) {
-  const dots = getStatusLevel(ship);
   return (
     <span className="status-dots">
-      {dots.map((color, i) => (
+      {Array.from({ length: STATUS[ship.status].dots }).map((dot, i) => (
         <span
           key={i}
           className="status-dot"
-          style={{ background: STATUS_COLORS[color] }}
+          style={{ background: STATUS[ship.status].color }}
         />
       ))}
     </span>
@@ -45,7 +25,10 @@ function StatusDots({ ship }) {
 function computeDistanceToSector(ship, sectorBoundary) {
   if (!ship.waypoints || ship.currentWaypointIndex == null) return null;
 
-  let dist = calculateDistance(ship.position, ship.waypoints[ship.currentWaypointIndex]);
+  let dist = calculateDistance(
+    ship.position,
+    ship.waypoints[ship.currentWaypointIndex],
+  );
   for (let i = ship.currentWaypointIndex; i < ship.waypoints.length; i++) {
     if (pointInPolygon(ship.waypoints[i], sectorBoundary)) {
       return dist;
@@ -74,9 +57,13 @@ export default function InboundPanel({
       .filter((s) => !s.arrived)
       .map((s) => {
         const currentlyInSector = pointInPolygon(s.position, sectorBoundary);
-        const routeEntersSector = !currentlyInSector && s.waypoints?.some(
-          (wp, i) => i >= (s.currentWaypointIndex || 0) && pointInPolygon(wp, sectorBoundary)
-        );
+        const routeEntersSector =
+          !currentlyInSector &&
+          s.waypoints?.some(
+            (wp, i) =>
+              i >= (s.currentWaypointIndex || 0) &&
+              pointInPolygon(wp, sectorBoundary),
+          );
         return { ...s, currentlyInSector, routeEntersSector };
       })
       .filter((s) => s.currentlyInSector || s.routeEntersSector);
@@ -115,22 +102,27 @@ export default function InboundPanel({
         <tbody>
           {inboundShips.map((ship) => {
             const isSelected = ship.id === selectedShipId;
-            const destKnown = ship.destination && ship.destination !== 'Unknown';
+            const destKnown =
+              ship.destination && ship.destination !== "Unknown";
 
             let eta;
             if (ship.currentlyInSector) {
-              eta = 'In sector';
+              eta = "In sector";
             } else {
-              const distToSector = computeDistanceToSector(ship, sectorBoundary);
-              eta = distToSector != null
-                ? formatETA(calculateETA(distToSector, ship.speed))
-                : 'Unknown';
+              const distToSector = computeDistanceToSector(
+                ship,
+                sectorBoundary,
+              );
+              eta =
+                distToSector != null
+                  ? formatETA(calculateETA(distToSector, ship.speed))
+                  : "Unknown";
             }
 
             return (
               <tr
                 key={ship.id}
-                className={`inbound-row ${isSelected ? 'selected' : ''}`}
+                className={`inbound-row ${isSelected ? "selected" : ""}`}
                 onClick={() => onSelectShip(ship.id)}
               >
                 <td className="ship-name-cell">{ship.name}</td>
@@ -140,9 +132,12 @@ export default function InboundPanel({
                 <td className="destination-cell">
                   <span
                     className="dest-text"
-                    style={{ color: destKnown ? '#bbb' : STATUS_COLORS.red, fontStyle: destKnown ? 'normal' : 'italic' }}
+                    style={{
+                      color: destKnown ? "#bbb" : STATUS["red"].color,
+                      fontStyle: destKnown ? "normal" : "italic",
+                    }}
                   >
-                    {destKnown ? ship.destination : 'unknown'}
+                    {destKnown ? ship.destination : "unknown"}
                   </span>
                 </td>
                 <td className="status-cell">{eta}</td>
