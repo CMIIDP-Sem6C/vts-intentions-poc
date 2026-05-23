@@ -8,29 +8,14 @@ import {
 import { STATUS } from "../../utils/status";
 import { SECTORS } from "../../data/sectors";
 
-function getStatusLevel(ship) {
-  const destKnown = ship.destination && ship.destination !== "Unknown";
-  const isVerified = Boolean(ship.verified);
-  const dots = [];
-  if (destKnown && isVerified) {
-    dots.push("green", "green", "green");
-  } else if (destKnown || isVerified) {
-    dots.push("yellow", "yellow");
-  } else {
-    dots.push("red");
-  }
-  return dots;
-}
-
 function StatusDots({ ship }) {
-  const dots = getStatusLevel(ship);
   return (
     <span className="status-dots">
-      {dots.map((color, i) => (
+      {Array.from({ length: STATUS[ship.status].dots }).map((dot, i) => (
         <span
           key={i}
           className="status-dot"
-          style={{ background: STATUS[color].color }}
+          style={{ background: STATUS[ship.status].color }}
         />
       ))}
     </span>

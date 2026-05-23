@@ -10,6 +10,7 @@ import useScenarioData from "./hooks/useScenarioData";
 import useVerificationSync from "./hooks/useVerificationSync";
 import useScenarioSimulation from "./hooks/useScenarioSimulation";
 import { API_URL, ENDPOINT_DESTINATIONS } from "./utils/api";
+import { getStatusLevel } from "./utils/status";
 import "./App.css";
 
 export default function App() {
@@ -62,13 +63,19 @@ export default function App() {
 
   const ships = useMemo(
     () =>
-      simulatedShips.map((ship) => ({
-        ...ship,
-        destination:
-          verificationByShipId[ship.id]?.destination ?? ship.destination,
-        verified: verificationByShipId[ship.id]?.verified ?? false,
-        aisActive: aisActiveMap[ship.id] ?? ship.aisActive,
-      })),
+      simulatedShips.map((ship) => {
+        const updatedShip = {
+          ...ship,
+          destination:
+            verificationByShipId[ship.id]?.destination ?? ship.destination,
+          verified: verificationByShipId[ship.id]?.verified ?? false,
+          aisActive: aisActiveMap[ship.id] ?? ship.aisActive,
+        };
+        return {
+          ...updatedShip,
+          status: getStatusLevel(updatedShip),
+        };
+      }),
     [simulatedShips, verificationByShipId, aisActiveMap],
   );
 
