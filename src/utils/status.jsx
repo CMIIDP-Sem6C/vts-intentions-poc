@@ -29,20 +29,3 @@ export const STATUS = {
     dots: 3,
   },
 };
-export const STATUS_LABELS = {
-  red: "Onbekend",
-  yellow: "Gedeeltelijk",
-  green: "Volledig",
-};
-
-export const STATUS_CSS = {
-  red: "status-red",
-  yellow: "status-yellow",
-  green: "status-ok",
-};
-
-export const STATUS_COLORS = {
-  red: "#F44336",
-  yellow: "#FF9800",
-  green: "#4CAF50",
-};
