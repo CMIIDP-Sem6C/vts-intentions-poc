@@ -908,6 +908,11 @@
   border: none !important;
 }
 
+.ship-label-container {
+  display: flex;
+  flex-direction: column;
+}
+
 .ship-label-text {
   color: #c8e6c9;
   font-size: 11px;
