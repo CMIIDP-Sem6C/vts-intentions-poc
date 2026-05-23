@@ -58,7 +58,6 @@ function createHullIcon(heading, isSelected) {
 }
 
 function createLabelIcon(ship, expandLabel) {
-  console.log(ship);
   const hasDimensions =
     ship.length !== undefined ||
     ship.width !== undefined ||
