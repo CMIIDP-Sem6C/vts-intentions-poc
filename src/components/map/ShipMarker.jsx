@@ -2,7 +2,7 @@ import { useMemo, useState, useCallback, useRef } from "react";
 import { Marker, Polyline, useMap } from "react-leaflet";
 import L from "leaflet";
 import { getCourseVectorEnd } from "../../utils/navigation";
-import { STATUS_COLORS } from "../../utils/status";
+import { STATUS } from "../../utils/status";
 
 const FILL = "#1B5E20";
 const FILL_SEL = "#2E7D32";
@@ -64,7 +64,7 @@ function createLabelIcon(ship, expandLabel) {
     ship.width !== undefined ||
     ship.depth !== undefined;
   const verifiedIcon = `<svg width="6" height="6" viewBox="0 0 6 6" fill="none" xmlns="http://www.w3.org/2000/svg">
-<circle cx="2.74382" cy="2.74382" r="2.74382" fill="${STATUS_COLORS["green"]}"/>
+<circle cx="2.74382" cy="2.74382" r="2.74382" fill="${STATUS["green"].color}"/>
 </svg>`;
   const labelTitle = `<span class="ship-label-text">${ship.verified ? verifiedIcon : ""}${ship.intentionsShowActive ? "#" : ""}${ship.shipType === "Zeevaart" ? "+" : ""}${ship.shortname.toUpperCase()}${ship.aisActive ? "+" : ""}${ship.operatorNotes && ship.operatorNotes.length > 0 ? "#" : ""} ${expandLabel ? ship.name : ""}</span>`;
   const labelExpandedInfo = `${hasDimensions ? `<span class="ship-label-text">${ship.length ?? "NaN"}m ${ship.widht ?? "NaN"}m ${ship.depth ?? "NaN"}dm</span>` : ""}<span class="ship-label-text">${ship.speed ?? "NaN"}kn ${ship.baseHeading.toFixed(1) ?? "NaN"}° ${ship.rateOfTurn !== undefined ? `${ship.rateOfTurn}°/min` : ""}</span><span class="ship-label-text">${ship.shipType === "Zeevaart" ? "Z" : "B"} ${ship.destination} ${ship.verified ? verifiedIcon : ""}</span>`;

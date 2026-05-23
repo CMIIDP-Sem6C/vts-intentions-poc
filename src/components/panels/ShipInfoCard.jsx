@@ -1,12 +1,7 @@
 import { useState, useEffect } from "react";
 import TextAutocompleteInput from "../inputs/TextAutocompleteInput";
 import Flag from "./Flag";
-import {
-  getStatusLevel,
-  STATUS_LABELS,
-  STATUS_CSS,
-  STATUS_COLORS,
-} from "../../utils/status";
+import { getStatusLevel, STATUS } from "../../utils/status";
 
 export default function ShipInfoCard({
   ship,
@@ -17,7 +12,7 @@ export default function ShipInfoCard({
   verificationError,
   destinations = [],
 }) {
-  const [editDest, setEditDest] = useState('');
+  const [editDest, setEditDest] = useState("");
   const [scanning, setScanning] = useState(false);
   if (!ship) return null;
 
@@ -48,15 +43,15 @@ export default function ShipInfoCard({
 
       <div className="ship-info-actions">
         <button
-          className={`scan-ais-btn ${scanning ? 'scanning' : ''} ${ship.verified ? 'active' : ''}`}
+          className={`scan-ais-btn ${scanning ? "scanning" : ""} ${ship.verified ? "active" : ""}`}
           onClick={handleScan}
           disabled={ship.verified}
         >
           {ship.verified
-            ? 'SCHIP GEVERIFIEERD'
+            ? "SCHIP GEVERIFIEERD"
             : scanning
-              ? 'VERIFIEREN...'
-              : 'VERIFIEER SCHIP'}
+              ? "VERIFIEREN..."
+              : "VERIFIEER SCHIP"}
         </button>
       </div>
 
@@ -101,20 +96,20 @@ export default function ShipInfoCard({
               onSubmit={handleDestSubmit}
               suggestions={destinations}
               level={level}
-              style={{ color: STATUS_COLORS[level] }}
+              style={{ color: STATUS[level].color }}
               placeholder="Onbekend - voer in..."
             />
           </div>
           <div className="info-row">
             <span className="info-label">VERIFICATIE</span>
-            <span className={`info-value ${STATUS_CSS[level]}`}>
-              {ship.verified ? 'Geverifieerd' : 'Niet geverifieerd'}
+            <span className={`info-value ${STATUS[level].css}`}>
+              {ship.verified ? "Geverifieerd" : "Niet geverifieerd"}
             </span>
           </div>
           <div className="info-row">
             <span className="info-label">TRACKING</span>
-            <span className={`info-value ${STATUS_CSS[level]}`}>
-              {STATUS_LABELS[level]}
+            <span className={`info-value ${STATUS[level].css}`}>
+              {STATUS[level].label}
             </span>
           </div>
           <div className="info-row">

@@ -734,7 +734,7 @@
 
 /* --- Status colours --- */
 
-.status-ok {
+.status-green {
   color: var(--color-success);
 }
 
