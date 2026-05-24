@@ -1027,7 +1027,6 @@
   min-height: 94px;
   padding: 10px 11px 12px;
   background: #2a2926;
-  border: 0.805128px solid #ffffff;
   border-radius: 8.26316px;
   font-family: "Hind", "Segoe UI", sans-serif;
   color: #c0c0c0;
@@ -1061,7 +1060,6 @@
 
 .intention-change-alert__message {
   margin: 0;
-  font-weight: 700;
   font-size: 14px;
   line-height: 22px;
   color: #c0c0c0;
