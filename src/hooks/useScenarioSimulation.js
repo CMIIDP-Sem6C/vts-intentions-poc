@@ -5,6 +5,10 @@ import {
   moveAlongBearing,
 } from "../utils/navigation";
 import { useDynamicIntentionsDisplay } from "../utils/dynamicIntentionsDisplay";
+import {
+  ALERT_INTENTION_CHANGE_DURATION_SEC,
+  resolveEventShipId,
+} from "../utils/scenarioEvents";
 
 const TICK_MS = 100;
 const TIME_SCALE = 4;
@@ -87,20 +91,6 @@ function computeShipPosition(ship, spawnTime, t) {
   };
 }
 
-// Map an event's subject_id to a ship dbId.
-// - subject_type=ship  -> subject_id IS the ship.id
-// - subject_type=intention -> subject_id is intention.id; look up its ship
-function resolveEventShipId(event, ships, intentions) {
-  if (!event) return null;
-  if (event.subjectType === "intention") {
-    const intention = (intentions || []).find((i) => i.id === event.subjectId);
-    if (intention) {
-      return intention.dbShipId ?? intention.ship_id ?? null;
-    }
-  }
-  return event.subjectId;
-}
-
 // Walk events <= t in time order to determine each ship's intentionsShowActive.
 function computeIntentionVisibility(events, ships, intentions, t) {
   const visible = new Map();
@@ -137,6 +127,10 @@ export default function useScenarioSimulation(scenarioData) {
     for (const event of events || []) {
       const tt = event.triggerTime ?? 0;
       if (tt > max) max = tt;
+      if (event.type === "AlertIntentionChange") {
+        const alertEnd = tt + ALERT_INTENTION_CHANGE_DURATION_SEC;
+        if (alertEnd > max) max = alertEnd;
+      }
     }
     for (const ship of ships || []) {
       const key = ship.id ?? ship.dbId;
