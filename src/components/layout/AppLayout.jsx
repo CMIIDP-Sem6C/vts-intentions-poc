@@ -8,10 +8,10 @@ export default function AppLayout({
   return (
     <div className="app-layout">
       <div className="map-container">{map}</div>
-      {topCenterAlerts ? (
-        <div className="top-center-alerts">{topCenterAlerts}</div>
-      ) : null}
       <div className="overlay-panels">
+        {topCenterAlerts ? (
+        <div className="top-center-alerts">{topCenterAlerts}</div>
+        ) : null}
         <div className="left-panels">{inboundPanel}</div>
         <div className="right-panels">{shipInfoCard}</div>
       </div>

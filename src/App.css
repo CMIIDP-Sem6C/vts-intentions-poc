@@ -1026,49 +1026,48 @@
   width: 314px;
   min-height: 94px;
   padding: 10px 11px 12px;
-  background: rgba(30, 30, 30, 0.94);
-  border-radius: 8.26316px;
-  font-family: "Hind", "Segoe UI", sans-serif;
-  color: #c0c0c0;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+  background: var(--color-bg-panel);
+  border-radius: var(--border-radius-base);
+  color: var(--color-text-main);
+  box-shadow: var(--shadow-panel);
 }
 
-.intention-change-alert__indicator {
+.intention-change-alert-indicator {
   flex-shrink: 0;
   width: 26px;
   height: 26px;
   margin-top: 1px;
   border-radius: 50%;
-  background: #eb4235;
+  background: var(--color-error);
 }
 
-.intention-change-alert__content {
+.intention-change-alert-content {
   flex: 1;
   min-width: 0;
   padding-top: 2px;
 }
 
-.intention-change-alert__title {
+.intention-change-alert-title {
   margin: 0 0 4px;
   padding-left: 2px;
   font-weight: 700;
   font-size: 30px;
   line-height: 1;
-  color: #c0c0c0;
+  color: var(--color-text-main);
   letter-spacing: 0.02em;
 }
 
-.intention-change-alert__message {
+.intention-change-alert-message {
   margin: 0;
   font-size: 14px;
   line-height: 22px;
-  color: #c0c0c0;
+  color: var(--color-text-main);
 }
 
-.intention-change-alert__ship {
+.intention-change-alert-ship {
   font-weight: 700;
   font-size: 14px;
-  color: #c0c0c0;
+  color: var(--color-text-main);
 }
 
 /* ==============================

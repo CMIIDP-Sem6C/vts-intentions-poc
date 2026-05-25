@@ -4,7 +4,7 @@ export const ALERT_INTENTION_CHANGE_DURATION_SEC = 8;
 export function resolveEventShipId(event, ships, intentions) {
   if (!event) return null;
   if (event.subjectType === "intention") {
-    const intention = (intentions || []).find((i) => i.id === event.subjectId);
+    const intention = (intentions || []).find((intention) => intention.id === event.subjectId);
     if (intention) {
       return intention.dbShipId ?? intention.ship_id ?? null;
     }
@@ -16,8 +16,7 @@ export function findShipByDbId(ships, dbShipId) {
   if (dbShipId == null || !ships?.length) return null;
   const id = Number(dbShipId);
   return (
-    ships.find((s) => Number(s.dbId ?? s.id) === id) ??
-    ships.find((s) => Number(s.id) === id) ??
+    ships.find((ship) => Number(ship.dbId ?? ship.id) === id) ??
     null
   );
 }
@@ -40,16 +39,16 @@ export function getActiveIntentionChangeAlerts(
   if (!events?.length) return [];
 
   return events
-    .filter((e) => e.type === "AlertIntentionChange")
-    .filter((e) => {
-      const t = e.triggerTime ?? 0;
-      return simTime >= t && simTime < t + durationSec;
+    .filter((event) => event.type === "AlertIntentionChange")
+    .filter((event) => {
+      const triggerTime = event.triggerTime ?? 0;
+      return simTime >= triggerTime && simTime < triggerTime + durationSec;
     })
-    .map((e) => {
-      const shipDbId = resolveEventShipId(e, ships, intentions);
+    .map((event) => {
+      const shipDbId = resolveEventShipId(event, ships, intentions);
       return {
-        key: e.id,
-        shipName: getShipDisplayName(ships, shipDbId ?? e.subjectId),
+        key: event.id,
+        shipName: getShipDisplayName(ships, shipDbId ?? event.subjectId),
       };
     });
 }
