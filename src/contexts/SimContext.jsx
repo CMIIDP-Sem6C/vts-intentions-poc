@@ -22,9 +22,10 @@ export function SimProvider({ children }) {
     const map = new Map();
     for (const event of events || []) {
       if (event.type === "SpawnShip") {
-        const t = event.triggerTime ?? 0;
+        const triggerTime = event.triggerTime ?? 0;
         const existing = map.get(event.subjectId);
-        if (existing == null || t < existing) map.set(event.subjectId, t);
+        if (existing == null || t < existing)
+          map.set(event.subjectId, triggerTime);
       }
     }
     return map;
@@ -33,8 +34,8 @@ export function SimProvider({ children }) {
   const duration = useMemo(() => {
     let max = 0;
     for (const event of events || []) {
-      const tt = event.triggerTime ?? 0;
-      if (tt > max) max = tt;
+      const triggerTime = event.triggerTime ?? 0;
+      if (triggerTime > max) max = triggerTime;
     }
     for (const ship of ships || []) {
       const key = ship.id ?? ship.dbId;
@@ -77,7 +78,7 @@ export function SimProvider({ children }) {
   }, [isPlaying, duration]);
 
   const seek = useCallback(
-    (t) => setSimTime(Math.max(0, Math.min(duration, t))),
+    (time) => setSimTime(Math.max(0, Math.min(duration, time))),
     [duration],
   );
   const play = useCallback(() => {

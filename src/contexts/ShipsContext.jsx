@@ -19,10 +19,10 @@ import { useDynamicIntentionsDisplay } from "../utils/dynamicIntentionsDisplay";
 
 const ShipsContext = createContext(null);
 
-function computeShipPosition(ship, spawnTime, t, timeScale) {
+function computeShipPosition(ship, spawnTime, time, timeScale) {
   const waypoints = ship.waypoints || [];
   if (waypoints.length === 0) return null;
-  if (t < spawnTime) return null;
+  if (time < spawnTime) return null;
   const baseSpeed = ship.speed || 5;
   if (waypoints.length < 2) {
     return {
@@ -33,7 +33,7 @@ function computeShipPosition(ship, spawnTime, t, timeScale) {
       baseSpeed,
     };
   }
-  const travelSec = t - spawnTime;
+  const travelSec = time - spawnTime;
   let remaining = baseSpeed * ((travelSec * timeScale) / 3600);
   for (let i = 0; i < waypoints.length - 1; i++) {
     const segDist = calculateDistance(waypoints[i], waypoints[i + 1]);
@@ -73,7 +73,7 @@ function resolveEventShipId(event, ships, intentions) {
   return event.subjectId;
 }
 
-function computeIntentionVisibility(events, ships, intentions, t) {
+function computeIntentionVisibility(events, ships, intentions, time) {
   const visible = new Map();
   for (const ship of ships || []) {
     const initial = ship.intentionsShowActive ?? false;
@@ -85,7 +85,7 @@ function computeIntentionVisibility(events, ships, intentions, t) {
     (a, b) => (a.triggerTime ?? 0) - (b.triggerTime ?? 0),
   );
   for (const event of sorted) {
-    if ((event.triggerTime ?? 0) > t) break;
+    if ((event.triggerTime ?? 0) > time) break;
     if (event.type !== "ShowIntention" && event.type !== "HideIntention")
       continue;
     const shipKey = resolveEventShipId(event, ships, intentions);
