@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import AppLayout from "./components/layout/AppLayout";
 import VTSMap from "./components/map/VTSMap";
 import ScenarioSelect from "./components/ScenarioSelect";
@@ -6,87 +6,31 @@ import SectorSelect from "./components/SectorSelect";
 import TimelineControls from "./components/panels/TimelineControls";
 import InboundPanel from "./components/panels/InboundPanel";
 import ShipInfoCard from "./components/panels/ShipInfoCard";
-import useScenarioData from "./hooks/useScenarioData";
-import useVerificationSync from "./hooks/useVerificationSync";
-import useScenarioSimulation from "./hooks/useScenarioSimulation";
+import { ScenarioProvider, useScenario } from "./contexts/ScenarioContext";
+import { SimProvider, useSim } from "./contexts/SimContext";
+import { ShipsProvider, useShips } from "./contexts/ShipsContext";
+import { SECTORS } from "./data/sectors";
 import { API_URL, ENDPOINT_DESTINATIONS } from "./utils/api";
-import { getStatusLevel } from "./utils/status";
 import "./App.css";
 
-export default function App() {
-  const [activeScenarioId, setActiveScenarioId] = useState(null);
-  const [activeSector, setActiveSector] = useState(null);
-
-  const { verificationByShipId, updateVerification, verificationError } =
-    useVerificationSync();
-
+function AppContent({ activeSector, destinations }) {
+  const { scenario, loading, error, originalShips } = useScenario();
+  const { simTime, duration, isPlaying, play, pause, seek, restart } = useSim();
   const {
-    data: scenarioData,
-    loading: scenarioLoading,
-    error: scenarioError,
-  } = useScenarioData(activeScenarioId);
-
-  const activeScenarioData = activeSector ? scenarioData : null;
-
-  const {
-    ships: simulatedShips,
-    simTime,
-    duration,
-    isPlaying,
-    play,
-    pause,
-    seek,
-    restart,
-  } = useScenarioSimulation(activeScenarioData);
-
-  const [selectedShipId, setSelectedShipId] = useState(null);
-  const [aisActiveMap, setAisActiveMap] = useState({});
-  const [destinations, setDestinations] = useState([]);
-
-  useEffect(() => {
-    fetch(`${API_URL}/${ENDPOINT_DESTINATIONS}`)
-      .then((res) => res.json())
-      .then((data) => setDestinations(data))
-      .catch((err) => console.error("Failed to load destinations:", err));
-  }, []);
-
-  useEffect(() => {
-    if (!scenarioData?.ships) return;
-    setAisActiveMap((prev) => {
-      const next = { ...prev };
-      scenarioData.ships.forEach((s) => {
-        if (!(s.id in next)) next[s.id] = s.aisActive;
-      });
-      return next;
-    });
-  }, [scenarioData]);
-
-  const ships = useMemo(
-    () =>
-      simulatedShips.map((ship) => {
-        const updatedShip = {
-          ...ship,
-          destination:
-            verificationByShipId[ship.id]?.destination ?? ship.destination,
-          verified: verificationByShipId[ship.id]?.verified ?? false,
-          aisActive: aisActiveMap[ship.id] ?? ship.aisActive,
-        };
-        return {
-          ...updatedShip,
-          status: getStatusLevel(updatedShip),
-        };
-      }),
-    [simulatedShips, verificationByShipId, aisActiveMap],
-  );
-
-  const selectedShip = useMemo(
-    () => ships.find((s) => s.id === selectedShipId) || null,
-    [ships, selectedShipId],
-  );
+    ships,
+    selectedShipId,
+    selectedShip,
+    selectShip,
+    setDestination,
+    verifyShip,
+    toggleShipVerification,
+    resetShip,
+    verificationError,
+  } = useShips();
 
   const scenarioFocus = useMemo(() => {
     const points = [];
-    for (const s of scenarioData?.ships || []) {
+    for (const s of originalShips || []) {
       if (Array.isArray(s.waypoints) && s.waypoints.length > 0) {
         points.push(...s.waypoints.slice(0, 5));
       }
@@ -104,73 +48,9 @@ export default function App() {
     const span = Math.max(latSpan, lngSpan * 0.62);
     const zoom = span > 0.05 ? 13 : span > 0.025 ? 14 : 15;
     return { center, zoom };
-  }, [scenarioData]);
+  }, [originalShips]);
 
-  const handleSelectShip = useCallback((id) => {
-    setSelectedShipId((prev) => (prev === id ? null : id));
-  }, []);
-
-  const handleCloseInfo = useCallback(() => {
-    setSelectedShipId(null);
-  }, []);
-
-  const handleSetDestination = useCallback(
-    async (id, dest) => {
-      try {
-        await updateVerification(id, { destination: dest, verified: true });
-      } catch (_error) {
-        // Polling loop will retry.
-      }
-    },
-    [updateVerification],
-  );
-
-  const handleVerifyShip = useCallback(
-    async (id) => {
-      try {
-        await updateVerification(id, { verified: true });
-      } catch (_error) {
-        // Polling loop will retry.
-      }
-    },
-    [updateVerification],
-  );
-
-  const handleToggleShipVerification = useCallback(
-    async (id, verified) => {
-      try {
-        await updateVerification(id, { verified });
-      } catch (_error) {
-        // Polling loop will retry.
-      }
-    },
-    [updateVerification],
-  );
-
-  const handleResetShip = useCallback(
-    async (id) => {
-      setAisActiveMap((prev) => ({ ...prev, [id]: false }));
-      try {
-        await updateVerification(id, {
-          verified: false,
-          destination: "Unknown",
-        });
-      } catch (_error) {
-        // DB down -> alleen lokaal gereset.
-      }
-    },
-    [updateVerification],
-  );
-
-  if (activeScenarioId == null) {
-    return <ScenarioSelect onSelect={setActiveScenarioId} />;
-  }
-
-  if (!activeSector) {
-    return <SectorSelect onSelect={(sector) => setActiveSector(sector)} />;
-  }
-
-  if (scenarioLoading) {
+  if (loading) {
     return (
       <div className="sector-select-overlay">
         <div className="sector-select-card">
@@ -181,13 +61,13 @@ export default function App() {
     );
   }
 
-  if (scenarioError) {
+  if (error) {
     return (
       <div className="sector-select-overlay">
         <div className="sector-select-card">
           <h1 className="sector-select-title">VTS ROTTERDAM</h1>
           <p className="scenario-status scenario-status-error">
-            Scenario laden mislukt: {scenarioError}
+            Scenario laden mislukt: {error}
           </p>
         </div>
       </div>
@@ -200,7 +80,7 @@ export default function App() {
         <VTSMap
           ships={ships}
           selectedShipId={selectedShipId}
-          onSelectShip={handleSelectShip}
+          onSelectShip={selectShip}
           activeSector={activeSector}
           scenarioFocus={scenarioFocus}
           simTime={simTime}
@@ -210,18 +90,18 @@ export default function App() {
         <InboundPanel
           ships={ships}
           selectedShipId={selectedShipId}
-          onSelectShip={handleSelectShip}
-          onToggleShipVerification={handleToggleShipVerification}
+          onSelectShip={selectShip}
+          onToggleShipVerification={toggleShipVerification}
           activeSector={activeSector}
         />
       }
       shipInfoCard={
         <ShipInfoCard
           ship={selectedShip}
-          onClose={handleCloseInfo}
-          onSetDestination={handleSetDestination}
-          onVerifyShip={handleVerifyShip}
-          onResetShip={handleResetShip}
+          onClose={() => selectShip(null)}
+          onSetDestination={setDestination}
+          onVerifyShip={verifyShip}
+          onResetShip={resetShip}
           verificationError={verificationError}
           destinations={destinations}
         />
@@ -238,5 +118,36 @@ export default function App() {
         />
       }
     />
+  );
+}
+
+export default function App() {
+  const [activeScenarioId, setActiveScenarioId] = useState(null);
+  const [activeSector, setActiveSector] = useState(null);
+  const [destinations, setDestinations] = useState([]);
+
+  useEffect(() => {
+    fetch(`${API_URL}/${ENDPOINT_DESTINATIONS}`)
+      .then((res) => res.json())
+      .then((data) => setDestinations(data))
+      .catch((err) => console.error("Failed to load destinations:", err));
+  }, []);
+
+  if (activeScenarioId == null) {
+    return <ScenarioSelect onSelect={setActiveScenarioId} />;
+  }
+
+  if (!activeSector) {
+    return <SectorSelect onSelect={(sector) => setActiveSector(sector)} />;
+  }
+
+  return (
+    <ScenarioProvider scenarioId={activeScenarioId} sector={activeSector}>
+      <SimProvider>
+        <ShipsProvider>
+          <AppContent activeSector={activeSector} destinations={destinations} />
+        </ShipsProvider>
+      </SimProvider>
+    </ScenarioProvider>
   );
 }

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 
 const TextAutocompleteInput = ({
-  value,
+  value = "",
   onSubmit,
   suggestions = [],
   placeholder = "Onbekend - voer in...",
@@ -18,7 +18,7 @@ const TextAutocompleteInput = ({
 
   // Sync input value with prop
   useEffect(() => {
-    setInputValue(value);
+    setInputValue(value ?? "");
   }, [value]);
 
   // Filter suggestions based on input

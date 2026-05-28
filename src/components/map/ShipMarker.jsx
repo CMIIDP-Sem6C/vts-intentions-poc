@@ -3,7 +3,7 @@ import { Marker, Polyline, useMap } from "react-leaflet";
 import L from "leaflet";
 import { getCourseVectorEnd } from "../../utils/navigation";
 import { STATUS } from "../../utils/status";
-import { TIME_SCALE } from "../../hooks/useScenarioSimulation";
+import { useSim } from "../../contexts/SimContext";
 
 const FILL = "#1B5E20";
 const FILL_SEL = "#2E7D32";
@@ -16,18 +16,21 @@ const DEFAULT_LABEL_OFFSET_PX = [14, 0];
 const ETA_INTERVAL_MINUTES = 2;
 
 /** Convert real-world travel minutes → simulation seconds */
-function travelMinutesToSimSeconds(minutes) {
-  return (minutes * 60) / TIME_SCALE;
+function travelMinutesToSimSeconds(minutes, timeScale) {
+  return (minutes * 60) / timeScale;
 }
 
 /** Convert simulation seconds → real-world minutes */
-function simSecondsToTravelMinutes(simSec) {
-  return (simSec * TIME_SCALE) / 60;
+function simSecondsToTravelMinutes(simSec, timeScale) {
+  return (simSec * timeScale) / timeScale;
 }
 
 /** Format sim-seconds offset from now into "Xm" or "Xh Ym" */
-function formatETA(etaSimSec, currentSimSec) {
-  const deltaRealMin = simSecondsToTravelMinutes(etaSimSec - currentSimSec);
+function formatETA(etaSimSec, currentSimSec, timeScale) {
+  const deltaRealMin = simSecondsToTravelMinutes(
+    etaSimSec - currentSimSec,
+    timeScale,
+  );
   if (deltaRealMin < 0) return null;
   const h = Math.floor(deltaRealMin / 60);
   const m = Math.round(deltaRealMin % 60);
@@ -40,10 +43,15 @@ function formatETA(etaSimSec, currentSimSec) {
  * where ETA labels should appear: every `intervalMinutes` real-world
  * minutes, plus always at the last point.
  */
-function computeETAMarkers(displayPath, currentSimSec, intervalMinutes) {
+function computeETAMarkers(
+  displayPath,
+  currentSimSec,
+  intervalMinutes,
+  timeScale,
+) {
   if (!displayPath || displayPath.length < 2) return [];
 
-  const intervalSimSec = travelMinutesToSimSeconds(intervalMinutes);
+  const intervalSimSec = travelMinutesToSimSeconds(intervalMinutes, timeScale);
   const startEta = displayPath[0].eta;
   const markers = [];
 
@@ -66,7 +74,7 @@ function computeETAMarkers(displayPath, currentSimSec, intervalMinutes) {
       markers.push({
         coords: [lat, lng],
         eta: nextBoundary,
-        label: formatETA(nextBoundary, currentSimSec),
+        label: formatETA(nextBoundary, currentSimSec, timeScale),
       });
       nextBoundary += intervalSimSec;
     }
@@ -175,8 +183,9 @@ function pixelOffsetToLatLng(map, origin, pxOffset) {
  * @param {*} onSelect
  * @returns
  */
-export default function ShipMarker({ ship, isSelected, onSelect, simTime }) {
+export default function ShipMarker({ ship, isSelected, onSelect }) {
   const map = useMap();
+  const { simTime, timeScale } = useSim();
   const [hovered, setHovered] = useState(false);
   const [labelOffsetPx, setLabelOffsetPx] = useState(DEFAULT_LABEL_OFFSET_PX);
   const [expandLabel, setExpandLabel] = useState(false);
