@@ -7,7 +7,7 @@ import { STATUS } from "../../utils/status";
 const FILL = "#1B5E20";
 const FILL_SEL = "#2E7D32";
 const ROUTE_COLOR = "#E57373";
-const INTENTIONS_COLOR = "#bb47ff";
+const INTENTIONS_COLOR = "#BB47FF";
 const VECTOR_COLOR = "#D32F2F";
 const VECTOR_NM_PER_KNOT = 0.05;
 const VECTOR_MAX_NM = 0.25;
@@ -184,7 +184,7 @@ export default function ShipMarker({ ship, isSelected, onSelect }) {
         <Polyline
           positions={intentionsToDisplay}
           pathOptions={{
-            color: hasIntentions ? INTENTIONS_COLOR : VECTOR_COLOR,
+            color: INTENTIONS_COLOR,
             weight: 1.5,
             opacity: 0.6,
           }}
@@ -213,7 +213,10 @@ export default function ShipMarker({ ship, isSelected, onSelect }) {
         position={ship.position}
         icon={icon}
         eventHandlers={{
-          click: () => onSelect(ship.id),
+          click: () => {
+            console.log(ship);
+            onSelect(ship.id);
+          },
           mouseover: handleMouseOver,
           mouseout: handleMouseOut,
         }}
