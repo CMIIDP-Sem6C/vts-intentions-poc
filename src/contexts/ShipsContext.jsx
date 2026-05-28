@@ -140,7 +140,7 @@ export function ShipsProvider({ children }) {
           intentionsShowActive,
           baseHeading: motion.heading,
         };
-        const dyn = updateDynamicIntentions(shipState, simTime);
+        const dyn = updateDynamicIntentions(shipState, simTime, timeScale);
 
         const merged = {
           ...shipState,

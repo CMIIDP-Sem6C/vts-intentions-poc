@@ -82,7 +82,7 @@ function computeETAMarkers(
 
   // Always add the end-of-line marker (if not already placed)
   const lastEntry = displayPath[displayPath.length - 1];
-  const lastLabel = formatETA(lastEntry.eta, currentSimSec);
+  const lastLabel = formatETA(lastEntry.eta, currentSimSec, timeScale);
   if (lastLabel) {
     const alreadyPlaced =
       markers.length > 0 && markers[markers.length - 1].eta === lastEntry.eta;
@@ -262,8 +262,14 @@ export default function ShipMarker({ ship, isSelected, onSelect }) {
       ship.dynamicIntentionsPath,
       simTime ?? 0,
       ETA_INTERVAL_MINUTES,
+      timeScale,
     );
-  }, [ship.dynamicIntentionsPath, ship.intentionsShowActive, simTime]);
+  }, [
+    ship.dynamicIntentionsPath,
+    ship.intentionsShowActive,
+    simTime,
+    timeScale,
+  ]);
 
   const vectorEnd = useMemo(
     () =>
