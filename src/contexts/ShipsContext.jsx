@@ -6,16 +6,16 @@ import {
   useState,
   useCallback,
 } from "react";
-import { useScenario } from "./ScenarioContext";
-import { useSim } from "./SimContext";
-import useVerificationSync from "../hooks/useVerificationSync";
-import { getStatusLevel } from "../utils/status";
+import { useScenario } from "@contexts/ScenarioContext";
+import { useSim } from "@contexts/SimContext";
+import useVerificationSync from "@hooks/useVerificationSync";
+import { getStatusLevel } from "@utils/status";
 import {
   calculateDistance,
   calculateHeading,
   moveAlongBearing,
-} from "../utils/navigation";
-import { useDynamicIntentionsDisplay } from "../utils/dynamicIntentionsDisplay";
+} from "@utils/navigation";
+import { useDynamicIntentionsDisplay } from "@utils/dynamicIntentionsDisplay";
 
 const ShipsContext = createContext(null);
 

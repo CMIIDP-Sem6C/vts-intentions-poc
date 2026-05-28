@@ -4,9 +4,9 @@ import {
   calculateETA,
   formatETA,
   pointInPolygon,
-} from "../../utils/navigation";
-import { STATUS } from "../../utils/status";
-import { SECTORS } from "../../data/sectors";
+} from "@utils/navigation";
+import { STATUS } from "@utils/status";
+import { SECTORS } from "@data/sectors";
 
 function StatusDots({ ship }) {
   return (

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import TextAutocompleteInput from "../inputs/TextAutocompleteInput";
-import Flag from "./Flag";
-import { getStatusLevel, STATUS } from "../../utils/status";
+import TextAutocompleteInput from "@components/inputs/TextAutocompleteInput";
+import Flag from "@components/panels/Flag";
+import { getStatusLevel, STATUS } from "@utils/status";
 
 export default function ShipInfoCard({
   ship,

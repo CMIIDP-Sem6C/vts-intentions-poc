@@ -15,8 +15,8 @@ import {
   WATERWAY_CENTERLINE,
   KM_MARKERS,
   TURNING_BASINS,
-} from "../../data/sectors";
-import ShipMarker from "./ShipMarker";
+} from "@data/sectors";
+import ShipMarker from "@components/map/ShipMarker";
 
 const ALL_SECTORS_BOUNDS = (() => {
   const allCoords = Object.values(SECTORS).flatMap((s) => s.boundary);

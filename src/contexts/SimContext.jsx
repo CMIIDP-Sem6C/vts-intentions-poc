@@ -6,15 +6,16 @@ import {
   useMemo,
   useCallback,
 } from "react";
-import { useScenario } from "./ScenarioContext";
-import { calculateDistance } from "../utils/navigation";
+import { useScenario } from "@contexts/ScenarioContext";
+import { calculateDistance } from "@utils/navigation";
 
 const SimContext = createContext(null);
 
 const TICK_MS = 100;
 
 export function SimProvider({ children }) {
-  const { ships, events, originalShips, originalEvents } = useScenario();
+  const { ships, events, originalShips, originalEvents, scenario } =
+    useScenario();
 
   const [timeScale, setTimeScale] = useState(4);
 
@@ -51,7 +52,11 @@ export function SimProvider({ children }) {
 
   const [simTime, setSimTime] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
-  const [startTime] = useState(() => Date.now());
+  const [startTime] = useState(() => {
+    // If scenario defines a real start time, use it
+    if (scenario?.startTime) return new Date(scenario.startTime).getTime();
+    return Date.now();
+  });
 
   useEffect(() => {
     setSimTime(0);

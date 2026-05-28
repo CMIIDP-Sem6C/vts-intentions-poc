@@ -3,7 +3,7 @@ import {
   calculateDistance,
   calculateHeading,
   moveAlongBearing,
-} from "../utils/navigation";
+} from "@utils/navigation";
 
 export function calculateFuturePosition(startPos, speed, minutes, target) {
   const hours = minutes / 60;

@@ -1,16 +1,16 @@
 import { useState, useMemo, useEffect } from "react";
-import AppLayout from "./components/layout/AppLayout";
-import VTSMap from "./components/map/VTSMap";
-import ScenarioSelect from "./components/ScenarioSelect";
-import SectorSelect from "./components/SectorSelect";
-import TimelineControls from "./components/panels/TimelineControls";
-import InboundPanel from "./components/panels/InboundPanel";
-import ShipInfoCard from "./components/panels/ShipInfoCard";
-import { ScenarioProvider, useScenario } from "./contexts/ScenarioContext";
-import { SimProvider, useSim } from "./contexts/SimContext";
-import { ShipsProvider, useShips } from "./contexts/ShipsContext";
-import { SECTORS } from "./data/sectors";
-import { API_URL, ENDPOINT_DESTINATIONS } from "./utils/api";
+import AppLayout from "@components/layout/AppLayout";
+import VTSMap from "@components/map/VTSMap";
+import ScenarioSelect from "@components/ScenarioSelect";
+import SectorSelect from "@components/SectorSelect";
+import TimelineControls from "@components/panels/TimelineControls";
+import InboundPanel from "@components/panels/InboundPanel";
+import ShipInfoCard from "@components/panels/ShipInfoCard";
+import { ScenarioProvider, useScenario } from "@contexts/ScenarioContext";
+import { SimProvider, useSim } from "@contexts/SimContext";
+import { ShipsProvider, useShips } from "@contexts/ShipsContext";
+import { SECTORS } from "@data/sectors";
+import { API_URL, ENDPOINT_DESTINATIONS } from "@utils/api";
 import "./App.css";
 
 function AppContent({ activeSector, destinations }) {

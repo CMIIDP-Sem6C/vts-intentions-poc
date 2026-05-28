@@ -1,4 +1,4 @@
-import { SECTORS } from '../data/sectors';
+import { SECTORS } from "@data/sectors";
 
 export default function SectorSelect({ onSelect }) {
   return (

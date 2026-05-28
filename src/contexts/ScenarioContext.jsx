@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, useMemo } from "react";
-import useScenarioData from "../hooks/useScenarioData";
+import useScenarioData from "@hooks/useScenarioData";
 
 const ScenarioContext = createContext(null);
 
