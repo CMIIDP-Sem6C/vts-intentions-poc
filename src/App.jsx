@@ -203,6 +203,7 @@ export default function App() {
           onSelectShip={handleSelectShip}
           activeSector={activeSector}
           scenarioFocus={scenarioFocus}
+          simTime={simTime}
         />
       }
       inboundPanel={

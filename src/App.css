@@ -903,6 +903,22 @@
   letter-spacing: 0.3px;
 }
 
+.eta-label-icon {
+  pointer-events: none;
+}
+
+.eta-label {
+  font-size: 9px;
+  font-weight: 600;
+  color: #bb47ff;
+  background: rgba(255, 255, 255, 0.85);
+  padding: 1px 3px;
+  border-radius: 2px;
+  white-space: nowrap;
+  line-height: 1.2;
+  border: 0.5px solid rgba(187, 71, 255, 0.4);
+}
+
 .ship-label-icon {
   background: transparent !important;
   border: none !important;

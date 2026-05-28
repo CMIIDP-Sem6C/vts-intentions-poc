@@ -7,7 +7,7 @@ import {
 import { useDynamicIntentionsDisplay } from "../utils/dynamicIntentionsDisplay";
 
 const TICK_MS = 100;
-const TIME_SCALE = 4;
+export const TIME_SCALE = 4;
 
 function totalRouteDistanceNm(waypoints) {
   if (!Array.isArray(waypoints) || waypoints.length < 2) return 0;
@@ -112,11 +112,12 @@ function computeIntentionVisibility(events, ships, intentions, t) {
   if (!events) return visible;
 
   const sorted = [...events].sort(
-    (a, b) => (a.triggerTime ?? 0) - (b.triggerTime ?? 0)
+    (a, b) => (a.triggerTime ?? 0) - (b.triggerTime ?? 0),
   );
   for (const event of sorted) {
     if ((event.triggerTime ?? 0) > t) break;
-    if (event.type !== "ShowIntention" && event.type !== "HideIntention") continue;
+    if (event.type !== "ShowIntention" && event.type !== "HideIntention")
+      continue;
     const shipKey = resolveEventShipId(event, ships, intentions);
     if (shipKey == null) continue;
     visible.set(shipKey, event.type === "ShowIntention");
@@ -176,7 +177,12 @@ export default function useScenarioSimulation(scenarioData) {
 
   const activeShips = useMemo(() => {
     if (!ships) return [];
-    const visibility = computeIntentionVisibility(events, ships, intentions, simTime);
+    const visibility = computeIntentionVisibility(
+      events,
+      ships,
+      intentions,
+      simTime,
+    );
 
     return ships
       .map((ship) => {
@@ -195,10 +201,10 @@ export default function useScenarioSimulation(scenarioData) {
           baseHeading: motion.heading,
         };
 
-        const dyn = updateDynamicIntentions(shipState);
+        const dyn = updateDynamicIntentions(shipState, simTime);
         return {
           ...shipState,
-          dynamicIntentionsPath: dyn.path,
+          dynamicIntentionsPath: dyn.displayPath,
           intentionsPosition: dyn.intentionsPosition,
           currentIntentionsIndex: dyn.currentIntentionsIndex,
         };
@@ -211,7 +217,7 @@ export default function useScenarioSimulation(scenarioData) {
       const clamped = Math.max(0, Math.min(duration, t));
       setSimTime(clamped);
     },
-    [duration]
+    [duration],
   );
 
   const play = useCallback(() => {

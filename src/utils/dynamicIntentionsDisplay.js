@@ -4,6 +4,7 @@ import {
   calculateHeading,
   moveAlongBearing,
 } from "../utils/navigation";
+import { TIME_SCALE } from "../hooks/useScenarioSimulation";
 
 export function calculateFuturePosition(startPos, speed, minutes, target) {
   const hours = minutes / 60;
@@ -101,8 +102,13 @@ function nearestPointOnSegment(pos, a, b) {
   };
 }
 
+function travelMinutesToSimSeconds(minutes) {
+  const realSeconds = minutes * 60;
+  return realSeconds / TIME_SCALE;
+}
+
 export function useDynamicIntentionsDisplay() {
-  const updateDynamicIntentions = useCallback((ship) => {
+  const updateDynamicIntentions = useCallback((ship, simTime) => {
     const {
       intentionsShareTime,
       intentionsShowActive,
@@ -118,21 +124,6 @@ export function useDynamicIntentionsDisplay() {
 
     const { cursorPos, cursorIndex } = getIntentionsCursor(ship, routeSource);
 
-    if (!intentionsShowActive) {
-      // Still compute cursor so position stays in sync, but return empty path
-      const hasValidIntentions =
-        ship.intentions &&
-        Array.isArray(ship.intentions) &&
-        ship.intentions.length > 1;
-      const routeSource = hasValidIntentions ? ship.intentions : ship.waypoints;
-      const { cursorPos, cursorIndex } = getIntentionsCursor(ship, routeSource);
-      return {
-        path: [],
-        intentionsPosition: cursorPos,
-        currentIntentionsIndex: cursorIndex,
-      };
-    }
-
     if (
       !routeSource ||
       !Array.isArray(routeSource) ||
@@ -142,55 +133,71 @@ export function useDynamicIntentionsDisplay() {
     ) {
       return {
         path: [],
+        displayPath: [],
         intentionsPosition: cursorPos,
         currentIntentionsIndex: cursorIndex,
       };
     }
 
-    if (intentionsShowComplete) {
-      return {
-        path: [cursorPos, ...routeSource.slice(cursorIndex)],
-        intentionsPosition: cursorPos,
-        currentIntentionsIndex: cursorIndex,
-      };
+    // Build full remaining route with ETAs from cursorPos onward
+    const path = [];
+    let accSimSec = 0;
+    path.push({ coords: [...cursorPos], eta: simTime });
+
+    for (let i = cursorIndex; i < routeSource.length; i++) {
+      const prev = i === cursorIndex ? cursorPos : routeSource[i - 1];
+      const curr = routeSource[i];
+      const segDist = calculateDistance(prev, curr);
+      const segTimeMin = (segDist / ship.baseSpeed) * 60;
+      accSimSec += travelMinutesToSimSeconds(segTimeMin);
+      path.push({ coords: [...curr], eta: simTime + accSimSec });
     }
 
-    const minutes = Number(intentionsShareTime);
-    if (isNaN(minutes) || minutes <= 0) {
-      return {
-        path: [],
-        intentionsPosition: cursorPos,
-        currentIntentionsIndex: cursorIndex,
-      };
-    }
+    let displayPath = [];
 
-    const path = [cursorPos];
-    let remainingTime = minutes;
-    let currentIndex = cursorIndex;
-
-    while (currentIndex < routeSource.length && remainingTime > 0) {
-      const prevWaypoint =
-        currentIndex === cursorIndex
-          ? cursorPos
-          : routeSource[currentIndex - 1];
-      const currentWaypoint = routeSource[currentIndex];
-      const segmentDistance = calculateDistance(prevWaypoint, currentWaypoint);
-      const segmentTimeMinutes = (segmentDistance / ship.baseSpeed) * 60;
-
-      if (segmentTimeMinutes <= remainingTime) {
-        path.push(currentWaypoint);
-        remainingTime -= segmentTimeMinutes;
+    if (!intentionsShowActive) {
+      displayPath = [];
+    } else if (intentionsShowComplete) {
+      displayPath = path;
+    } else {
+      const minutes = Number(intentionsShareTime);
+      if (isNaN(minutes) || minutes <= 0) {
+        displayPath = [];
       } else {
-        const remainingDistance = (remainingTime / 60) * ship.baseSpeed;
-        const bearing = calculateHeading(prevWaypoint, currentWaypoint);
-        path.push(moveAlongBearing(prevWaypoint, bearing, remainingDistance));
-        remainingTime = 0;
+        const maxSimSec = travelMinutesToSimSeconds(minutes);
+        displayPath = [path[0]];
+        let remainingSimSec = maxSimSec;
+
+        for (let i = 1; i < path.length; i++) {
+          const etaDiff = path[i].eta - path[i - 1].eta;
+          if (etaDiff <= remainingSimSec) {
+            displayPath.push(path[i]);
+            remainingSimSec -= etaDiff;
+          } else {
+            const fraction = remainingSimSec / etaDiff;
+            const prevCoords = path[i - 1].coords;
+            const currCoords = path[i].coords;
+            const bearing = calculateHeading(prevCoords, currCoords);
+            const segDist = calculateDistance(prevCoords, currCoords);
+            const partialPos = moveAlongBearing(
+              prevCoords,
+              bearing,
+              segDist * fraction,
+            );
+            displayPath.push({
+              coords: partialPos,
+              eta: path[i - 1].eta + remainingSimSec,
+            });
+            remainingSimSec = 0;
+            break;
+          }
+        }
       }
-      currentIndex++;
     }
 
     return {
       path,
+      displayPath,
       intentionsPosition: cursorPos,
       currentIntentionsIndex: cursorIndex,
     };

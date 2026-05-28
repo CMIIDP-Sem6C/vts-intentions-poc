@@ -3,6 +3,7 @@ import { Marker, Polyline, useMap } from "react-leaflet";
 import L from "leaflet";
 import { getCourseVectorEnd } from "../../utils/navigation";
 import { STATUS } from "../../utils/status";
+import { TIME_SCALE } from "../../hooks/useScenarioSimulation";
 
 const FILL = "#1B5E20";
 const FILL_SEL = "#2E7D32";
@@ -12,6 +13,92 @@ const VECTOR_COLOR = "#D32F2F";
 const VECTOR_NM_PER_KNOT = 0.05;
 const VECTOR_MAX_NM = 0.25;
 const DEFAULT_LABEL_OFFSET_PX = [14, 0];
+const ETA_INTERVAL_MINUTES = 2;
+
+/** Convert real-world travel minutes → simulation seconds */
+function travelMinutesToSimSeconds(minutes) {
+  return (minutes * 60) / TIME_SCALE;
+}
+
+/** Convert simulation seconds → real-world minutes */
+function simSecondsToTravelMinutes(simSec) {
+  return (simSec * TIME_SCALE) / 60;
+}
+
+/** Format sim-seconds offset from now into "Xm" or "Xh Ym" */
+function formatETA(etaSimSec, currentSimSec) {
+  const deltaRealMin = simSecondsToTravelMinutes(etaSimSec - currentSimSec);
+  if (deltaRealMin < 0) return null;
+  const h = Math.floor(deltaRealMin / 60);
+  const m = Math.round(deltaRealMin % 60);
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+}
+
+/**
+ * Given a displayPath [{ coords, eta }, ...], compute positions
+ * where ETA labels should appear: every `intervalMinutes` real-world
+ * minutes, plus always at the last point.
+ */
+function computeETAMarkers(displayPath, currentSimSec, intervalMinutes) {
+  if (!displayPath || displayPath.length < 2) return [];
+
+  const intervalSimSec = travelMinutesToSimSeconds(intervalMinutes);
+  const startEta = displayPath[0].eta;
+  const markers = [];
+
+  // Next ETA boundary in sim-seconds
+  let nextBoundary = startEta + intervalSimSec;
+  const endEta = displayPath[displayPath.length - 1].eta;
+
+  // Walk segments, interpolating where the boundary falls
+  for (let i = 1; i < displayPath.length; i++) {
+    const prev = displayPath[i - 1];
+    const curr = displayPath[i];
+    const segStartEta = prev.eta;
+    const segEndEta = curr.eta;
+
+    while (nextBoundary <= segEndEta && nextBoundary < endEta) {
+      // Interpolate position at nextBoundary
+      const fraction = (nextBoundary - segStartEta) / (segEndEta - segStartEta);
+      const lat = prev.coords[0] + (curr.coords[0] - prev.coords[0]) * fraction;
+      const lng = prev.coords[1] + (curr.coords[1] - prev.coords[1]) * fraction;
+      markers.push({
+        coords: [lat, lng],
+        eta: nextBoundary,
+        label: formatETA(nextBoundary, currentSimSec),
+      });
+      nextBoundary += intervalSimSec;
+    }
+  }
+
+  // Always add the end-of-line marker (if not already placed)
+  const lastEntry = displayPath[displayPath.length - 1];
+  const lastLabel = formatETA(lastEntry.eta, currentSimSec);
+  if (lastLabel) {
+    const alreadyPlaced =
+      markers.length > 0 && markers[markers.length - 1].eta === lastEntry.eta;
+    if (!alreadyPlaced) {
+      markers.push({
+        coords: lastEntry.coords,
+        eta: lastEntry.eta,
+        label: lastLabel,
+      });
+    }
+  }
+
+  return markers;
+}
+
+/** Create a small divIcon for an ETA label */
+function createETAIcon(label) {
+  return L.divIcon({
+    html: `<div class="eta-label">${label}</div>`,
+    className: "eta-label-icon",
+    iconSize: [0, 0],
+    iconAnchor: [0, -6],
+  });
+}
 
 function createTriangleIcon(heading, isSelected) {
   const size = isSelected ? 20 : 16;
@@ -88,7 +175,7 @@ function pixelOffsetToLatLng(map, origin, pxOffset) {
  * @param {*} onSelect
  * @returns
  */
-export default function ShipMarker({ ship, isSelected, onSelect }) {
+export default function ShipMarker({ ship, isSelected, onSelect, simTime }) {
   const map = useMap();
   const [hovered, setHovered] = useState(false);
   const [labelOffsetPx, setLabelOffsetPx] = useState(DEFAULT_LABEL_OFFSET_PX);
@@ -140,7 +227,7 @@ export default function ShipMarker({ ship, isSelected, onSelect }) {
       ship.dynamicIntentionsPath &&
       ship.dynamicIntentionsPath.length > 1
     ) {
-      return ship.dynamicIntentionsPath;
+      return ship.dynamicIntentionsPath.map((waypoint) => waypoint.coords);
     }
     return [];
   }, [
@@ -153,6 +240,21 @@ export default function ShipMarker({ ship, isSelected, onSelect }) {
     ship.currentIntentionsIndex,
     ship.intentionsShowActive,
   ]);
+
+  const etaMarkers = useMemo(() => {
+    if (
+      !ship.intentionsShowActive ||
+      !ship.dynamicIntentionsPath ||
+      ship.dynamicIntentionsPath.length < 2
+    ) {
+      return [];
+    }
+    return computeETAMarkers(
+      ship.dynamicIntentionsPath,
+      simTime ?? 0,
+      ETA_INTERVAL_MINUTES,
+    );
+  }, [ship.dynamicIntentionsPath, ship.intentionsShowActive, simTime]);
 
   const vectorEnd = useMemo(
     () =>
@@ -190,6 +292,16 @@ export default function ShipMarker({ ship, isSelected, onSelect }) {
           }}
         />
       )}
+      {/* ETA labels along intention line */}
+      {showOverlay &&
+        etaMarkers.map((m, idx) => (
+          <Marker
+            key={`eta-${ship.id}-${idx}`}
+            position={m.coords}
+            icon={createETAIcon(m.label)}
+            interactive={false}
+          />
+        ))}
       {/* Vector line */}
       {!showOverlay && destKnown && ship.aisActive && (
         <Polyline
