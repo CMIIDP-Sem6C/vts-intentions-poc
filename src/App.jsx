@@ -11,6 +11,8 @@ import useVerificationSync from "./hooks/useVerificationSync";
 import useScenarioSimulation from "./hooks/useScenarioSimulation";
 import { API_URL, ENDPOINT_DESTINATIONS } from "./utils/api";
 import { getStatusLevel } from "./utils/status";
+import { getActiveIntentionChangeAlerts } from "./utils/scenarioEvents";
+import IntentionChangeAlertStack from "./components/alerts/IntentionChangeAlertStack";
 import "./App.css";
 
 export default function App() {
@@ -82,6 +84,17 @@ export default function App() {
   const selectedShip = useMemo(
     () => ships.find((s) => s.id === selectedShipId) || null,
     [ships, selectedShipId],
+  );
+
+  const activeIntentionChangeAlerts = useMemo(
+    () =>
+      getActiveIntentionChangeAlerts(
+        scenarioData?.events,
+        scenarioData?.ships,
+        scenarioData?.intentions,
+        simTime,
+      ),
+    [scenarioData, simTime],
   );
 
   const scenarioFocus = useMemo(() => {
@@ -196,6 +209,9 @@ export default function App() {
 
   return (
     <AppLayout
+      topCenterAlerts={
+        <IntentionChangeAlertStack alerts={activeIntentionChangeAlerts} />
+      }
       map={
         <VTSMap
           ships={ships}

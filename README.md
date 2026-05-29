@@ -109,6 +109,7 @@ Voor de API-stack (FastAPI / asyncpg / Postgres) zie [`vts-intentions-api`](http
 - Sector-selector na scenario-keuze: kies VTS-sector Eemhaven of Waalhaven (Rotterdam, Nieuwe Maas)
 - Database-gedreven scheepssimulatie: ships spawnen op `trigger_time` events, volgen `route` waypoints uit de DB
 - Intentie-lijnen (declared route) per ship, dynamisch in/uit te schakelen via `HideIntention` / `ShowIntention` events
+- Waarschuwingspaneel bovenaan bij `AlertIntentionChange` events (8 seconden zichtbaar, scheepsnaam uit `subject_id`)
 - Reeds-gevaren deel van de intentie-lijn wordt automatisch afgesneden voorbij de huidige scheepspositie
 - Twee typen scheepsmarkers: driehoekige pijltjes (klein/snel) en langwerpige vrachtschepen
 - Status-kleur als omtrek rond elke scheepsmarker (groen/oranje/rood) gesynchroniseerd met de info-card en het inbound-panel
