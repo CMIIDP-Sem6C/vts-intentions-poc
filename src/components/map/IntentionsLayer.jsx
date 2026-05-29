@@ -10,6 +10,16 @@ const INTENTIONS_COLOR = "#BB47FF";
 const INTENTIONS_COLOR_HOVER = "#04e2ff";
 const ETA_INTERVAL_MINUTES = 5;
 
+/**
+ * Layer that renders a ship's intentions path, hatch marks, and ETA labels.
+ *
+ * @param {Object} props
+ * @param {Ship} props.ship - Enriched ship object
+ * @param {boolean} props.showOverlay - Whether to show the intentions overlay
+ * @param {number} props.timeScale - Simulation time scale factor
+ * @param {number} props.startTime - Real-world start time as epoch ms
+ * @param {boolean} props.isSelected - Whether the ship is currently selected
+ */
 export default function IntentionsLayer({
   ship,
   showOverlay,
@@ -17,6 +27,7 @@ export default function IntentionsLayer({
   startTime,
   isSelected,
 }) {
+  /** @type {Coordinates[]} */
   const intentionsToDisplay = useMemo(() => {
     if (!ship.intentionsShowActive) return [];
     if (
@@ -38,6 +49,7 @@ export default function IntentionsLayer({
     ship.intentionsShowActive,
   ]);
 
+  /** @type {ETAMarker[]} */
   const etaMarkers = useMemo(() => {
     if (
       !ship.intentionsShowActive ||

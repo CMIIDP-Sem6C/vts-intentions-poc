@@ -18,6 +18,7 @@ import {
 } from "@data/sectors";
 import ShipMarker from "@components/map/ShipMarker";
 
+/** @type {L.LatLngBounds} */
 const ALL_SECTORS_BOUNDS = (() => {
   const allCoords = Object.values(SECTORS).flatMap((s) => s.boundary);
   const lats = allCoords.map((c) => c[0]);
@@ -30,6 +31,7 @@ const ALL_SECTORS_BOUNDS = (() => {
   );
 })();
 
+/** Inner component that applies map constraints. */
 function MapConstraints() {
   const map = useMap();
   useMemo(() => {
@@ -40,6 +42,7 @@ function MapConstraints() {
   return null;
 }
 
+/** @type {L.PolylineOptions} */
 const SECTOR_BORDER_STYLE = {
   color: "#66BB6A",
   weight: 2,
@@ -47,12 +50,15 @@ const SECTOR_BORDER_STYLE = {
 }; // this can be done with CSS i believe
 
 /**
+ * Main VTS map component rendering the Leaflet map with sector boundaries,
+ * waterway markers, turning basins, and ship markers.
  *
- * @param {Ship[]} ships
- * @param {*} selectedShipId
- * @param {*} onSelectShip
- * @param {*} activeSector,
- * @returns {ForwardRefExoticComponent}
+ * @param {Object} props
+ * @param {Ship[]} props.ships - Enriched ships to render
+ * @param {number|null} props.selectedShipId - Currently selected ship's id
+ * @param {(id: number) => void} props.onSelectShip - Callback when a ship is clicked
+ * @param {string} props.activeSector - Active sector key
+ * @param {{ center: Coordinates, zoom: number }|null} [props.scenarioFocus=null] - Override for initial map center/zoom
  */
 export default function VTSMap({
   ships,
@@ -61,6 +67,7 @@ export default function VTSMap({
   activeSector,
   scenarioFocus = null,
 }) {
+  /** @type {Sector} */
   const active = SECTORS[activeSector];
   const initialCenter = scenarioFocus?.center ?? active.center;
   const initialZoom = scenarioFocus?.zoom ?? active.zoom;

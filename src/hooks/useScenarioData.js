@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
 
+/**
+ * Normalize a raw ship from the API by adding a guaranteed-numeric `dbId`.
+ * @param {RawShip} rawShip - Ship object from the API
+ * @returns {NormalizedShip|null} Normalized ship, or null if input is falsy
+ */
 function normalizeShip(rawShip) {
   if (!rawShip) return null;
   const dbId = typeof rawShip.id === "number" ? rawShip.id : Number(rawShip.id);
@@ -9,6 +14,12 @@ function normalizeShip(rawShip) {
   };
 }
 
+/**
+ * Normalize a single intention entry from the grouped-by-ship format.
+ * @param {Object} entry - Raw intention entry from the API
+ * @param {number} dbShipId - Numeric ship ID this entry belongs to
+ * @returns {Intention}
+ */
 function normalizeIntentionEntry(entry, dbShipId) {
   return {
     id: entry.id,
@@ -19,6 +30,11 @@ function normalizeIntentionEntry(entry, dbShipId) {
   };
 }
 
+/**
+ * Normalize intentions from either array or object-by-ship-id format.
+ * @param {Intention[] | Object<string, Object[]> | null} rawIntentions
+ * @returns {Intention[]}
+ */
 function normalizeIntentions(rawIntentions) {
   if (!rawIntentions) return [];
   if (Array.isArray(rawIntentions)) {
@@ -39,6 +55,11 @@ function normalizeIntentions(rawIntentions) {
   return out;
 }
 
+/**
+ * Normalize a raw scenario event from the API (camelCase + snake_case compat).
+ * @param {Object} rawEvent - Raw event from the API
+ * @returns {ScenarioEvent}
+ */
 function normalizeEvent(rawEvent) {
   return {
     id: rawEvent.id,
@@ -50,6 +71,11 @@ function normalizeEvent(rawEvent) {
   };
 }
 
+/**
+ * Normalize a raw scenario from the API.
+ * @param {Object} rawScenario - Raw scenario from the API
+ * @returns {Scenario|null}
+ */
 function normalizeScenario(rawScenario) {
   if (!rawScenario) return null;
   return {
@@ -58,6 +84,11 @@ function normalizeScenario(rawScenario) {
   };
 }
 
+/**
+ * Normalize the full scenario bundle from the API response.
+ * @param {ScenarioBundle} payload - Raw API response
+ * @returns {NormalizedScenarioData|null}
+ */
 function normalizeBundle(payload) {
   if (!payload) return null;
   const ships = (payload.ships || []).map(normalizeShip).filter(Boolean);
@@ -73,6 +104,11 @@ function normalizeBundle(payload) {
   };
 }
 
+/**
+ * Hook to fetch and normalize scenario data for a given scenario ID.
+ * @param {number|null} scenarioId - Scenario ID to load, or null to clear
+ * @returns {{ data: NormalizedScenarioData|null, loading: boolean, error: string|null }}
+ */
 export default function useScenarioData(scenarioId) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);

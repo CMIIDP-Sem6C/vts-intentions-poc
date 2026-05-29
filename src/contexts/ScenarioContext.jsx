@@ -1,8 +1,15 @@
 import { createContext, useContext, useMemo } from "react";
 import useScenarioData from "@hooks/useScenarioData";
 
+/** @type {React.Context<<ScenarioContextValue|null>} */
 const ScenarioContext = createContext(null);
 
+/**
+ * Provider that fetches and provides scenario data.
+ * Only provides data when a sector is selected.
+ *
+ * @param {{ scenarioId: number|null, sector: string|null, children: React.ReactNode }} props
+ */
 export function ScenarioProvider({ scenarioId, sector, children }) {
   const { data, loading, error } = useScenarioData(scenarioId);
 
@@ -20,6 +27,7 @@ export function ScenarioProvider({ scenarioId, sector, children }) {
     };
   }, [activeData]);
 
+  /** @type {ScenarioContextValue} */
   const value = useMemo(
     () => ({
       scenarioId,
@@ -45,6 +53,11 @@ export function ScenarioProvider({ scenarioId, sector, children }) {
   );
 }
 
+/**
+ * Access the scenario context.
+ * @returns {ScenarioContextValue}
+ * @throws {Error} If used outside ScenarioProvider
+ */
 export function useScenario() {
   const ctx = useContext(ScenarioContext);
   if (!ctx) throw new Error("useScenario must be used within ScenarioProvider");

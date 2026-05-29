@@ -8,6 +8,10 @@ import {
 import { STATUS } from "@utils/status";
 import { SECTORS } from "@data/sectors";
 
+/**
+ * Renders status dots for a ship based on its status level.
+ * @param {{ ship: Ship }} props
+ */
 function StatusDots({ ship }) {
   return (
     <span className="status-dots">
@@ -22,6 +26,14 @@ function StatusDots({ ship }) {
   );
 }
 
+/**
+ * Compute the distance from a ship's current position to the sector boundary
+ * along its remaining route.
+ *
+ * @param {Ship} ship - Enriched ship with position and waypoints
+ * @param {import('../types').Coordinates[]} sectorBoundary - Sector polygon boundary
+ * @returns {number|null} Distance in nautical miles, or null if route doesn't enter sector
+ */
 function computeDistanceToSector(ship, sectorBoundary) {
   if (!ship.waypoints || ship.currentWaypointIndex == null) return null;
 
@@ -40,6 +52,16 @@ function computeDistanceToSector(ship, sectorBoundary) {
   return null;
 }
 
+/**
+ * Panel listing inbound ships for the active sector.
+ *
+ * @param {Object} props
+ * @param {Ship[]} props.ships - Enriched ships
+ * @param {number|null} props.selectedShipId - Currently selected ship id
+ * @param {(id: number) => void} props.onSelectShip - Ship selection callback
+ * @param {(id: number, verified: boolean) => void} props.onToggleShipVerification - Verification toggle callback
+ * @param {string} props.activeSector - Active sector key
+ */
 export default function InboundPanel({
   ships,
   selectedShipId,
@@ -50,6 +72,7 @@ export default function InboundPanel({
   const [minimized, setMinimized] = useState(false);
   const sectorBoundary = activeSector ? SECTORS[activeSector]?.boundary : null;
 
+  /** @type {InboundShip[]} */
   const inboundShips = useMemo(() => {
     if (!sectorBoundary) return [];
 

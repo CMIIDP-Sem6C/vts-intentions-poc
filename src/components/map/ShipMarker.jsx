@@ -15,6 +15,14 @@ const VECTOR_NM_PER_KNOT = 0.05;
 const VECTOR_MAX_NM = 0.25;
 const DEFAULT_LABEL_OFFSET_PX = [14, 0];
 
+/**
+ * Renders a ship on the map with its icon, label, course vector, and intentions layer.
+ *
+ * @param {Object} props
+ * @param {Ship} props.ship - Enriched ship object
+ * @param {boolean} props.isSelected - Whether the ship is currently selected
+ * @param {(id: number) => void} props.onSelect - Callback when the ship is clicked
+ */
 export default function ShipMarker({ ship, isSelected, onSelect }) {
   const map = useMap();
   const { timeScale, startTime } = useSim();

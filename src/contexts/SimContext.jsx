@@ -13,6 +13,7 @@ import {
   getActiveIntentionChangeAlerts,
 } from "@utils/scenarioEvents";
 
+/** @type {React.Context<<SimContextValue|null>} */
 const SimContext = createContext(null);
 
 const TICK_MS = 100;
@@ -23,6 +24,7 @@ export function SimProvider({ children }) {
 
   const [timeScale, setTimeScale] = useState(4);
 
+  /** @type {Map<number, number>} ship id → spawn sim time */
   const spawnTimes = useMemo(() => {
     const map = new Map();
     for (const event of events || []) {
@@ -110,6 +112,7 @@ export function SimProvider({ children }) {
     setIsPlaying(true);
   }, []);
 
+  /** @type {SimContextValue} */
   const value = useMemo(
     () => ({
       simTime,
@@ -144,12 +147,22 @@ export function SimProvider({ children }) {
   return <SimContext.Provider value={value}>{children}</SimContext.Provider>;
 }
 
+/**
+ * Access the simulation context.
+ * @returns {SimContextValue}
+ * @throws {Error} If used outside SimProvider
+ */
 export function useSim() {
   const ctx = useContext(SimContext);
   if (!ctx) throw new Error("useSim must be used within SimProvider");
   return ctx;
 }
 
+/**
+ * Compute total route distance in nautical miles.
+ * @param {import('../types').Coordinates[]} waypoints
+ * @returns {number}
+ */
 function totalRouteDistanceNm(waypoints) {
   if (!Array.isArray(waypoints) || waypoints.length < 2) return 0;
   let total = 0;

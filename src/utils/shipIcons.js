@@ -4,28 +4,57 @@ import { STATUS } from "@utils/status";
 const FILL = "#1B5E20";
 const FILL_SEL = "#2E7D32";
 
-/** Convert real-world travel minutes → simulation seconds */
+/**
+ * Convert real-world travel minutes → simulation seconds.
+ * @param {number} minutes
+ * @param {number} timeScale
+ * @returns {number}
+ */
 export function travelMinutesToSimSeconds(minutes, timeScale) {
   return (minutes * 60) / timeScale;
 }
 
-/** Convert simulation seconds → real-world minutes */
+/**
+ * Convert simulation seconds → real-world minutes.
+ * @param {number} simSec
+ * @param {number} timeScale
+ * @returns {number}
+ */
 export function simSecondsToTravelMinutes(simSec, timeScale) {
   return (simSec * timeScale) / timeScale;
 }
 
-/** Convert sim-seconds to a real-world Date */
+/**
+ * Convert sim-seconds to a real-world Date.
+ * @param {number} simSec - Simulation time in seconds
+ * @param {number} timeScale - Time scale factor
+ * @param {number} startTimeMs - Real-world start time as epoch ms
+ * @returns {Date}
+ */
 export function simTimeToClock(simSec, timeScale, startTimeMs) {
   return new Date(startTimeMs + simSec * timeScale * 1000);
 }
 
-/** Format a Date as HH:MM in local time */
+/**
+ * Format a Date as HH:MM in local time.
+ * @param {Date} date
+ * @returns {string}
+ */
 export function formatClockTime(date) {
   const h = date.getHours();
   const m = date.getMinutes();
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
+/**
+ * Compute ETA markers along an intentions display path at regular clock-time intervals.
+ *
+ * @param {IntentionsPathPoint[]} displayPath - Path with ETAs
+ * @param {number} intervalMinutes - Interval between markers in real-world minutes (e.g. 5)
+ * @param {number} timeScale - Simulation time scale factor
+ * @param {number} startTimeMs - Real-world start time as epoch ms
+ * @returns {ETAMarker[]} ETA markers with positions and labels
+ */
 export function computeETAMarkers(
   displayPath,
   intervalMinutes,
@@ -58,6 +87,7 @@ export function computeETAMarkers(
   const dayOffset = Math.round((endDayMs - startDayMs) / 86400000);
   const endBoundaryMin = endTotalMin + dayOffset * 1440;
 
+  /** @type {ETAMarker[]} */
   const markers = [];
   let boundaryMin = firstBoundaryMin;
 
@@ -77,6 +107,7 @@ export function computeETAMarkers(
     }
     if (boundarySimTime > endEta) break;
 
+    /** @type {Coordinates|null} */
     let coords = null;
     for (let i = 1; i < displayPath.length; i++) {
       const prev = displayPath[i - 1];
@@ -121,7 +152,12 @@ export function computeETAMarkers(
   return markers;
 }
 
-/** Create a small divIcon for an ETA label */
+/**
+ * Create a small divIcon for an ETA label.
+ * @param {string} label - Clock time label (e.g. "14:35")
+ * @param {string} [color="#bb47ff"] - Text color
+ * @returns {L.DivIcon}
+ */
 export function createETAIcon(label, color = "#bb47ff") {
   const width = 40;
   return L.divIcon({
@@ -132,12 +168,20 @@ export function createETAIcon(label, color = "#bb47ff") {
   });
 }
 
+/**
+ * Compute a perpendicular hatch mark at a given position along the intentions line.
+ * @param {Coordinates} coords - Position to place the hatch
+ * @param {Coordinates[]} intentionsPositions - Full intentions polyline
+ * @param {number} [hatchLengthPx=0.5] - Hatch length in pixels (approximate)
+ * @returns {Coordinates[]|null} Two points forming the hatch, or null
+ */
 export function computeHatchMark(
   coords,
   intentionsPositions,
   hatchLengthPx = 0.5,
 ) {
   let minDist = Infinity;
+  /** @type {Coordinates[]|null} */
   let bestSegment = null;
 
   for (let i = 0; i < intentionsPositions.length - 1; i++) {
@@ -177,6 +221,12 @@ export function computeHatchMark(
   ];
 }
 
+/**
+ * Create a triangle (pleziervaart) ship icon rotated to the given heading.
+ * @param {number} heading - Heading in degrees
+ * @param {boolean} isSelected - Whether the ship is selected
+ * @returns {L.DivIcon}
+ */
 export function createTriangleIcon(heading, isSelected) {
   const size = isSelected ? 20 : 16;
   const half = size / 2;
@@ -201,6 +251,12 @@ linejoin="round"/>
   });
 }
 
+/**
+ * Create a hull (binnenvaart/zeevaart) ship icon rotated to the given heading.
+ * @param {number} heading - Heading in degrees
+ * @param {boolean} isSelected - Whether the ship is selected
+ * @returns {L.DivIcon}
+ */
 export function createHullIcon(heading, isSelected) {
   const size = isSelected ? 38 : 32;
   const half = size / 2;
@@ -224,6 +280,14 @@ xmlns="http://www.w3.org/2000/svg">
   });
 }
 
+/**
+ * Create a draggable label icon for a ship marker.
+ * Shows shortname, status indicators, and optional expanded info.
+ *
+ * @param {Ship} ship - Enriched ship object
+ * @param {boolean} expandLabel - Whether to show expanded info (dimensions, speed, destination)
+ * @returns {L.DivIcon}
+ */
 export function createLabelIcon(ship, expandLabel) {
   const hasDimensions =
     ship.length !== undefined ||
@@ -265,6 +329,13 @@ ${ship.status === "green" ? verifiedIcon : ""}</span>`;
   });
 }
 
+/**
+ * Convert a pixel offset from a map origin to a LatLng position.
+ * @param {L.Map} map - Leaflet map instance
+ * @param {Coordinates} origin - Origin [lat, lng]
+ * @param {[number, number]} pxOffset - Pixel offset [x, y]
+ * @returns {L.LatLng}
+ */
 export function pixelOffsetToLatLng(map, origin, pxOffset) {
   const originPx = map.latLngToContainerPoint(origin);
   const targetPx = L.point(originPx.x + pxOffset[0], originPx.y + pxOffset[1]);

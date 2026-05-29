@@ -5,6 +5,14 @@ import {
   moveAlongBearing,
 } from "@utils/navigation";
 
+/**
+ * Calculate a future position along a straight line toward a target.
+ * @param {Coordinates} startPos - Starting [lat, lng]
+ * @param {number} speed - Speed in knots
+ * @param {number} minutes - Travel time in real-world minutes
+ * @param {Coordinates} target - Target [lat, lng]
+ * @returns {Coordinates} Future position
+ */
 export function calculateFuturePosition(startPos, speed, minutes, target) {
   const hours = minutes / 60;
   const distanceNm = speed * hours;
@@ -18,6 +26,12 @@ export function calculateFuturePosition(startPos, speed, minutes, target) {
   return moveAlongBearing(startPos, bearing, distanceNm);
 }
 
+/**
+ * Walk along the intentions route and return the path up to a given distance traveled.
+ * @param {Ship} ship - Ship with `intentions` array
+ * @param {number} waypointDistanceTraveled - Distance already traveled in nautical miles
+ * @returns {Coordinates[]} The portion of the intention route covered
+ */
 export function calculateIntentionsProgress(ship, waypointDistanceTraveled) {
   if (!ship.intentions || ship.intentions.length <= 1) return [];
 
@@ -51,8 +65,12 @@ export function calculateIntentionsProgress(ship, waypointDistanceTraveled) {
   return intentionsPath;
 }
 
-// Finds the nearest point on the route path to the ship's actual position,
-// rather than deriving position from distance-traveled on waypoints.
+/**
+ * Find the nearest point on the route path to the ship's actual position.
+ * @param {Ship} ship - Ship with `position` and route data
+ * @param {Coordinates[]} routeSource - The route to search (intentions or waypoints)
+ * @returns {{ cursorPos: Coordinates, cursorIndex: number }}
+ */
 function getIntentionsCursor(ship, routeSource) {
   if (!routeSource || routeSource.length <= 1) {
     return { cursorPos: ship.position, cursorIndex: 0 };
@@ -81,8 +99,14 @@ function getIntentionsCursor(ship, routeSource) {
   return { cursorPos: bestPos, cursorIndex: bestIndex };
 }
 
-// Projects `pos` onto the segment [a, b] and returns the clamped
-// nearest point plus the interpolation parameter t ∈ [0, 1].
+/**
+ * Project `pos` onto the segment [a, b] and return the clamped nearest point
+ * plus the interpolation parameter t ∈ [0, 1].
+ * @param {Coordinates} pos - Point to project
+ * @param {Coordinates} a - Segment start
+ * @param {Coordinates} b - Segment end
+ * @returns {{ point: Coordinates, t: number }}
+ */
 function nearestPointOnSegment(pos, a, b) {
   const dx = b[0] - a[0];
   const dy = b[1] - a[1];
@@ -101,12 +125,31 @@ function nearestPointOnSegment(pos, a, b) {
   };
 }
 
+/**
+ * Convert real-world travel minutes to simulation seconds.
+ * @param {number} minutes - Real-world minutes
+ * @param {number} timeScale - Simulation time scale factor
+ * @returns {number} Simulation seconds
+ */
 function travelMinutesToSimSeconds(minutes, timeScale) {
   const realSeconds = minutes * 60;
   return realSeconds / timeScale;
 }
 
+/**
+ * Hook that provides `updateDynamicIntentions` — a function that computes
+ * the visible intentions path for a ship based on current sim state.
+ *
+ * @returns {{ updateDynamicIntentions: (ship: Ship, simTime: number, timeScale?: number) => DynamicIntentionsState }}
+ */
 export function useDynamicIntentionsDisplay() {
+  /**
+   * Compute the dynamic intentions display state for a single ship.
+   * @param {Ship} ship - Enriched ship with motion + intention data
+   * @param {number} simTime - Current simulation time in seconds
+   * @param {number} [timeScale=1] - Simulation time scale factor
+   * @returns {DynamicIntentionsState}
+   */
   const updateDynamicIntentions = useCallback(
     (ship, simTime, timeScale = 1) => {
       const {
@@ -140,6 +183,7 @@ export function useDynamicIntentionsDisplay() {
       }
 
       // Build full remaining route with ETAs from cursorPos onward
+      /** @type {IntentionsPathPoint[]} */
       const path = [];
       let accSimSec = 0;
       path.push({ coords: [...cursorPos], eta: simTime });
@@ -153,6 +197,7 @@ export function useDynamicIntentionsDisplay() {
         path.push({ coords: [...curr], eta: simTime + accSimSec });
       }
 
+      /** @type {IntentionsPathPoint[]} */
       let displayPath = [];
 
       if (!intentionsShowActive) {

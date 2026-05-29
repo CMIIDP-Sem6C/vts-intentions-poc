@@ -17,8 +17,18 @@ import {
 } from "@utils/navigation";
 import { useDynamicIntentionsDisplay } from "@utils/dynamicIntentionsDisplay";
 
+/** @type {React.Context<<ShipsContextValue|null>} */
 const ShipsContext = createContext(null);
 
+/**
+ * Compute a ship's position along its waypoint route at a given simulation time.
+ *
+ * @param {NormalizedShip} ship - Ship with waypoints and speed
+ * @param {number} spawnTime - Simulation time when the ship spawns
+ * @param {number} time - Current simulation time in seconds
+ * @param {number} timeScale - Simulation time scale factor
+ * @returns {ShipMotion|null} Motion state, or null if ship hasn't spawned or has no route
+ */
 function computeShipPosition(ship, spawnTime, time, timeScale) {
   const waypoints = ship.waypoints || [];
   if (waypoints.length === 0) return null;
@@ -64,6 +74,13 @@ function computeShipPosition(ship, spawnTime, time, timeScale) {
   };
 }
 
+/**
+ * Resolve an event's subject to a ship database id.
+ * @param {ScenarioEvent} event
+ * @param {NormalizedShip[]} ships
+ * @param {Intention[]} intentions
+ * @returns {number|null}
+ */
 function resolveEventShipId(event, ships, intentions) {
   if (!event) return null;
   if (event.subjectType === "intention") {
@@ -73,7 +90,18 @@ function resolveEventShipId(event, ships, intentions) {
   return event.subjectId;
 }
 
+/**
+ * Compute which ships have their intentions currently visible,
+ * based on initial state and ShowIntention/HideIntention events up to `time`.
+ *
+ * @param {ScenarioEvent[]} events - All scenario events
+ * @param {NormalizedShip[]} ships - All ships
+ * @param {Intention[]} intentions - All intentions
+ * @param {number} time - Current simulation time
+ * @returns {Map<number, boolean>} Map of ship id → intentions visible
+ */
 function computeIntentionVisibility(events, ships, intentions, time) {
+  /** @type {Map<number, boolean>} */
   const visible = new Map();
   for (const ship of ships || []) {
     const initial = ship.intentionsShowActive ?? false;
@@ -94,6 +122,11 @@ function computeIntentionVisibility(events, ships, intentions, time) {
   }
   return visible;
 }
+
+/**
+ * Provider that enriches scenario ships with motion, intentions, verification, and status.
+ * @param {{ children: React.ReactNode }} props
+ */
 
 export function ShipsProvider({ children }) {
   const { ships: scenarioShips, intentions, events } = useScenario();
@@ -116,6 +149,7 @@ export function ShipsProvider({ children }) {
     });
   }, [scenarioShips]);
 
+  /** @type {Ship[]} */
   const ships = useMemo(() => {
     if (!scenarioShips) return [];
     const visibility = computeIntentionVisibility(
@@ -216,6 +250,7 @@ export function ShipsProvider({ children }) {
     [updateVerification],
   );
 
+  /** @type {ShipsContextValue} */
   const value = useMemo(
     () => ({
       ships,
@@ -248,6 +283,11 @@ export function ShipsProvider({ children }) {
   );
 }
 
+/**
+ * Access the ships context.
+ * @returns {ShipsContextValue}
+ * @throws {Error} If used outside ShipsProvider
+ */
 export function useShips() {
   const ctx = useContext(ShipsContext);
   if (!ctx) throw new Error("useShips must be used within ShipsProvider");
