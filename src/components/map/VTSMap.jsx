@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useMemo } from "react";
 import "leaflet/dist/leaflet.css";
 import {
   MapContainer,

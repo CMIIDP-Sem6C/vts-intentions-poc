@@ -1,6 +1,5 @@
-import { useMemo, useState, useCallback, useRef } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { Marker, Polyline, useMap } from "react-leaflet";
-import L from "leaflet";
 import { getCourseVectorEnd } from "@utils/navigation";
 import { useSim } from "@contexts/SimContext";
 import {
@@ -11,7 +10,6 @@ import {
 } from "@utils/shipIcons";
 import IntentionsLayer from "@components/map/IntentionsLayer";
 
-const ROUTE_COLOR = "#E57373";
 const VECTOR_COLOR = "#D32F2F";
 const VECTOR_NM_PER_KNOT = 0.05;
 const VECTOR_MAX_NM = 0.25;
@@ -19,12 +17,11 @@ const DEFAULT_LABEL_OFFSET_PX = [14, 0];
 
 export default function ShipMarker({ ship, isSelected, onSelect }) {
   const map = useMap();
-  const { simTime, timeScale, startTime } = useSim();
+  const { timeScale, startTime } = useSim();
   const [hovered, setHovered] = useState(false);
   const [labelOffsetPx, setLabelOffsetPx] = useState(DEFAULT_LABEL_OFFSET_PX);
   const [expandLabel, setExpandLabel] = useState(false);
   const showOverlay = isSelected || hovered;
-  const labelRef = useRef(null);
 
   const destKnown = ship.destination && ship.destination !== "Unknown";
 
@@ -124,7 +121,6 @@ export default function ShipMarker({ ship, isSelected, onSelect }) {
       />
 
       <Marker
-        ref={labelRef}
         position={labelPos}
         icon={labelIcon}
         draggable
