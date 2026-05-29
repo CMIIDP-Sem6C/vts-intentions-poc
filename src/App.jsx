@@ -9,13 +9,23 @@ import ShipInfoCard from "@components/panels/ShipInfoCard";
 import { ScenarioProvider, useScenario } from "@contexts/ScenarioContext";
 import { SimProvider, useSim } from "@contexts/SimContext";
 import { ShipsProvider, useShips } from "@contexts/ShipsContext";
+import IntentionChangeAlertStack from "@components/alerts/IntentionChangeAlertStack";
 import { SECTORS } from "@data/sectors";
 import { API_URL, ENDPOINT_DESTINATIONS } from "@utils/api";
 import "./App.css";
 
 function AppContent({ activeSector, destinations }) {
   const { scenario, loading, error, originalShips } = useScenario();
-  const { simTime, duration, isPlaying, play, pause, seek, restart } = useSim();
+  const {
+    simTime,
+    duration,
+    activeIntentionChangeAlerts,
+    isPlaying,
+    play,
+    pause,
+    seek,
+    restart,
+  } = useSim();
   const {
     ships,
     selectedShipId,
@@ -76,6 +86,9 @@ function AppContent({ activeSector, destinations }) {
 
   return (
     <AppLayout
+      topCenterAlerts={
+        <IntentionChangeAlertStack alerts={activeIntentionChangeAlerts} />
+      }
       map={
         <VTSMap
           ships={ships}

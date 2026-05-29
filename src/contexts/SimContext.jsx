@@ -8,13 +8,17 @@ import {
 } from "react";
 import { useScenario } from "@contexts/ScenarioContext";
 import { calculateDistance } from "@utils/navigation";
+import {
+  ALERT_INTENTION_CHANGE_DURATION_SEC,
+  getActiveIntentionChangeAlerts,
+} from "@utils/scenarioEvents";
 
 const SimContext = createContext(null);
 
 const TICK_MS = 100;
 
 export function SimProvider({ children }) {
-  const { ships, events, originalShips, originalEvents, scenario } =
+  const { ships, events, intentions, originalShips, originalEvents, scenario } =
     useScenario();
 
   const [timeScale, setTimeScale] = useState(4);
@@ -37,6 +41,11 @@ export function SimProvider({ children }) {
     for (const event of events || []) {
       const triggerTime = event.triggerTime ?? 0;
       if (triggerTime > max) max = triggerTime;
+      // Ensure alert duration is included so alerts stay visible
+      if (event.type === "AlertIntentionChange") {
+        const alertEnd = triggerTime + ALERT_INTENTION_CHANGE_DURATION_SEC;
+        if (alertEnd > max) max = alertEnd;
+      }
     }
     for (const ship of ships || []) {
       const key = ship.id ?? ship.dbId;
@@ -82,6 +91,11 @@ export function SimProvider({ children }) {
     return () => clearInterval(interval);
   }, [isPlaying, duration]);
 
+  const activeIntentionChangeAlerts = useMemo(
+    () => getActiveIntentionChangeAlerts(events, ships, intentions, simTime),
+    [events, ships, intentions, simTime],
+  );
+
   const seek = useCallback(
     (time) => setSimTime(Math.max(0, Math.min(duration, time))),
     [duration],
@@ -105,6 +119,7 @@ export function SimProvider({ children }) {
       startTime,
       currentTime: Date.now(),
       spawnTimes,
+      activeIntentionChangeAlerts,
       play,
       pause,
       seek,
@@ -118,6 +133,7 @@ export function SimProvider({ children }) {
       timeScale,
       startTime,
       spawnTimes,
+      activeIntentionChangeAlerts,
       play,
       pause,
       seek,
