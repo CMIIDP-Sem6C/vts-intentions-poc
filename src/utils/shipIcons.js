@@ -308,7 +308,7 @@ fill="${STATUS[ship.status].color}"/>
 ${expandLabel ? ship.name : ""}</span>`;
   const labelExpandedInfo = `${
     hasDimensions
-      ? `<span class="ship-label-text">${ship.length ?? "NaN"}m ${ship.widht ?? "NaN"}m ${
+      ? `<span class="ship-label-text">${ship.length ?? "NaN"}m ${ship.width ?? "NaN"}m ${
           ship.depth ?? "NaN"
         }dm</span>`
       : ""
