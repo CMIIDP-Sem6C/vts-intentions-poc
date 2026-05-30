@@ -83,7 +83,10 @@ export default function ShipInfoCard({
   /** @type {StatusLevel} */
   const level = getStatusLevel(ship);
   const etaLabel = getEtaLabel(ship, activeSector);
-  const dangerous = isDangerousCargo(ship.cargo);
+  const dangerous =
+    typeof ship.dangerousCargo === "boolean"
+      ? ship.dangerousCargo
+      : isDangerousCargo(ship.cargo);
 
   const handleDestSubmit = (newValue) => {
     if (newValue !== ship.destination) {
