@@ -14,7 +14,7 @@ import { SECTORS } from "@data/sectors";
 import { API_URL, ENDPOINT_DESTINATIONS } from "@utils/api";
 import "./App.css";
 
-function AppContent({ activeSector, destinations }) {
+function AppContent({ activeSector, destinations, onBack }) {
   const { scenario, loading, error, originalShips } = useScenario();
   const {
     simTime,
@@ -86,6 +86,7 @@ function AppContent({ activeSector, destinations }) {
 
   return (
     <AppLayout
+      onBack={onBack}
       topCenterAlerts={
         <IntentionChangeAlertStack alerts={activeIntentionChangeAlerts} />
       }
@@ -111,6 +112,7 @@ function AppContent({ activeSector, destinations }) {
       shipInfoCard={
         <ShipInfoCard
           ship={selectedShip}
+          activeSector={activeSector}
           onClose={() => selectShip(null)}
           onSetDestination={setDestination}
           onVerifyShip={verifyShip}
@@ -146,6 +148,11 @@ export default function App() {
       .catch((err) => console.error("Failed to load destinations:", err));
   }, []);
 
+  const handleBack = () => {
+    setActiveScenarioId(null);
+    setActiveSector(null);
+  };
+
   if (activeScenarioId == null) {
     return <ScenarioSelect onSelect={setActiveScenarioId} />;
   }
@@ -158,7 +165,11 @@ export default function App() {
     <ScenarioProvider scenarioId={activeScenarioId} sector={activeSector}>
       <SimProvider>
         <ShipsProvider>
-          <AppContent activeSector={activeSector} destinations={destinations} />
+          <AppContent
+            activeSector={activeSector}
+            destinations={destinations}
+            onBack={handleBack}
+          />
         </ShipsProvider>
       </SimProvider>
     </ScenarioProvider>

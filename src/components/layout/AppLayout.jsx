@@ -7,6 +7,7 @@
  * @param {React.ReactNode} props.shipInfoCard - Right-side ship detail card
  * @param {React.ReactNode} [props.bottomBar] - Bottom timeline/playback bar
  * @param {React.ReactNode} [props.topCenterAlerts] - Top-center alert stack
+ * @param {() => void} [props.onBack] - Return to the start (scenario select) screen
  */
 export default function AppLayout({
   map,
@@ -14,10 +15,31 @@ export default function AppLayout({
   shipInfoCard,
   bottomBar,
   topCenterAlerts,
+  onBack,
 }) {
   return (
     <div className="app-layout">
       <div className="map-container">{map}</div>
+      {onBack ? (
+        <button
+          type="button"
+          className="back-to-start-btn"
+          onClick={onBack}
+          title="Terug naar startscherm"
+          aria-label="Terug naar startscherm"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path
+              d="M15 18l-6-6 6-6"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          <span>Menu</span>
+        </button>
+      ) : null}
       <div className="overlay-panels">
         {topCenterAlerts ? (
           <div className="top-center-alerts">{topCenterAlerts}</div>
