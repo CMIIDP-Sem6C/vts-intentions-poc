@@ -308,16 +308,14 @@ fill="${STATUS[ship.status].color}"/>
 ${expandLabel ? ship.name : ""}</span>`;
   const labelExpandedInfo = `${
     hasDimensions
-      ? `<span class="ship-label-
-text">${ship.length ?? "NaN"}m ${ship.widht ?? "NaN"}m ${
+      ? `<span class="ship-label-text">${ship.length ?? "NaN"}m ${ship.widht ?? "NaN"}m ${
           ship.depth ?? "NaN"
         }dm</span>`
       : ""
   }<span class="ship-label-text">${ship.speed ?? "NaN"}kn 
 ${ship.baseHeading.toFixed(1) ?? "NaN"}° ${
     ship.rateOfTurn !== undefined ? `${ship.rateOfTurn}°/min` : ""
-  }</span><span class="ship-label-
-text">${ship.shipType === "Zeevaart" ? "Z" : "B"} ${ship.destination} 
+  }</span><span class="ship-label-text">${ship.shipType === "Zeevaart" ? "Z" : "B"} ${ship.destination} 
 ${ship.status === "green" ? verifiedIcon : ""}</span>`;
   return L.divIcon({
     html: `<div class="ship-label-container">${labelTitle}${
