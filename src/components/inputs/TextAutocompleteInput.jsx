@@ -24,6 +24,7 @@ const TextAutocompleteInput = ({
   const [inputValue, setInputValue] = useState(value);
   const [filteredSuggestions, setFilteredSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
   const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
   const inputRef = useRef(null);
   const wrapperRef = useRef(null);
@@ -33,7 +34,9 @@ const TextAutocompleteInput = ({
     setInputValue(value ?? "");
   }, [value]);
 
-  // Filter suggestions based on input
+  // Filter suggestions based on input. Only reveal the dropdown while the
+  // field is focused, so opening a ship card with a known destination does
+  // not pop the suggestions list open over the card.
   useEffect(() => {
     if (!inputValue) {
       setFilteredSuggestions([]);
@@ -46,9 +49,9 @@ const TextAutocompleteInput = ({
       .filter((name) => name.toLowerCase().includes(inputValue.toLowerCase()));
 
     setFilteredSuggestions(filtered);
-    setShowSuggestions(filtered.length > 0);
+    setShowSuggestions(isFocused && filtered.length > 0);
     setActiveSuggestionIndex(-1);
-  }, [inputValue, suggestions]);
+  }, [inputValue, suggestions, isFocused]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -129,6 +132,8 @@ const TextAutocompleteInput = ({
         placeholder={placeholder}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
         autoComplete="off"
         spellCheck="false"
       />
