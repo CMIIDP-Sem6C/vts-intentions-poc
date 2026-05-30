@@ -38,9 +38,9 @@ export default function ShipMarker({ ship, isSelected, onSelect }) {
   const icon = useMemo(
     () =>
       ship.markerType === "hull"
-        ? createHullIcon(headingRounded, isSelected)
+        ? createHullIcon(headingRounded, isSelected, ship.length, ship.width)
         : createTriangleIcon(headingRounded, isSelected),
-    [headingRounded, ship.markerType, isSelected],
+    [headingRounded, ship.markerType, isSelected, ship.length, ship.width],
   );
 
   const labelIcon = useMemo(
