@@ -1,3 +1,13 @@
+/**
+ * Derive the verification status level for a ship.
+ *
+ * - "red"    → AIS off and/or no valid destination
+ * - "yellow" → AIS on + destination known, but not verified
+ * - "green"  → AIS on + destination known + verified
+ *
+ * @param {Ship} ship - Enriched ship object
+ * @returns {StatusLevel}
+ */
 export function getStatusLevel(ship) {
   // if ais not active, and/or no (or unknown) destination => red
   if (!ship.aisActive) return "red";
@@ -9,6 +19,7 @@ export function getStatusLevel(ship) {
   return "yellow";
 }
 
+/** @type {Record<<StatusLevel, { label: string, css: string, color: string, dots: number }>} */
 export const STATUS = {
   red: {
     label: "Onbekend",

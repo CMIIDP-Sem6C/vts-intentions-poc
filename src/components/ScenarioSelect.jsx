@@ -1,6 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
+/**
+ * Scenario selection screen. Fetches the list of scenarios from the API
+ * and presents them as clickable rows.
+ *
+ * @param {Object} props
+ * @param {(id: number) => void} props.onSelect - Called when a scenario is chosen
+ */
 export default function ScenarioSelect({ onSelect }) {
+  /** @type {Scenario[]} */
   const [scenarios, setScenarios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -8,7 +16,7 @@ export default function ScenarioSelect({ onSelect }) {
   useEffect(() => {
     let cancelled = false;
 
-    fetch('/api/scenarios')
+    fetch("/api/scenarios")
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
@@ -61,7 +69,7 @@ export default function ScenarioSelect({ onSelect }) {
                 </div>
                 <div className="scenario-row-meta">
                   {duration != null && <span>{duration}s</span>}
-                  <span className="scenario-row-arrow">{'->'}</span>
+                  <span className="scenario-row-arrow">{"->"}</span>
                 </div>
               </button>
             );

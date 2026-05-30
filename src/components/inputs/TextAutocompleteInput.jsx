@@ -1,7 +1,19 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 
+/**
+ * Text input with autocomplete suggestions for destination entry.
+ *
+ * @param {Object} props
+ * @param {string} [props.value=""] - Current input value
+ * @param {(value: string) => void} props.onSubmit - Called when the user submits a value
+ * @param {DestinationSuggestion[]} [props.suggestions=[]] - Autocomplete suggestions
+ * @param {string} [props.placeholder="Onbekend - voer in..."] - Placeholder text
+ * @param {string} [props.className=""] - Additional CSS class
+ * @param {React.CSSProperties} [props.style] - Inline styles
+ * @param {StatusLevel} [props.level] - Status level for color styling
+ */
 const TextAutocompleteInput = ({
-  value,
+  value = "",
   onSubmit,
   suggestions = [],
   placeholder = "Onbekend - voer in...",
@@ -18,7 +30,7 @@ const TextAutocompleteInput = ({
 
   // Sync input value with prop
   useEffect(() => {
-    setInputValue(value);
+    setInputValue(value ?? "");
   }, [value]);
 
   // Filter suggestions based on input

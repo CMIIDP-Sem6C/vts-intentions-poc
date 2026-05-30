@@ -1,5 +1,11 @@
-import { SECTORS } from '../data/sectors';
+import { SECTORS } from "@data/sectors";
 
+/**
+ * Sector selection screen. Presents available sectors as buttons.
+ *
+ * @param {Object} props
+ * @param {(sectorKey: string) => void} props.onSelect - Called when a sector is chosen
+ */
 export default function SectorSelect({ onSelect }) {
   return (
     <div className="sector-select-overlay">

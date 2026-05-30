@@ -1,8 +1,20 @@
 import { useState, useEffect } from "react";
-import TextAutocompleteInput from "../inputs/TextAutocompleteInput";
-import Flag from "./Flag";
-import { getStatusLevel, STATUS } from "../../utils/status";
+import TextAutocompleteInput from "@components/inputs/TextAutocompleteInput";
+import Flag from "@components/panels/Flag";
+import { getStatusLevel, STATUS } from "@utils/status";
 
+/**
+ * Detail panel showing ship information, verification controls, and operator notes.
+ *
+ * @param {Object} props
+ * @param {Ship|null} props.ship - The selected ship, or null if none selected
+ * @param {() => void} props.onClose - Close the panel
+ * @param {(id: number, destination: string) => void} props.onSetDestination - Set destination callback
+ * @param {(id: number) => void} props.onVerifyShip - Verify ship callback
+ * @param {(id: number) => void} [props.onResetShip] - Reset ship to red status callback
+ * @param {string|null} props.verificationError - Last verification error message
+ * @param {DestinationSuggestion[]} [props.destinations=[]] - Destination autocomplete suggestions
+ */
 export default function ShipInfoCard({
   ship,
   onClose,
@@ -16,6 +28,7 @@ export default function ShipInfoCard({
   const [scanning, setScanning] = useState(false);
   if (!ship) return null;
 
+  /** @type {StatusLevel} */
   const level = getStatusLevel(ship);
 
   const handleDestSubmit = (newValue) => {

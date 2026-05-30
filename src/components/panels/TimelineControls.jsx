@@ -1,12 +1,29 @@
-import { useCallback } from 'react';
+import { useCallback } from "react";
 
+/**
+ * Format seconds into MM:SS display.
+ * @param {number} seconds
+ * @returns {string}
+ */
 function formatTime(seconds) {
   const total = Math.max(0, Math.floor(seconds));
   const m = Math.floor(total / 60);
   const s = total % 60;
-  return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
+/**
+ * Playback controls for the scenario timeline.
+ *
+ * @param {Object} props
+ * @param {number} props.simTime - Current simulation time in seconds
+ * @param {number} props.duration - Total scenario duration in seconds
+ * @param {boolean} props.isPlaying - Whether the simulation is running
+ * @param {() => void} props.onPlay - Start playback
+ * @param {() => void} props.onPause - Pause playback
+ * @param {(time: number) => void} props.onSeek - Seek to a specific time
+ * @param {() => void} props.onRestart - Reset to beginning
+ */
 export default function TimelineControls({
   simTime,
   duration,
@@ -21,7 +38,7 @@ export default function TimelineControls({
       const value = parseFloat(e.target.value);
       if (Number.isFinite(value)) onSeek(value);
     },
-    [onSeek]
+    [onSeek],
   );
 
   const togglePlay = useCallback(() => {
@@ -30,7 +47,11 @@ export default function TimelineControls({
   }, [isPlaying, onPlay, onPause]);
 
   return (
-    <div className="timeline-controls" role="group" aria-label="Scenario tijdlijn">
+    <div
+      className="timeline-controls"
+      role="group"
+      aria-label="Scenario tijdlijn"
+    >
       <button
         type="button"
         className="timeline-btn"
@@ -47,8 +68,8 @@ export default function TimelineControls({
         type="button"
         className="timeline-btn timeline-play-btn"
         onClick={togglePlay}
-        title={isPlaying ? 'Pauze' : 'Afspelen'}
-        aria-label={isPlaying ? 'Pauze' : 'Afspelen'}
+        title={isPlaying ? "Pauze" : "Afspelen"}
+        aria-label={isPlaying ? "Pauze" : "Afspelen"}
       >
         {isPlaying ? (
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
@@ -72,12 +93,14 @@ export default function TimelineControls({
         className="timeline-slider"
         aria-label="Scenario tijd"
         style={{
-          '--timeline-progress': `${
+          "--timeline-progress": `${
             duration > 0 ? Math.min(100, (simTime / duration) * 100) : 0
           }%`,
         }}
       />
-      <span className="timeline-time timeline-duration">{formatTime(duration)}</span>
+      <span className="timeline-time timeline-duration">
+        {formatTime(duration)}
+      </span>
     </div>
   );
 }
