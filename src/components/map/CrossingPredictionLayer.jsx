@@ -4,8 +4,95 @@ import L from "leaflet";
 import { useScenario } from "@contexts/ScenarioContext";
 import { useSim } from "@contexts/SimContext";
 import { useShips } from "@contexts/ShipsContext";
+import { calculateDistance } from "@utils/navigation";
 
 /** @typedef {{ id: string, ship_ids: number[], position: [number, number], distance_m: number, trigger_time: number, active_from: number, active_until: number }} CrossingPrediction */
+
+const CLEARANCE_NM = 200 / 1852;
+
+/**
+ * @param {import("../types").Coordinates} point
+ * @param {import("../types").Coordinates} a
+ * @param {import("../types").Coordinates} b
+ * @returns {{ point: import("../types").Coordinates, t: number }}
+ */
+function nearestPointOnSegment(point, a, b) {
+  const dx = b[0] - a[0];
+  const dy = b[1] - a[1];
+  const lenSq = dx * dx + dy * dy;
+
+  if (lenSq === 0) return { point: [...a], t: 0 };
+
+  const t = Math.max(
+    0,
+    Math.min(1, ((point[0] - a[0]) * dx + (point[1] - a[1]) * dy) / lenSq),
+  );
+
+  return {
+    point: [a[0] + t * dx, a[1] + t * dy],
+    t,
+  };
+}
+
+/**
+ * Distance in nautical miles from the start of a route to the nearest point on it.
+ * @param {import("../types").Coordinates[]} route
+ * @param {import("../types").Coordinates} target
+ * @returns {number|null}
+ */
+function distanceAlongRouteToPoint(route, target) {
+  if (!Array.isArray(route) || route.length < 2) return null;
+
+  let bestGeoDist = Infinity;
+  let bestRouteDist = 0;
+  let cumulative = 0;
+
+  for (let i = 0; i < route.length - 1; i++) {
+    const segLen = calculateDistance(route[i], route[i + 1]);
+    const { point, t } = nearestPointOnSegment(target, route[i], route[i + 1]);
+    const geoDist = calculateDistance(target, point);
+    const routeDist = cumulative + segLen * t;
+
+    if (geoDist < bestGeoDist) {
+      bestGeoDist = geoDist;
+      bestRouteDist = routeDist;
+    }
+
+    cumulative += segLen;
+  }
+
+  return bestRouteDist;
+}
+
+/**
+ * @param {import("../types").Ship} ship
+ * @param {import("../types").Coordinates} crossingPosition
+ * @param {import("../types").Coordinates[]} route
+ * @returns {boolean}
+ */
+function hasShipPassedCrossing(ship, crossingPosition, route) {
+  const crossingDist = distanceAlongRouteToPoint(route, crossingPosition);
+  const shipDist = distanceAlongRouteToPoint(route, ship.position);
+  if (crossingDist == null || shipDist == null) return false;
+  return shipDist > crossingDist + CLEARANCE_NM;
+}
+
+/**
+ * @param {CrossingPrediction} prediction
+ * @param {import("../types").Ship[]} ships
+ * @returns {boolean}
+ */
+function bothShipsPassedCrossing(prediction, ships) {
+  return prediction.ship_ids.every((id) => {
+    const ship = ships.find((entry) => Number(entry.id) === Number(id));
+    if (!ship) return false;
+
+    const route = ship.intentions;
+    if (!Array.isArray(route) || route.length < 2) return false;
+
+    return hasShipPassedCrossing(ship, prediction.position, route);
+  });
+}
 
 function escapeHtml(value) {
   return String(value)
@@ -76,9 +163,13 @@ function getVisibleCrossingPredictions(predictions, ships) {
       .map((ship) => Number(ship.id)),
   );
 
-  return predictions.filter((prediction) =>
-    prediction.ship_ids.every((id) => sharedShipIds.has(Number(id))),
-  );
+  return predictions.filter((prediction) => {
+    if (!prediction.ship_ids.every((id) => sharedShipIds.has(Number(id)))) {
+      return false;
+    }
+
+    return !bothShipsPassedCrossing(prediction, ships);
+  });
 }
 
 /**
