@@ -269,15 +269,16 @@ export function createTriangleIcon(heading, isSelected) {
   const size = isSelected ? 20 : 16;
   const half = size / 2;
   const fill = isSelected ? FILL_SEL : FILL;
-  const stroke = isSelected ? "#FFFFFF" : "rgba(255,255,255,0.85)";
-  const sw = isSelected ? 2.2 : 0.9;
+  // White border; only its opacity changes between states (fill stays solid).
+  const strokeOpacity = isSelected ? 1 : 0.85;
+  const strokeWidth = isSelected ? 2.2 : 0.9;
 
   const svg = `<svg width="${size}" height="${size}" viewBox="0 0 18 18" 
 xmlns="http://www.w3.org/2000/svg">
     <g transform="rotate(${heading}, 9, 9)">
       <path d="M 9,2 C 11.5,5 14,10 13.5,14 C 13,15.5 11,14.5 9,12.5
                C 7,14.5 5,15.5 4.5,14 C 4,10 6.5,5 9,2 Z"
-        fill="${fill}" stroke="${stroke}" stroke-width="${sw}" stroke-
+        fill="${fill}" stroke="#FFFFFF" stroke-opacity="${strokeOpacity}" stroke-width="${strokeWidth}" stroke-
 linejoin="round"/>
     </g></svg>`;
 
@@ -302,34 +303,35 @@ linejoin="round"/>
 export function createHullIcon(heading, isSelected, lengthM, widthM) {
   const { lengthPx, widthPx } = hullPixelSize(lengthM, widthM, isSelected);
   const fill = isSelected ? FILL_SEL : FILL;
-  const stroke = isSelected ? "#FFFFFF" : "rgba(255,255,255,0.85)";
-  const sw = isSelected ? 2.2 : 0.9;
+  // White border; only its opacity changes between states (fill stays solid).
+  const strokeOpacity = isSelected ? 1 : 0.85;
+  const strokeWidth = isSelected ? 2.2 : 0.9;
 
   const size = Math.ceil(lengthPx) + 4;
-  const c = size / 2;
-  const ht = widthPx / 2;
-  const sternX = c - lengthPx / 2;
-  const bowTipX = c + lengthPx / 2;
+  const center = size / 2;
+  const halfWidth = widthPx / 2;
+  const sternX = center - lengthPx / 2;
+  const bowTipX = center + lengthPx / 2;
   const bowBaseX = bowTipX - lengthPx * 0.24;
 
   const r = (n) => Math.round(n * 100) / 100;
-  const rot = heading - 90;
+  const rotation = heading - 90;
   const path =
-    `M ${r(sternX)},${r(c - ht)} ` +
-    `L ${r(bowBaseX)},${r(c - ht)} ` +
-    `Q ${r(bowTipX)},${r(c)} ${r(bowBaseX)},${r(c + ht)} ` +
-    `L ${r(sternX)},${r(c + ht)} Z`;
+    `M ${r(sternX)},${r(center - halfWidth)} ` +
+    `L ${r(bowBaseX)},${r(center - halfWidth)} ` +
+    `Q ${r(bowTipX)},${r(center)} ${r(bowBaseX)},${r(center + halfWidth)} ` +
+    `L ${r(sternX)},${r(center + halfWidth)} Z`;
 
   const svg = `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
-    <g transform="rotate(${rot}, ${r(c)}, ${r(c)})">
-      <path d="${path}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" stroke-linejoin="round"/>
+    <g transform="rotate(${rotation}, ${r(center)}, ${r(center)})">
+      <path d="${path}" fill="${fill}" stroke="#FFFFFF" stroke-opacity="${strokeOpacity}" stroke-width="${strokeWidth}" stroke-linejoin="round"/>
     </g></svg>`;
 
   return L.divIcon({
     html: svg,
     className: "ship-icon",
     iconSize: [size, size],
-    iconAnchor: [c, c],
+    iconAnchor: [center, center],
   });
 }
 
