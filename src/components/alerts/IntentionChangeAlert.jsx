@@ -8,16 +8,17 @@
 export default function IntentionChangeAlert({ shipName }) {
   return (
     <div className="intention-change-alert" role="alert" aria-live="assertive">
-      <span className="intention-change-alert-indicator" aria-hidden="true" />
-      <div className="intention-change-alert-content">
-        <p className="intention-change-alert-title">WAARSCHUWING</p>
-        <p className="intention-change-alert-message">
-          <strong className="intention-change-alert-ship">{shipName}</strong>
-          {
-            " geeft geen intenties meer door van de route. De stuurman heeft nu controle."
-          }
-        </p>
+      <div className="intention-change-alert-title">
+        <span className="intention-change-alert-dot" aria-hidden="true" />
+        <h2 className="intention-change-alert-heading">WAARSCHUWING</h2>
+        <span className="intention-change-alert-dot" aria-hidden="true" />
       </div>
+      <p className="intention-change-alert-message">
+        <strong className="intention-change-alert-ship">{shipName}</strong>
+        {
+          " geeft geen intenties meer door van de route. De stuurman heeft nu controle."
+        }
+      </p>
     </div>
   );
 }

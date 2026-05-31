@@ -1,8 +1,46 @@
 import L from "leaflet";
 import { STATUS } from "@utils/status";
 
-const FILL = "#1B5E20";
-const FILL_SEL = "#2E7D32";
+const FILL = "#FB8C00";
+const FILL_SEL = "#FFA726";
+
+// Ship-dimension fallbacks (meters) when the DB has no size for a vessel.
+const DEFAULT_LENGTH_M = 70;
+const DEFAULT_WIDTH_M = 9;
+
+// Relative size mapping: inland vessels roughly span 38m (spits) to 135m
+// (large motor vessel). We map that range to a modest pixel length so larger
+// ships read as bigger without overlapping neighbours at the scenario zoom.
+const MIN_LEN_M = 38;
+const MAX_LEN_M = 135;
+const MIN_LEN_PX = 20;
+const MAX_LEN_PX = 42;
+
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+/**
+ * Map a ship's real length/width (meters) to on-screen hull dimensions (px).
+ * @param {number} lengthM
+ * @param {number} widthM
+ * @param {boolean} isSelected
+ * @returns {{ lengthPx: number, widthPx: number }}
+ */
+function hullPixelSize(lengthM, widthM, isSelected) {
+  const len = clamp(lengthM || DEFAULT_LENGTH_M, MIN_LEN_M, MAX_LEN_M);
+  const wid = widthM || DEFAULT_WIDTH_M;
+  let lengthPx =
+    MIN_LEN_PX +
+    ((len - MIN_LEN_M) / (MAX_LEN_M - MIN_LEN_M)) * (MAX_LEN_PX - MIN_LEN_PX);
+  // Slender hull: beam scales with the real width/length ratio but stays
+  // visually thin (roughly a 4:1 hull) so ships read as vessels, not blobs.
+  const beamRatio = clamp(wid / len, 0.06, 0.2);
+  let widthPx = clamp(lengthPx * beamRatio * 1.9, 6, 13);
+  if (isSelected) {
+    lengthPx *= 1.15;
+    widthPx *= 1.15;
+  }
+  return { lengthPx, widthPx };
+}
 
 /**
  * Convert real-world travel minutes → simulation seconds.
@@ -231,15 +269,16 @@ export function createTriangleIcon(heading, isSelected) {
   const size = isSelected ? 20 : 16;
   const half = size / 2;
   const fill = isSelected ? FILL_SEL : FILL;
-  const stroke = isSelected ? "#FFFFFF" : "rgba(0,0,0,0.5)";
-  const sw = isSelected ? 1.5 : 0.6;
+  // White border; only its opacity changes between states (fill stays solid).
+  const strokeOpacity = isSelected ? 1 : 0.85;
+  const strokeWidth = isSelected ? 2.2 : 0.9;
 
   const svg = `<svg width="${size}" height="${size}" viewBox="0 0 18 18" 
 xmlns="http://www.w3.org/2000/svg">
     <g transform="rotate(${heading}, 9, 9)">
       <path d="M 9,2 C 11.5,5 14,10 13.5,14 C 13,15.5 11,14.5 9,12.5
                C 7,14.5 5,15.5 4.5,14 C 4,10 6.5,5 9,2 Z"
-        fill="${fill}" stroke="${stroke}" stroke-width="${sw}" stroke-
+        fill="${fill}" stroke="#FFFFFF" stroke-opacity="${strokeOpacity}" stroke-width="${strokeWidth}" stroke-
 linejoin="round"/>
     </g></svg>`;
 
@@ -252,31 +291,47 @@ linejoin="round"/>
 }
 
 /**
- * Create a hull (binnenvaart/zeevaart) ship icon rotated to the given heading.
+ * Create a hull (binnenvaart/zeevaart) ship icon rotated to the given heading,
+ * scaled to the vessel's real length/width and filled orange.
+ *
  * @param {number} heading - Heading in degrees
  * @param {boolean} isSelected - Whether the ship is selected
+ * @param {number} [lengthM] - Ship length in meters (from DB)
+ * @param {number} [widthM] - Ship beam in meters (from DB)
  * @returns {L.DivIcon}
  */
-export function createHullIcon(heading, isSelected) {
-  const size = isSelected ? 38 : 32;
-  const half = size / 2;
+export function createHullIcon(heading, isSelected, lengthM, widthM) {
+  const { lengthPx, widthPx } = hullPixelSize(lengthM, widthM, isSelected);
   const fill = isSelected ? FILL_SEL : FILL;
-  const stroke = isSelected ? "#FFFFFF" : "rgba(0,0,0,0.45)";
-  const sw = isSelected ? 1.3 : 0.5;
+  // White border; only its opacity changes between states (fill stays solid).
+  const strokeOpacity = isSelected ? 1 : 0.85;
+  const strokeWidth = isSelected ? 2.2 : 0.9;
 
-  const rot = heading - 90;
-  const svg = `<svg width="${size}" height="${size}" viewBox="0 0 36 36" 
-xmlns="http://www.w3.org/2000/svg">
-    <g transform="rotate(${rot}, 18, 18)">
-      <path d="M 4,14.5 L 28,14.5 Q 33,18 28,21.5 L 4,21.5 Z"
-        fill="${fill}" stroke="${stroke}" stroke-width="${sw}"/>
+  const size = Math.ceil(lengthPx) + 4;
+  const center = size / 2;
+  const halfWidth = widthPx / 2;
+  const sternX = center - lengthPx / 2;
+  const bowTipX = center + lengthPx / 2;
+  const bowBaseX = bowTipX - lengthPx * 0.24;
+
+  const r = (n) => Math.round(n * 100) / 100;
+  const rotation = heading - 90;
+  const path =
+    `M ${r(sternX)},${r(center - halfWidth)} ` +
+    `L ${r(bowBaseX)},${r(center - halfWidth)} ` +
+    `Q ${r(bowTipX)},${r(center)} ${r(bowBaseX)},${r(center + halfWidth)} ` +
+    `L ${r(sternX)},${r(center + halfWidth)} Z`;
+
+  const svg = `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
+    <g transform="rotate(${rotation}, ${r(center)}, ${r(center)})">
+      <path d="${path}" fill="${fill}" stroke="#FFFFFF" stroke-opacity="${strokeOpacity}" stroke-width="${strokeWidth}" stroke-linejoin="round"/>
     </g></svg>`;
 
   return L.divIcon({
     html: svg,
     className: "ship-icon",
     iconSize: [size, size],
-    iconAnchor: [half, half],
+    iconAnchor: [center, center],
   });
 }
 

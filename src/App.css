@@ -269,6 +269,47 @@
 }
 
 /* ==============================
+   Back to start button
+   ============================== */
+
+.back-to-start-btn {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  /* Same overlay layer as the panels (above the map at z-index 0). */
+  z-index: 1000;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px 8px 9px;
+  background: var(--color-bg-panel);
+  color: var(--color-text-main);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  border-radius: var(--border-radius-base);
+  box-shadow: var(--shadow-panel);
+  backdrop-filter: blur(6px);
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.back-to-start-btn:hover {
+  background: rgba(255, 152, 0, 0.15);
+  border-color: var(--color-primary);
+  color: var(--color-text-main);
+}
+
+.back-to-start-btn svg {
+  display: block;
+}
+
+/* ==============================
    Panel base
    ============================== */
 
@@ -297,6 +338,7 @@
 .inbound-panel {
   min-width: 420px;
   position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.75);
 }
 
 .inbound-minimize-btn {
@@ -455,9 +497,74 @@
    ============================== */
 
 .ship-info-card {
-  min-width: 400px;
-  max-width: 460px;
+  min-width: 280px;
+  max-width: 320px;
   position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.75);
+}
+
+/* --- Header (name + ETA) --- */
+
+.ship-info-title {
+  margin-bottom: 12px;
+  padding-right: 22px;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.ship-info-name {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.ship-info-eta {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: none;
+  letter-spacing: 0.2px;
+}
+
+/* --- Symbol cells --- */
+
+.info-symbol {
+  display: inline-flex;
+  align-items: center;
+}
+
+.tracking-symbol,
+.lading-symbol {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+}
+
+.info-taal {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.info-taal .flag {
+  flex: 0 0 22px;
+  height: 15px;
+}
+
+.ship-info-error {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ship-info-error .info-label {
+  display: block;
+  color: var(--color-error);
+  margin-bottom: 2px;
 }
 
 .close-btn {
@@ -643,9 +750,14 @@
 .info-row {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
-  padding: 4px 0;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  align-items: center;
+  min-height: 30px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.info-row:last-child {
+  border-bottom: none;
 }
 
 .info-label {
@@ -1031,52 +1143,54 @@
 .intention-change-alert {
   box-sizing: border-box;
   display: flex;
-  align-items: flex-start;
-  gap: 5px;
-  width: 314px;
-  min-height: 94px;
-  padding: 10px 11px 12px;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 360px;
+  padding: 12px 18px 14px;
   background: var(--color-bg-panel);
+  border: 1px solid rgba(255, 255, 255, 0.75);
   border-radius: var(--border-radius-base);
   color: var(--color-text-main);
   box-shadow: var(--shadow-panel);
+  backdrop-filter: blur(6px);
+  text-align: center;
 }
 
-.intention-change-alert-indicator {
-  flex-shrink: 0;
-  width: 26px;
-  height: 26px;
-  margin-top: 1px;
+.intention-change-alert-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  margin: 0;
+}
+
+.intention-change-alert-heading {
+  margin: 0;
+  font-weight: 800;
+  font-size: 16px;
+  line-height: 1;
+  letter-spacing: 0.12em;
+  color: var(--color-text-main);
+}
+
+.intention-change-alert-dot {
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
   background: var(--color-error);
 }
 
-.intention-change-alert-content {
-  flex: 1;
-  min-width: 0;
-  padding-top: 2px;
-}
-
-.intention-change-alert-title {
-  margin: 0 0 4px;
-  padding-left: 2px;
-  font-weight: 700;
-  font-size: 30px;
-  line-height: 1;
-  color: var(--color-text-main);
-  letter-spacing: 0.02em;
-}
-
 .intention-change-alert-message {
   margin: 0;
-  font-size: 14px;
-  line-height: 22px;
+  font-size: 13px;
+  line-height: 1.5;
   color: var(--color-text-main);
+  max-width: 320px;
 }
 
 .intention-change-alert-ship {
   font-weight: 700;
-  font-size: 14px;
   color: var(--color-text-main);
 }
 

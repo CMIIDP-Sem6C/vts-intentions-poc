@@ -1,13 +1,22 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import TextAutocompleteInput from "@components/inputs/TextAutocompleteInput";
 import Flag from "@components/panels/Flag";
-import { getStatusLevel, STATUS } from "@utils/status";
+import { LadingSymbol, isDangerousCargo } from "@components/panels/ShipInfoSymbols";
+import {
+  getStatusLevel,
+  STATUS,
+  StatusDots,
+  TrackingSymbol,
+} from "@utils/status";
+import { getSectorEtaLabel } from "@utils/inboundEta";
+import { SECTORS } from "@data/sectors";
 
 /**
  * Detail panel showing ship information, verification controls, and operator notes.
  *
  * @param {Object} props
  * @param {Ship|null} props.ship - The selected ship, or null if none selected
+ * @param {string} [props.activeSector] - Active sector key (for ETA in header)
  * @param {() => void} props.onClose - Close the panel
  * @param {(id: number, destination: string) => void} props.onSetDestination - Set destination callback
  * @param {(id: number) => void} props.onVerifyShip - Verify ship callback
@@ -17,6 +26,7 @@ import { getStatusLevel, STATUS } from "@utils/status";
  */
 export default function ShipInfoCard({
   ship,
+  activeSector,
   onClose,
   onSetDestination,
   onVerifyShip,
@@ -24,12 +34,17 @@ export default function ShipInfoCard({
   verificationError,
   destinations = [],
 }) {
-  const [editDest, setEditDest] = useState("");
   const [scanning, setScanning] = useState(false);
   if (!ship) return null;
 
   /** @type {StatusLevel} */
   const level = getStatusLevel(ship);
+  const sectorBoundary = activeSector ? SECTORS[activeSector]?.boundary : null;
+  const etaLabel = getSectorEtaLabel(ship, sectorBoundary);
+  const dangerous =
+    typeof ship.dangerousCargo === "boolean"
+      ? ship.dangerousCargo
+      : isDangerousCargo(ship.cargo);
 
   const handleDestSubmit = (newValue) => {
     if (newValue !== ship.destination) {
@@ -52,7 +67,10 @@ export default function ShipInfoCard({
         X
       </button>
 
-      <h2 className="panel-title">SCHIP INFO - {ship.name}</h2>
+      <div className="panel-title ship-info-title">
+        <h2 className="ship-info-name">{ship.name}</h2>
+        {etaLabel && <p className="ship-info-eta"> - {etaLabel}</p>}
+      </div>
 
       <div className="ship-info-actions">
         <button
@@ -68,95 +86,59 @@ export default function ShipInfoCard({
         </button>
       </div>
 
-      <div className="ship-info-body">
-        <div className="ship-info-visual">
-          <div className="ship-placeholder-img">
-            <svg viewBox="0 0 120 60" width="100%" height="100%">
-              <rect x="10" y="20" width="100" height="25" rx="4" fill="#555" />
-              <polygon points="110,32 125,32 120,20 110,20" fill="#666" />
-              <rect x="30" y="12" width="20" height="10" rx="2" fill="#444" />
-              <line
-                x1="40"
-                y1="5"
-                x2="40"
-                y2="12"
-                stroke="#777"
-                strokeWidth="1.5"
-              />
-            </svg>
-          </div>
-          <button className="vhf-btn">CONTACT VIA VHF</button>
-
-          {ship.nationality && (
-            <div className="ship-flag-row">
-              <Flag code={ship.nationality} />
-              <button
-                className="transcript-btn"
-                onClick={() => {}}
-                type="button"
-              >
-                TRANSCRIPT
-              </button>
-            </div>
-          )}
+      <div className="ship-info-details">
+        <div className="info-row">
+          <span className="info-label">BESTEMMING</span>
+          <TextAutocompleteInput
+            value={ship.destination === "Unknown" ? "" : ship.destination}
+            onSubmit={handleDestSubmit}
+            suggestions={destinations}
+            level={level}
+            style={{ color: STATUS[level].color }}
+            placeholder="Onbekend - voer in..."
+          />
         </div>
 
-        <div className="ship-info-details">
-          <div className="info-row">
-            <span className="info-label">BESTEMMING</span>
-            <TextAutocompleteInput
-              value={ship.destination === "Unknown" ? "" : ship.destination}
-              onSubmit={handleDestSubmit}
-              suggestions={destinations}
-              level={level}
-              style={{ color: STATUS[level].color }}
-              placeholder="Onbekend - voer in..."
-            />
-          </div>
-          <div className="info-row">
-            <span className="info-label">VERIFICATIE</span>
-            <span className={`info-value ${STATUS[level].css}`}>
-              {ship.verified ? "Geverifieerd" : "Niet geverifieerd"}
-            </span>
-          </div>
-          <div className="info-row">
-            <span className="info-label">TRACKING</span>
-            <span className={`info-value ${STATUS[level].css}`}>
-              {STATUS[level].label}
-            </span>
-          </div>
-          <div className="info-row">
-            <span className="info-label">LADING</span>
-            <span className="info-value">{ship.cargo}</span>
-          </div>
-          <div className="info-row">
-            <span className="info-label">TYPE</span>
-            <span className="info-value">{ship.shipType}</span>
-          </div>
-
-          {ship.operatorNotes && ship.operatorNotes.length > 0 && (
-            <div className="operator-notes">
-              <h3 className="notes-title">OPERATOR NOTITIES</h3>
-              {ship.operatorNotes.map((note, i) => (
-                <div key={i} className="note-entry">
-                  <div className="note-header">
-                    {note.channel} - {note.location} | {note.time}
-                  </div>
-                  <div className="note-text">{note.note}</div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {verificationError && (
-            <div className="operator-notes">
-              <h3 className="notes-title">DATABASE FOUT</h3>
-              <div className="note-entry">
-                <div className="note-text">{verificationError}</div>
-              </div>
-            </div>
-          )}
+        <div className="info-row">
+          <span className="info-label">AIS STATUS</span>
+          <span className="info-value info-symbol">
+            <StatusDots level={level} ariaLabel={`AIS status ${STATUS[level].label}`} />
+          </span>
         </div>
+
+        <div className="info-row">
+          <span className="info-label">TRACKING</span>
+          <span className="info-value info-symbol">
+            <TrackingSymbol level={level} />
+          </span>
+        </div>
+
+        <div className="info-row">
+          <span className="info-label">LADING</span>
+          <span className="info-value info-symbol">
+            <LadingSymbol dangerous={dangerous} />
+          </span>
+        </div>
+
+        <div className="info-row">
+          <span className="info-label">TYPE</span>
+          <span className="info-value">{ship.shipType}</span>
+        </div>
+
+        <div className="info-row">
+          <span className="info-label">TAAL</span>
+          <span className="info-value info-taal">
+            {ship.nationality && <Flag code={ship.nationality} />}
+            <span>{(ship.nationality || "-").toUpperCase()}</span>
+          </span>
+        </div>
+
+        {verificationError && (
+          <div className="ship-info-error">
+            <span className="info-label">DATABASE FOUT</span>
+            <span className="note-text">{verificationError}</span>
+          </div>
+        )}
       </div>
 
       {onResetShip && (
