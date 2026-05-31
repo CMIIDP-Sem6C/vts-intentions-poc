@@ -10,19 +10,27 @@ import { useShips } from "@contexts/ShipsContext";
 const crossingBubbleIcon = L.divIcon({
   html: `
     <div class="crossing-alert-bubble" aria-hidden="true">
-      <div class="crossing-alert-bubble__halo"></div>
-      <div class="crossing-alert-bubble__pin">
-        <div class="crossing-alert-bubble__head">
-          <div class="crossing-alert-bubble__mark"></div>
-          <div class="crossing-alert-bubble__dot"></div>
-        </div>
-        <div class="crossing-alert-bubble__stem"></div>
-      </div>
+      <svg width="50" height="50" viewBox="0 0 24 24" aria-hidden="true">
+          <path
+            d="M12 3L1.5 21h21L12 3z"
+            fill="none"
+            stroke="#f44336"
+            strokeWidth="4"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M12 9v5"
+            stroke="#f44336"
+            strokeWidth="4"
+            strokeLinecap="round"
+          />
+          <circle cx="12" cy="17.5" r="1.2" fill="#f44336" />
+        </svg>
     </div>
   `,
   className: "crossing-alert-bubble-icon",
-  iconSize: [50, 50],
-  iconAnchor: [25, 50],
+  iconSize: [1, 1],
+  iconAnchor: [25, 25],
 });
 
 /**
