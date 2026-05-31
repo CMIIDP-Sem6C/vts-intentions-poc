@@ -7,36 +7,66 @@ import { useShips } from "@contexts/ShipsContext";
 
 /** @typedef {{ id: string, ship_ids: number[], position: [number, number], distance_m: number, trigger_time: number, active_from: number, active_until: number }} CrossingPrediction */
 
-const crossingBubbleIcon = L.divIcon({
-  html: `
-    <div class="crossing-alert-bubble" aria-hidden="true">
-      <svg width="50" height="50" viewBox="0 0 24 24" aria-hidden="true">
-          <path
-            d="M12 3L1.5 21h21L12 3z"
-            fill="none"
-            stroke="#f44336"
-            strokeWidth="4"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M12 9v5"
-            stroke="#f44336"
-            strokeWidth="4"
-            strokeLinecap="round"
-          />
-          <circle cx="12" cy="17.5" r="1.2" fill="#f44336" />
-        </svg>
-    </div>
-  `,
-  className: "crossing-alert-bubble-icon",
-  iconSize: [1, 1],
-  iconAnchor: [25, 25],
-});
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+/**
+ * @param {import("../types").NormalizedShip[]} scenarioShips
+ * @param {number[]} shipIds
+ * @returns {string}
+ */
+function formatCrossingLabel(scenarioShips, shipIds) {
+  const names = shipIds.map((id) => {
+    const ship = scenarioShips.find((entry) => Number(entry.id) === Number(id));
+    const name = ship?.name ?? ship?.shortname;
+    return typeof name === "string" && name.trim() ? name.trim() : `Ship ${id}`;
+  });
+  return `${names[0]} <-> ${names[1]}`;
+}
+
+/**
+ * @param {string} label
+ * @returns {L.DivIcon}
+ */
+function createCrossingBubbleIcon(label) {
+  return L.divIcon({
+    html: `
+      <div class="crossing-alert-marker">
+        <div class="crossing-alert-bubble" aria-hidden="true">
+          <svg width="50" height="50" viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M12 3L1.5 21h21L12 3z"
+              fill="none"
+              stroke="#f44336"
+              stroke-width="2.2"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M12 9v5"
+              stroke="#f44336"
+              stroke-width="2.2"
+              stroke-linecap="round"
+            />
+            <circle cx="12" cy="17.5" r="1.2" fill="#f44336" />
+          </svg>
+        </div>
+        <div class="crossing-alert-bubble-label">${escapeHtml(label)}</div>
+      </div>
+    `,
+    className: "crossing-alert-bubble-icon",
+    iconSize: [160, 72],
+    iconAnchor: [80, 25],
+  });
+}
 
 /**
  * @param {CrossingPrediction[]} predictions
  * @param {import("../types").Ship[]} ships
- * @param {number} simTime
  * @returns {CrossingPrediction[]}
  */
 function getVisibleCrossingPredictions(predictions, ships) {
@@ -55,7 +85,7 @@ function getVisibleCrossingPredictions(predictions, ships) {
  * Fetch crossing predictions from the API and render alert bubbles on the map.
  */
 export default function CrossingPredictionLayer() {
-  const { scenarioId } = useScenario();
+  const { scenarioId, ships: scenarioShips } = useScenario();
   const { timeScale } = useSim();
   const { ships } = useShips();
   /** @type {[CrossingPrediction[], React.Dispatch<React.SetStateAction<CrossingPrediction[]>>]} */
@@ -100,13 +130,26 @@ export default function CrossingPredictionLayer() {
     [predictions, ships],
   );
 
+  const predictionIcons = useMemo(
+    () =>
+      new Map(
+        visiblePredictions.map((prediction) => [
+          prediction.id,
+          createCrossingBubbleIcon(
+            formatCrossingLabel(scenarioShips, prediction.ship_ids),
+          ),
+        ]),
+      ),
+    [visiblePredictions, scenarioShips],
+  );
+
   return (
     <>
       {visiblePredictions.map((prediction) => (
         <Marker
           key={prediction.id}
           position={prediction.position}
-          icon={crossingBubbleIcon}
+          icon={predictionIcons.get(prediction.id)}
           interactive={false}
         />
       ))}

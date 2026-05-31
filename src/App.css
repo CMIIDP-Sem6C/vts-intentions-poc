@@ -1192,14 +1192,34 @@
    Crossing prediction alert bubble (map)
    ============================== */
 
-
-
-.crossing-alert-bubble {
-  position: relative;
-  width: 50px;
-  height: 50px;
+.crossing-alert-bubble-icon {
+  background: transparent !important;
+  border: none !important;
 }
 
+.crossing-alert-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 160px;
+}
+
+.crossing-alert-bubble {
+  width: 50px;
+  height: 50px;
+  flex-shrink: 0;
+}
+
+.crossing-alert-bubble-label {
+  margin-top: 2px;
+  font-family: "Inter", "Segoe UI", sans-serif;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--color-error);
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
+}
 
 /* ==============================
    Timeline Controls
