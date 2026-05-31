@@ -1,56 +1,8 @@
 import { useMemo, useState } from "react";
-import {
-  calculateDistance,
-  calculateETA,
-  formatETA,
-  pointInPolygon,
-} from "@utils/navigation";
-import { STATUS } from "@utils/status";
+import { pointInPolygon } from "@utils/navigation";
+import { getSectorEtaLabel } from "@utils/inboundEta";
+import { StatusDots, STATUS } from "@utils/status";
 import { SECTORS } from "@data/sectors";
-
-/**
- * Renders status dots for a ship based on its status level.
- * @param {{ ship: Ship }} props
- */
-function StatusDots({ ship }) {
-  return (
-    <span className="status-dots">
-      {Array.from({ length: STATUS[ship.status].dots }).map((dot, i) => (
-        <span
-          key={i}
-          className="status-dot"
-          style={{ background: STATUS[ship.status].color }}
-        />
-      ))}
-    </span>
-  );
-}
-
-/**
- * Compute the distance from a ship's current position to the sector boundary
- * along its remaining route.
- *
- * @param {Ship} ship - Enriched ship with position and waypoints
- * @param {import('../types').Coordinates[]} sectorBoundary - Sector polygon boundary
- * @returns {number|null} Distance in nautical miles, or null if route doesn't enter sector
- */
-function computeDistanceToSector(ship, sectorBoundary) {
-  if (!ship.waypoints || ship.currentWaypointIndex == null) return null;
-
-  let dist = calculateDistance(
-    ship.position,
-    ship.waypoints[ship.currentWaypointIndex],
-  );
-  for (let i = ship.currentWaypointIndex; i < ship.waypoints.length; i++) {
-    if (pointInPolygon(ship.waypoints[i], sectorBoundary)) {
-      return dist;
-    }
-    if (i < ship.waypoints.length - 1) {
-      dist += calculateDistance(ship.waypoints[i], ship.waypoints[i + 1]);
-    }
-  }
-  return null;
-}
 
 /**
  * Panel listing inbound ships for the active sector.
@@ -128,19 +80,7 @@ export default function InboundPanel({
             const destKnown =
               ship.destination && ship.destination !== "Unknown";
 
-            let eta;
-            if (ship.currentlyInSector) {
-              eta = "In sector";
-            } else {
-              const distToSector = computeDistanceToSector(
-                ship,
-                sectorBoundary,
-              );
-              eta =
-                distToSector != null
-                  ? formatETA(calculateETA(distToSector, ship.speed))
-                  : "Unknown";
-            }
+            const eta = getSectorEtaLabel(ship, sectorBoundary, "Unknown");
 
             return (
               <tr
@@ -150,7 +90,7 @@ export default function InboundPanel({
               >
                 <td className="ship-name-cell">{ship.name}</td>
                 <td className="status-cell">
-                  <StatusDots ship={ship} />
+                  <StatusDots level={ship.status} />
                 </td>
                 <td className="destination-cell">
                   <span

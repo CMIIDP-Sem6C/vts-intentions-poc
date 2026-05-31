@@ -1,58 +1,15 @@
 import { useState } from "react";
 import TextAutocompleteInput from "@components/inputs/TextAutocompleteInput";
 import Flag from "@components/panels/Flag";
+import { LadingSymbol, isDangerousCargo } from "@components/panels/ShipInfoSymbols";
 import {
-  AisStatusDots,
+  getStatusLevel,
+  STATUS,
+  StatusDots,
   TrackingSymbol,
-  LadingSymbol,
-  isDangerousCargo,
-} from "@components/panels/ShipInfoSymbols";
-import { getStatusLevel, STATUS } from "@utils/status";
-import {
-  calculateDistance,
-  calculateETA,
-  formatETA,
-  pointInPolygon,
-} from "@utils/navigation";
+} from "@utils/status";
+import { getSectorEtaLabel } from "@utils/inboundEta";
 import { SECTORS } from "@data/sectors";
-
-/**
- * Distance from a ship's current position to the sector boundary along its
- * remaining route, mirroring the inbound panel logic.
- *
- * @param {Ship} ship
- * @param {import('../types').Coordinates[]} sectorBoundary
- * @returns {number|null} Distance in nautical miles, or null if not entering sector
- */
-function computeDistanceToSector(ship, sectorBoundary) {
-  if (!ship.waypoints || ship.currentWaypointIndex == null) return null;
-  let dist = calculateDistance(
-    ship.position,
-    ship.waypoints[ship.currentWaypointIndex],
-  );
-  for (let i = ship.currentWaypointIndex; i < ship.waypoints.length; i++) {
-    if (pointInPolygon(ship.waypoints[i], sectorBoundary)) return dist;
-    if (i < ship.waypoints.length - 1) {
-      dist += calculateDistance(ship.waypoints[i], ship.waypoints[i + 1]);
-    }
-  }
-  return null;
-}
-
-/**
- * Compute the ETA-in-sector label shown next to the ship name in the header.
- * @param {Ship} ship
- * @param {string} activeSector
- * @returns {string|null}
- */
-function getEtaLabel(ship, activeSector) {
-  const boundary = activeSector ? SECTORS[activeSector]?.boundary : null;
-  if (!boundary) return null;
-  if (pointInPolygon(ship.position, boundary)) return "In sector";
-  const dist = computeDistanceToSector(ship, boundary);
-  if (dist == null) return null;
-  return formatETA(calculateETA(dist, ship.speed));
-}
 
 /**
  * Detail panel showing ship information, verification controls, and operator notes.
@@ -82,7 +39,8 @@ export default function ShipInfoCard({
 
   /** @type {StatusLevel} */
   const level = getStatusLevel(ship);
-  const etaLabel = getEtaLabel(ship, activeSector);
+  const sectorBoundary = activeSector ? SECTORS[activeSector]?.boundary : null;
+  const etaLabel = getSectorEtaLabel(ship, sectorBoundary);
   const dangerous =
     typeof ship.dangerousCargo === "boolean"
       ? ship.dangerousCargo
@@ -109,10 +67,10 @@ export default function ShipInfoCard({
         X
       </button>
 
-      <h2 className="panel-title ship-info-title">
-        <span className="ship-info-name">{ship.name}</span>
-        {etaLabel && <span className="ship-info-eta"> - {etaLabel}</span>}
-      </h2>
+      <div className="panel-title ship-info-title">
+        <h2 className="ship-info-name">{ship.name}</h2>
+        {etaLabel && <p className="ship-info-eta"> - {etaLabel}</p>}
+      </div>
 
       <div className="ship-info-actions">
         <button
@@ -144,7 +102,7 @@ export default function ShipInfoCard({
         <div className="info-row">
           <span className="info-label">AIS STATUS</span>
           <span className="info-value info-symbol">
-            <AisStatusDots level={level} />
+            <StatusDots level={level} ariaLabel={`AIS status ${STATUS[level].label}`} />
           </span>
         </div>
 
