@@ -17,6 +17,7 @@ import {
   TURNING_BASINS,
 } from "@data/sectors";
 import ShipMarker from "@components/map/ShipMarker";
+import CrossingPredictionLayer from "@components/map/CrossingPredictionLayer";
 
 /** @type {L.LatLngBounds} */
 const ALL_SECTORS_BOUNDS = (() => {
@@ -147,6 +148,8 @@ export default function VTSMap({
           </Tooltip>
         </CircleMarker>
       ))}
+
+      <CrossingPredictionLayer />
 
       {ships.map((ship) => (
         <ShipMarker
