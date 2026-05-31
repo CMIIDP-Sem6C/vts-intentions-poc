@@ -89,6 +89,15 @@ export default function ShipMarker({ ship, isSelected, onSelect }) {
     [map, ship.position],
   );
 
+  const handleLabelClick = useCallback(() => {
+    {
+      setExpandLabel((currentExpandLabel) => {
+        if (currentExpandLabel) setHovered(false);
+        return !currentExpandLabel;
+      });
+    }
+  });
+
   return (
     <>
       <IntentionsLayer
@@ -134,9 +143,7 @@ export default function ShipMarker({ ship, isSelected, onSelect }) {
         draggable
         eventHandlers={{
           dragend: handleLabelDragEnd,
-          click: () => {
-            setExpandLabel((currentExpandLabel) => !currentExpandLabel);
-          },
+          click: handleLabelClick,
           mouseover: handleMouseOver,
           mouseout: handleMouseOut,
         }}
