@@ -25,8 +25,8 @@ export default function AppLayout({
           type="button"
           className="back-to-start-btn"
           onClick={onBack}
-          title="Terug naar startscherm"
-          aria-label="Terug naar startscherm"
+          title="Terug naar menu"
+          aria-label="Terug naar menu"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path
@@ -37,7 +37,7 @@ export default function AppLayout({
               strokeLinejoin="round"
             />
           </svg>
-          <span>Menu</span>
+          Menu
         </button>
       ) : null}
       <div className="overlay-panels">

@@ -8,11 +8,11 @@
 export default function IntentionChangeAlert({ shipName }) {
   return (
     <div className="intention-change-alert" role="alert" aria-live="assertive">
-      <p className="intention-change-alert-title">
+      <div className="intention-change-alert-title">
         <span className="intention-change-alert-dot" aria-hidden="true" />
-        <span>WAARSCHUWING</span>
+        <h2 className="intention-change-alert-heading">WAARSCHUWING</h2>
         <span className="intention-change-alert-dot" aria-hidden="true" />
-      </p>
+      </div>
       <p className="intention-change-alert-message">
         <strong className="intention-change-alert-ship">{shipName}</strong>
         {
