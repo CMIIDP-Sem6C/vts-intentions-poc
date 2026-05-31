@@ -276,20 +276,20 @@
   position: absolute;
   bottom: 16px;
   left: 16px;
-  z-index: 1100;
+  /* Same overlay layer as the panels (above the map at z-index 0). */
+  z-index: 1000;
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 8px 12px 8px 9px;
   background: var(--color-bg-panel);
-  color: #e0e0e0;
+  color: var(--color-text-main);
   border: 1px solid rgba(255, 255, 255, 0.75);
   border-radius: var(--border-radius-base);
   box-shadow: var(--shadow-panel);
   backdrop-filter: blur(6px);
   cursor: pointer;
   font-family: inherit;
-  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.6px;
   text-transform: uppercase;
@@ -514,12 +514,14 @@
 }
 
 .ship-info-name {
+  margin: 0;
   font-size: 15px;
   font-weight: 800;
   letter-spacing: 0.5px;
 }
 
 .ship-info-eta {
+  margin: 0;
   font-size: 13px;
   font-weight: 600;
   color: var(--color-text-muted);
@@ -1160,6 +1162,10 @@
   align-items: center;
   justify-content: center;
   gap: 9px;
+  margin: 0;
+}
+
+.intention-change-alert-heading {
   margin: 0;
   font-weight: 800;
   font-size: 16px;
