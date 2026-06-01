@@ -6,7 +6,7 @@ import {
   getStatusLevel,
   STATUS,
   StatusDots,
-  TrackingSymbol,
+  TracklineSymbol,
 } from "@utils/status";
 import { getSectorEtaLabel } from "@utils/inboundEta";
 import { SECTORS } from "@data/sectors";
@@ -107,9 +107,9 @@ export default function ShipInfoCard({
         </div>
 
         <div className="info-row">
-          <span className="info-label">TRACKING</span>
+          <span className="info-label">TRACKLINE</span>
           <span className="info-value info-symbol">
-            <TrackingSymbol level={level} />
+            <TracklineSymbol present={!!ship.intentionsShowActive} />
           </span>
         </div>
 
