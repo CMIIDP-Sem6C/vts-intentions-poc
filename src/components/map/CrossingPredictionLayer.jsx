@@ -11,9 +11,6 @@ import { calculateDistance } from "@utils/navigation";
 const CLEARANCE_NM = 200 / 1852;
 
 /**
- * @param {import("../types").Coordinates} point
- * @param {import("../types").Coordinates} a
- * @param {import("../types").Coordinates} b
  * @returns {{ point: import("../types").Coordinates, t: number }}
  */
 function nearestPointOnSegment(point, a, b) {
@@ -36,8 +33,6 @@ function nearestPointOnSegment(point, a, b) {
 
 /**
  * Distance in nautical miles from the start of a route to the nearest point on it.
- * @param {import("../types").Coordinates[]} route
- * @param {import("../types").Coordinates} target
  * @returns {number|null}
  */
 function distanceAlongRouteToPoint(route, target) {
@@ -65,9 +60,6 @@ function distanceAlongRouteToPoint(route, target) {
 }
 
 /**
- * @param {import("../types").Ship} ship
- * @param {import("../types").Coordinates} crossingPosition
- * @param {import("../types").Coordinates[]} route
  * @returns {boolean}
  */
 function hasShipPassedCrossing(ship, crossingPosition, route) {
@@ -78,8 +70,6 @@ function hasShipPassedCrossing(ship, crossingPosition, route) {
 }
 
 /**
- * @param {CrossingPrediction} prediction
- * @param {import("../types").Ship[]} ships
  * @returns {boolean}
  */
 function bothShipsPassedCrossing(prediction, ships) {
@@ -103,8 +93,6 @@ function escapeHtml(value) {
 }
 
 /**
- * @param {import("../types").NormalizedShip[]} scenarioShips
- * @param {number[]} shipIds
  * @returns {string}
  */
 function formatCrossingLabel(scenarioShips, shipIds) {
@@ -152,8 +140,6 @@ function createCrossingBubbleIcon(label) {
 }
 
 /**
- * @param {CrossingPrediction[]} predictions
- * @param {import("../types").Ship[]} ships
  * @returns {CrossingPrediction[]}
  */
 function getVisibleCrossingPredictions(predictions, ships) {
