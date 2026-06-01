@@ -337,6 +337,7 @@
 
 .inbound-panel {
   min-width: 420px;
+  max-width: 420px;
   position: relative;
   border: 1px solid rgba(255, 255, 255, 0.75);
 }
@@ -445,8 +446,17 @@
   font-variant-numeric: tabular-nums;
 }
 
+.destination-cell {
+  max-width: 170px;
+}
+
 .dest-text {
   font-weight: 600;
+  display: block;
+  max-width: 170px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .status-cell {

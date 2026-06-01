@@ -59,15 +59,17 @@ export function StatusDots({ level, ariaLabel }) {
 }
 
 /**
- * Tracking indicator with double coding (colour + shape):
- * - red    -> cross (no tracking)
- * - yellow -> dash  (partial tracking)
- * - green  -> check (full tracking)
+ * Trackline indicator with double coding (colour + shape):
+ * - present     -> green check (a shared trackline/intention is available)
+ * - not present -> red cross   (no trackline available for this ship)
  *
- * @param {{ level: StatusLevel }} props
+ * AIS status already communicates the verification level, so this field only
+ * conveys whether a predictive trackline exists for the vessel.
+ *
+ * @param {{ present: boolean }} props
  */
-export function TrackingSymbol({ level }) {
-  const color = STATUS[level].color;
+export function TracklineSymbol({ present }) {
+  const color = present ? STATUS.green.color : STATUS.red.color;
   const common = {
     width: 18,
     height: 18,
@@ -80,26 +82,17 @@ export function TrackingSymbol({ level }) {
     "aria-hidden": true,
   };
 
-  if (level === "red") {
+  if (!present) {
     return (
-      <span className="tracking-symbol" title="Geen tracking">
+      <span className="tracking-symbol" title="Geen trackline aanwezig">
         <svg {...common}>
           <path d="M6 6l12 12M18 6L6 18" />
         </svg>
       </span>
     );
   }
-  if (level === "yellow") {
-    return (
-      <span className="tracking-symbol" title="Gedeeltelijke tracking">
-        <svg {...common}>
-          <path d="M5 12h14" />
-        </svg>
-      </span>
-    );
-  }
   return (
-    <span className="tracking-symbol" title="Volledige tracking">
+    <span className="tracking-symbol" title="Trackline aanwezig">
       <svg {...common}>
         <path d="M5 13l4 4L19 7" />
       </svg>
