@@ -1,4 +1,32 @@
-import L from "leaflet";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: utils/shipIcons.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: utils/shipIcons.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import L from "leaflet";
 import { STATUS } from "@utils/status";
 
 const FILL = "#FB8C00";
@@ -99,7 +127,7 @@ export function computeETAMarkers(
   timeScale,
   startTimeMs,
 ) {
-  if (!displayPath || displayPath.length < 2) return [];
+  if (!displayPath || displayPath.length &lt; 2) return [];
 
   const startEta = displayPath[0].eta;
   const endEta = displayPath[displayPath.length - 1].eta;
@@ -113,7 +141,7 @@ export function computeETAMarkers(
       ? (Math.floor(startTotalMin / intervalMinutes) + 1) * intervalMinutes
       : Math.ceil(startTotalMin / intervalMinutes) * intervalMinutes;
 
-  if (startSec === 0 && startTotalMin % intervalMinutes === 0) {
+  if (startSec === 0 &amp;&amp; startTotalMin % intervalMinutes === 0) {
     // firstBoundaryMin is already startTotalMin, which is correct
   }
 
@@ -129,7 +157,7 @@ export function computeETAMarkers(
   const markers = [];
   let boundaryMin = firstBoundaryMin;
 
-  while (boundaryMin <= endBoundaryMin) {
+  while (boundaryMin &lt;= endBoundaryMin) {
     const dayNum = Math.floor(boundaryMin / 1440);
     const minInDay = boundaryMin % 1440;
     const boundaryDate = new Date(startClock);
@@ -139,7 +167,7 @@ export function computeETAMarkers(
     const boundarySimTime =
       (boundaryDate.getTime() - startTimeMs) / (timeScale * 1000);
 
-    if (boundarySimTime < startEta) {
+    if (boundarySimTime &lt; startEta) {
       boundaryMin += intervalMinutes;
       continue;
     }
@@ -147,10 +175,10 @@ export function computeETAMarkers(
 
     /** @type {Coordinates|null} */
     let coords = null;
-    for (let i = 1; i < displayPath.length; i++) {
+    for (let i = 1; i &lt; displayPath.length; i++) {
       const prev = displayPath[i - 1];
       const curr = displayPath[i];
-      if (boundarySimTime >= prev.eta && boundarySimTime <= curr.eta) {
+      if (boundarySimTime >= prev.eta &amp;&amp; boundarySimTime &lt;= curr.eta) {
         const denom = curr.eta - prev.eta;
         const fraction = denom > 0 ? (boundarySimTime - prev.eta) / denom : 0;
         const lat =
@@ -178,7 +206,7 @@ export function computeETAMarkers(
   const lastClock = simTimeToClock(lastEntry.eta, timeScale, startTimeMs);
   const lastLabel = formatClockTime(lastClock);
   const alreadyPlaced =
-    markers.length > 0 && markers[markers.length - 1].label === lastLabel;
+    markers.length > 0 &amp;&amp; markers[markers.length - 1].label === lastLabel;
   if (!alreadyPlaced) {
     markers.push({
       coords: lastEntry.coords,
@@ -199,7 +227,7 @@ export function computeETAMarkers(
 export function createETAIcon(label, color = "#bb47ff") {
   const width = 40;
   return L.divIcon({
-    html: `<div class="eta-label" style="color:${color}">${label}</div>`,
+    html: `&lt;div class="eta-label" style="color:${color}">${label}&lt;/div>`,
     className: "eta-label-icon",
     iconSize: [width, 0],
     iconAnchor: [width / 2, -2],
@@ -222,7 +250,7 @@ export function computeHatchMark(
   /** @type {Coordinates[]|null} */
   let bestSegment = null;
 
-  for (let i = 0; i < intentionsPositions.length - 1; i++) {
+  for (let i = 0; i &lt; intentionsPositions.length - 1; i++) {
     const a = intentionsPositions[i];
     const b = intentionsPositions[i + 1];
     const midLat = (a[0] + b[0]) / 2;
@@ -230,7 +258,7 @@ export function computeHatchMark(
     const dLat = coords[0] - midLat;
     const dLng = coords[1] - midLng;
     const dist = dLat * dLat + dLng * dLng;
-    if (dist < minDist) {
+    if (dist &lt; minDist) {
       minDist = dist;
       bestSegment = [a, b];
     }
@@ -273,14 +301,14 @@ export function createTriangleIcon(heading, isSelected) {
   const strokeOpacity = isSelected ? 1 : 0.85;
   const strokeWidth = isSelected ? 2.2 : 0.9;
 
-  const svg = `<svg width="${size}" height="${size}" viewBox="0 0 18 18" 
+  const svg = `&lt;svg width="${size}" height="${size}" viewBox="0 0 18 18" 
 xmlns="http://www.w3.org/2000/svg">
-    <g transform="rotate(${heading}, 9, 9)">
-      <path d="M 9,2 C 11.5,5 14,10 13.5,14 C 13,15.5 11,14.5 9,12.5
+    &lt;g transform="rotate(${heading}, 9, 9)">
+      &lt;path d="M 9,2 C 11.5,5 14,10 13.5,14 C 13,15.5 11,14.5 9,12.5
                C 7,14.5 5,15.5 4.5,14 C 4,10 6.5,5 9,2 Z"
         fill="${fill}" stroke="#FFFFFF" stroke-opacity="${strokeOpacity}" stroke-width="${strokeWidth}" stroke-
 linejoin="round"/>
-    </g></svg>`;
+    &lt;/g>&lt;/svg>`;
 
   return L.divIcon({
     html: svg,
@@ -322,10 +350,10 @@ export function createHullIcon(heading, isSelected, lengthM, widthM) {
     `Q ${r(bowTipX)},${r(center)} ${r(bowBaseX)},${r(center + halfWidth)} ` +
     `L ${r(sternX)},${r(center + halfWidth)} Z`;
 
-  const svg = `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
-    <g transform="rotate(${rotation}, ${r(center)}, ${r(center)})">
-      <path d="${path}" fill="${fill}" stroke="#FFFFFF" stroke-opacity="${strokeOpacity}" stroke-width="${strokeWidth}" stroke-linejoin="round"/>
-    </g></svg>`;
+  const svg = `&lt;svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
+    &lt;g transform="rotate(${rotation}, ${r(center)}, ${r(center)})">
+      &lt;path d="${path}" fill="${fill}" stroke="#FFFFFF" stroke-opacity="${strokeOpacity}" stroke-width="${strokeWidth}" stroke-linejoin="round"/>
+    &lt;/g>&lt;/svg>`;
 
   return L.divIcon({
     html: svg,
@@ -348,34 +376,34 @@ export function createLabelIcon(ship, expandLabel) {
     ship.length !== undefined ||
     ship.width !== undefined ||
     ship.depth !== undefined;
-  const verifiedIcon = `<svg width="6" height="6" viewBox="0 0 6 6" fill="none" 
+  const verifiedIcon = `&lt;svg width="6" height="6" viewBox="0 0 6 6" fill="none" 
 xmlns="http://www.w3.org/2000/svg">
-<<circle cx="2.74382" cy="2.74382" r="2.74382" 
+&lt;&lt;circle cx="2.74382" cy="2.74382" r="2.74382" 
 fill="${STATUS[ship.status].color}"/>
-</svg>`;
-  const labelTitle = `<span class="ship-label-text">${
+&lt;/svg>`;
+  const labelTitle = `&lt;span class="ship-label-text">${
     ship.status === "green" ? verifiedIcon : ""
   }${ship.intentionsShowActive ? "#" : ""}${
     ship.shipType === "Zeevaart" ? "+" : ""
   }${ship.shortname.toUpperCase()}${
     ship.aisActive ? "+" : ""
-  }${ship.operatorNotes && ship.operatorNotes.length > 0 ? "#" : ""} 
-${expandLabel ? ship.name : ""}</span>`;
+  }${ship.operatorNotes &amp;&amp; ship.operatorNotes.length > 0 ? "#" : ""} 
+${expandLabel ? ship.name : ""}&lt;/span>`;
   const labelExpandedInfo = `${
     hasDimensions
-      ? `<span class="ship-label-text">${ship.length ?? "NaN"}m ${ship.width ?? "NaN"}m ${
+      ? `&lt;span class="ship-label-text">${ship.length ?? "NaN"}m ${ship.width ?? "NaN"}m ${
           ship.depth ?? "NaN"
-        }dm</span>`
+        }dm&lt;/span>`
       : ""
-  }<span class="ship-label-text">${ship.speed ?? "NaN"}kn 
+  }&lt;span class="ship-label-text">${ship.speed ?? "NaN"}kn 
 ${ship.baseHeading.toFixed(1) ?? "NaN"}° ${
     ship.rateOfTurn !== undefined ? `${ship.rateOfTurn}°/min` : ""
-  }</span><span class="ship-label-text">${ship.shipType === "Zeevaart" ? "Z" : "B"} ${ship.destination} 
-${ship.status === "green" ? verifiedIcon : ""}</span>`;
+  }&lt;/span>&lt;span class="ship-label-text">${ship.shipType === "Zeevaart" ? "Z" : "B"} ${ship.destination} 
+${ship.status === "green" ? verifiedIcon : ""}&lt;/span>`;
   return L.divIcon({
-    html: `<div class="ship-label-container">${labelTitle}${
+    html: `&lt;div class="ship-label-container">${labelTitle}${
       expandLabel ? labelExpandedInfo : ""
-    }</div>`,
+    }&lt;/div>`,
     className: "ship-label-icon",
     iconSize: [0, 0],
     iconAnchor: [0, 6],
@@ -383,7 +411,7 @@ ${ship.status === "green" ? verifiedIcon : ""}</span>`;
 }
 
 /**
- * @typedef {Array.<number>} PixelOffset
+ * @typedef {Array.&lt;number>} PixelOffset
  */
 
 /**
@@ -398,3 +426,26 @@ export function pixelOffsetToLatLng(map, origin, pxOffset) {
   const targetPx = L.point(originPx.x + pxOffset[0], originPx.y + pxOffset[1]);
   return map.containerPointToLatLng(targetPx);
 }
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#ALERT_INTENTION_CHANGE_DURATION_SEC">ALERT_INTENTION_CHANGE_DURATION_SEC</a></li><li><a href="global.html#API_URL">API_URL</a></li><li><a href="global.html#DANGEROUS_CARGO_KEYWORDS">DANGEROUS_CARGO_KEYWORDS</a></li><li><a href="global.html#ENDPOINT_DESTINATIONS">ENDPOINT_DESTINATIONS</a></li><li><a href="global.html#KM_MARKERS">KM_MARKERS</a></li><li><a href="global.html#MOCK_SHIPS">MOCK_SHIPS</a></li><li><a href="global.html#SECTORS">SECTORS</a></li><li><a href="global.html#SECTOR_WATER_BOUNDARIES">SECTOR_WATER_BOUNDARIES</a></li><li><a href="global.html#TURNING_BASINS">TURNING_BASINS</a></li><li><a href="global.html#WATERWAY_CENTERLINE">WATERWAY_CENTERLINE</a></li><li><a href="global.html#calculateDistance">calculateDistance</a></li><li><a href="global.html#calculateETA">calculateETA</a></li><li><a href="global.html#calculateFuturePosition">calculateFuturePosition</a></li><li><a href="global.html#calculateHeading">calculateHeading</a></li><li><a href="global.html#calculateIntentionsProgress">calculateIntentionsProgress</a></li><li><a href="global.html#computeDistanceToSector">computeDistanceToSector</a></li><li><a href="global.html#computeETAMarkers">computeETAMarkers</a></li><li><a href="global.html#computeHatchMark">computeHatchMark</a></li><li><a href="global.html#createETAIcon">createETAIcon</a></li><li><a href="global.html#createHullIcon">createHullIcon</a></li><li><a href="global.html#createLabelIcon">createLabelIcon</a></li><li><a href="global.html#createTriangleIcon">createTriangleIcon</a></li><li><a href="global.html#findShipByDbId">findShipByDbId</a></li><li><a href="global.html#formatClockTime">formatClockTime</a></li><li><a href="global.html#formatETA">formatETA</a></li><li><a href="global.html#getActiveIntentionChangeAlerts">getActiveIntentionChangeAlerts</a></li><li><a href="global.html#getCourseVectorEnd">getCourseVectorEnd</a></li><li><a href="global.html#getIntentionsCursor">getIntentionsCursor</a></li><li><a href="global.html#getSectorEtaLabel">getSectorEtaLabel</a></li><li><a href="global.html#getShipDisplayName">getShipDisplayName</a></li><li><a href="global.html#hullPixelSize">hullPixelSize</a></li><li><a href="global.html#moveAlongBearing">moveAlongBearing</a></li><li><a href="global.html#nearestPointOnSegment">nearestPointOnSegment</a></li><li><a href="global.html#normalizeBundle">normalizeBundle</a></li><li><a href="global.html#normalizeEvent">normalizeEvent</a></li><li><a href="global.html#normalizeIntentionEntry">normalizeIntentionEntry</a></li><li><a href="global.html#normalizeIntentions">normalizeIntentions</a></li><li><a href="global.html#normalizeScenario">normalizeScenario</a></li><li><a href="global.html#normalizeShip">normalizeShip</a></li><li><a href="global.html#normalizeShipId">normalizeShipId</a></li><li><a href="global.html#pixelOffsetToLatLng">pixelOffsetToLatLng</a></li><li><a href="global.html#pointInPolygon">pointInPolygon</a></li><li><a href="global.html#remainingRouteDistance">remainingRouteDistance</a></li><li><a href="global.html#requestJson">requestJson</a></li><li><a href="global.html#resolveEventShipId">resolveEventShipId</a></li><li><a href="global.html#resolveSectorKeyFromDbId">resolveSectorKeyFromDbId</a></li><li><a href="global.html#routePassesThroughSector">routePassesThroughSector</a></li><li><a href="global.html#simSecondsToTravelMinutes">simSecondsToTravelMinutes</a></li><li><a href="global.html#simTimeToClock">simTimeToClock</a></li><li><a href="global.html#travelMinutesToSimSeconds">travelMinutesToSimSeconds</a></li><li><a href="global.html#useDynamicIntentionsDisplay">useDynamicIntentionsDisplay</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Mon Jun 01 2026 20:09:53 GMT+0200 (Central European Summer Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: hooks/useScenarioData.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: hooks/useScenarioData.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import { useEffect, useState } from "react";
+
+/**
+ * Normalize a raw ship from the API by adding a guaranteed-numeric `dbId`.
+ * @param {RawShip} rawShip - Ship object from the API
+ * @returns {NormalizedShip|null} Normalized ship, or null if input is falsy
+ */
+function normalizeShip(rawShip) {
+  if (!rawShip) return null;
+  const dbId = typeof rawShip.id === "number" ? rawShip.id : Number(rawShip.id);
+  return {
+    ...rawShip,
+    dbId,
+  };
+}
+
+/**
+ * Normalize a single intention entry from the grouped-by-ship format.
+ * @param {Object} entry - Raw intention entry from the API
+ * @param {number} dbShipId - Numeric ship ID this entry belongs to
+ * @returns {Intention}
+ */
+function normalizeIntentionEntry(entry, dbShipId) {
+  return {
+    id: entry.id,
+    dbShipId,
+    name: typeof entry.name === "string" ? entry.name.trim() : entry.name,
+    description: entry.description,
+    route: Array.isArray(entry.route) ? entry.route : [],
+  };
+}
+
+/**
+ * Normalize intentions from either array or object-by-ship-id format.
+ * @param {Intention[] | Object&lt;string, Object[]> | null} rawIntentions
+ * @returns {Intention[]}
+ */
+function normalizeIntentions(rawIntentions) {
+  if (!rawIntentions) return [];
+  if (Array.isArray(rawIntentions)) {
+    return rawIntentions.map((i) => ({
+      ...i,
+      dbShipId: i.dbShipId ?? Number(i.ship_id),
+      route: Array.isArray(i.route) ? i.route : [],
+    }));
+  }
+  const out = [];
+  Object.entries(rawIntentions).forEach(([shipIdKey, entries]) => {
+    const dbShipId = Number(shipIdKey);
+    if (!Array.isArray(entries)) return;
+    entries.forEach((entry) =>
+      out.push(normalizeIntentionEntry(entry, dbShipId)),
+    );
+  });
+  return out;
+}
+
+/**
+ * Normalize a raw scenario event from the API (camelCase + snake_case compat).
+ * @param {Object} rawEvent - Raw event from the API
+ * @returns {ScenarioEvent}
+ */
+function normalizeEvent(rawEvent) {
+  return {
+    id: rawEvent.id,
+    scenarioId: rawEvent.scenarioId ?? rawEvent.scenario_id,
+    type: rawEvent.type,
+    subjectType: rawEvent.subjectType ?? rawEvent.subject_type,
+    subjectId: rawEvent.subjectId ?? rawEvent.subject_id,
+    triggerTime: rawEvent.triggerTime ?? rawEvent.trigger_time,
+  };
+}
+
+/**
+ * Normalize a raw scenario from the API.
+ * @param {Object} rawScenario - Raw scenario from the API
+ * @returns {Scenario|null}
+ */
+function normalizeScenario(rawScenario) {
+  if (!rawScenario) return null;
+  return {
+    ...rawScenario,
+    time: rawScenario.time ?? rawScenario.duration_seconds,
+  };
+}
+
+/**
+ * Normalize the full scenario bundle from the API response.
+ * @param {ScenarioBundle} payload - Raw API response
+ * @returns {NormalizedScenarioData|null}
+ */
+function normalizeBundle(payload) {
+  if (!payload) return null;
+  const ships = (payload.ships || []).map(normalizeShip).filter(Boolean);
+  const intentions = normalizeIntentions(
+    payload.intentions ?? payload.intentions_by_ship_id,
+  );
+  const events = (payload.events || []).map(normalizeEvent);
+  return {
+    scenario: normalizeScenario(payload.scenario),
+    ships,
+    intentions,
+    events,
+  };
+}
+
+/**
+ * Hook to fetch and normalize scenario data for a given scenario ID.
+ * @param {number|null} scenarioId - Scenario ID to load, or null to clear
+ * @returns {{ data: NormalizedScenarioData|null, loading: boolean, error: string|null }}
+ */
+export default function useScenarioData(scenarioId) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (scenarioId == null) {
+      setData(null);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+
+    fetch(`/api/scenarios/${scenarioId}`)
+      .then((res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
+      .then((payload) => {
+        if (cancelled) return;
+        setData(normalizeBundle(payload));
+        setLoading(false);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setError(err.message);
+        setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [scenarioId]);
+
+  return { data, loading, error };
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#ALERT_INTENTION_CHANGE_DURATION_SEC">ALERT_INTENTION_CHANGE_DURATION_SEC</a></li><li><a href="global.html#API_URL">API_URL</a></li><li><a href="global.html#DANGEROUS_CARGO_KEYWORDS">DANGEROUS_CARGO_KEYWORDS</a></li><li><a href="global.html#ENDPOINT_DESTINATIONS">ENDPOINT_DESTINATIONS</a></li><li><a href="global.html#KM_MARKERS">KM_MARKERS</a></li><li><a href="global.html#MOCK_SHIPS">MOCK_SHIPS</a></li><li><a href="global.html#SECTORS">SECTORS</a></li><li><a href="global.html#SECTOR_WATER_BOUNDARIES">SECTOR_WATER_BOUNDARIES</a></li><li><a href="global.html#TURNING_BASINS">TURNING_BASINS</a></li><li><a href="global.html#WATERWAY_CENTERLINE">WATERWAY_CENTERLINE</a></li><li><a href="global.html#calculateDistance">calculateDistance</a></li><li><a href="global.html#calculateETA">calculateETA</a></li><li><a href="global.html#calculateFuturePosition">calculateFuturePosition</a></li><li><a href="global.html#calculateHeading">calculateHeading</a></li><li><a href="global.html#calculateIntentionsProgress">calculateIntentionsProgress</a></li><li><a href="global.html#computeDistanceToSector">computeDistanceToSector</a></li><li><a href="global.html#computeETAMarkers">computeETAMarkers</a></li><li><a href="global.html#computeHatchMark">computeHatchMark</a></li><li><a href="global.html#createETAIcon">createETAIcon</a></li><li><a href="global.html#createHullIcon">createHullIcon</a></li><li><a href="global.html#createLabelIcon">createLabelIcon</a></li><li><a href="global.html#createTriangleIcon">createTriangleIcon</a></li><li><a href="global.html#findShipByDbId">findShipByDbId</a></li><li><a href="global.html#formatClockTime">formatClockTime</a></li><li><a href="global.html#formatETA">formatETA</a></li><li><a href="global.html#getActiveIntentionChangeAlerts">getActiveIntentionChangeAlerts</a></li><li><a href="global.html#getCourseVectorEnd">getCourseVectorEnd</a></li><li><a href="global.html#getIntentionsCursor">getIntentionsCursor</a></li><li><a href="global.html#getSectorEtaLabel">getSectorEtaLabel</a></li><li><a href="global.html#getShipDisplayName">getShipDisplayName</a></li><li><a href="global.html#hullPixelSize">hullPixelSize</a></li><li><a href="global.html#moveAlongBearing">moveAlongBearing</a></li><li><a href="global.html#nearestPointOnSegment">nearestPointOnSegment</a></li><li><a href="global.html#normalizeBundle">normalizeBundle</a></li><li><a href="global.html#normalizeEvent">normalizeEvent</a></li><li><a href="global.html#normalizeIntentionEntry">normalizeIntentionEntry</a></li><li><a href="global.html#normalizeIntentions">normalizeIntentions</a></li><li><a href="global.html#normalizeScenario">normalizeScenario</a></li><li><a href="global.html#normalizeShip">normalizeShip</a></li><li><a href="global.html#normalizeShipId">normalizeShipId</a></li><li><a href="global.html#pixelOffsetToLatLng">pixelOffsetToLatLng</a></li><li><a href="global.html#pointInPolygon">pointInPolygon</a></li><li><a href="global.html#remainingRouteDistance">remainingRouteDistance</a></li><li><a href="global.html#requestJson">requestJson</a></li><li><a href="global.html#resolveEventShipId">resolveEventShipId</a></li><li><a href="global.html#resolveSectorKeyFromDbId">resolveSectorKeyFromDbId</a></li><li><a href="global.html#routePassesThroughSector">routePassesThroughSector</a></li><li><a href="global.html#simSecondsToTravelMinutes">simSecondsToTravelMinutes</a></li><li><a href="global.html#simTimeToClock">simTimeToClock</a></li><li><a href="global.html#travelMinutesToSimSeconds">travelMinutesToSimSeconds</a></li><li><a href="global.html#useDynamicIntentionsDisplay">useDynamicIntentionsDisplay</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Mon Jun 01 2026 20:09:53 GMT+0200 (Central European Summer Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

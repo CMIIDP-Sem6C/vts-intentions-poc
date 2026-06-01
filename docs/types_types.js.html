@@ -1,4 +1,32 @@
-/**
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: types/types.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: types/types.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
  * A [latitude, longitude] pair in decimal degrees.
  * @typedef {number[]} Coordinates
  */
@@ -216,7 +244,7 @@
  * @typedef {Object} ScenarioBundle
  * @property {Scenario} scenario - Scenario metadata
  * @property {RawShip[]} ships - Ships in this scenario
- * @property {Object.<string, Array.<Intention>>} intentions_by_ship_id - Intentions keyed by ship ID string
+ * @property {Object.&lt;string, Array.&lt;Intention>>} intentions_by_ship_id - Intentions keyed by ship ID string
  * @property {ScenarioEvent[]} events - Timed scenario events
  */
 
@@ -245,26 +273,26 @@
  * @callback setDestinationCallback
  * @param {number} id
  * @param {string} dest
- * @returns {Promise<void>}
+ * @returns {Promise&lt;void>}
  */
 
 /**
  * @callback verifyShipCallback
  * @param {number} id
- * @returns {Promise<void>}
+ * @returns {Promise&lt;void>}
  */
 
 /**
  * @callback toggleShipVerificationCallback
  * @param {number} id
  * @param {boolean} verified
- * @returns {Promise<void>}
+ * @returns {Promise&lt;void>}
  */
 
 /**
  * @callback resetShipCallback
  * @param {number} id
- * @returns {Promise<void>}
+ * @returns {Promise&lt;void>}
  */
 
 /**
@@ -311,7 +339,7 @@
  * @property {number} timeScale - Time scale factor (e.g. 4 = 4× real-time)
  * @property {number} startTime - Real-world start time as epoch ms
  * @property {number} currentTime - Current real-world time as epoch ms
- * @property {Map<number, number>} spawnTimes - Map of ship id → spawn sim time
+ * @property {Map&lt;number, number>} spawnTimes - Map of ship id → spawn sim time
  * @property {IntentionChangeAlert[]} activeIntentionChangeAlerts - Currently visible alerts
  * @property {playCallback} play - Start/resume playback
  * @property {pauseCallback} pause - Pause playback
@@ -361,7 +389,7 @@
 
 /**
  * @typedef {Object} VerificationSyncResult
- * @property {Object.<string, Verification>} verificationByShipId - Verification rows keyed by ship ID
+ * @property {Object.&lt;string, Verification>} verificationByShipId - Verification rows keyed by ship ID
  * @property {updateVerificationCallback} updateVerification - PATCH a verification row
  * @property {string|null} verificationError - Last fetch error message
  */
@@ -370,7 +398,7 @@
  * @callback updateVerificationCallback
  * @param {string|number} shipId
  * @param {VerificationUpdates} updates
- * @returns {Promise<Verification>}
+ * @returns {Promise&lt;Verification>}
  */
 
 /**
@@ -380,3 +408,26 @@
  * @property {string} color - Hex color
  * @property {number} dots - Number of filled dots
  */
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#ALERT_INTENTION_CHANGE_DURATION_SEC">ALERT_INTENTION_CHANGE_DURATION_SEC</a></li><li><a href="global.html#API_URL">API_URL</a></li><li><a href="global.html#DANGEROUS_CARGO_KEYWORDS">DANGEROUS_CARGO_KEYWORDS</a></li><li><a href="global.html#ENDPOINT_DESTINATIONS">ENDPOINT_DESTINATIONS</a></li><li><a href="global.html#KM_MARKERS">KM_MARKERS</a></li><li><a href="global.html#MOCK_SHIPS">MOCK_SHIPS</a></li><li><a href="global.html#SECTORS">SECTORS</a></li><li><a href="global.html#SECTOR_WATER_BOUNDARIES">SECTOR_WATER_BOUNDARIES</a></li><li><a href="global.html#TURNING_BASINS">TURNING_BASINS</a></li><li><a href="global.html#WATERWAY_CENTERLINE">WATERWAY_CENTERLINE</a></li><li><a href="global.html#calculateDistance">calculateDistance</a></li><li><a href="global.html#calculateETA">calculateETA</a></li><li><a href="global.html#calculateFuturePosition">calculateFuturePosition</a></li><li><a href="global.html#calculateHeading">calculateHeading</a></li><li><a href="global.html#calculateIntentionsProgress">calculateIntentionsProgress</a></li><li><a href="global.html#computeDistanceToSector">computeDistanceToSector</a></li><li><a href="global.html#computeETAMarkers">computeETAMarkers</a></li><li><a href="global.html#computeHatchMark">computeHatchMark</a></li><li><a href="global.html#createETAIcon">createETAIcon</a></li><li><a href="global.html#createHullIcon">createHullIcon</a></li><li><a href="global.html#createLabelIcon">createLabelIcon</a></li><li><a href="global.html#createTriangleIcon">createTriangleIcon</a></li><li><a href="global.html#findShipByDbId">findShipByDbId</a></li><li><a href="global.html#formatClockTime">formatClockTime</a></li><li><a href="global.html#formatETA">formatETA</a></li><li><a href="global.html#getActiveIntentionChangeAlerts">getActiveIntentionChangeAlerts</a></li><li><a href="global.html#getCourseVectorEnd">getCourseVectorEnd</a></li><li><a href="global.html#getIntentionsCursor">getIntentionsCursor</a></li><li><a href="global.html#getSectorEtaLabel">getSectorEtaLabel</a></li><li><a href="global.html#getShipDisplayName">getShipDisplayName</a></li><li><a href="global.html#hullPixelSize">hullPixelSize</a></li><li><a href="global.html#moveAlongBearing">moveAlongBearing</a></li><li><a href="global.html#nearestPointOnSegment">nearestPointOnSegment</a></li><li><a href="global.html#normalizeBundle">normalizeBundle</a></li><li><a href="global.html#normalizeEvent">normalizeEvent</a></li><li><a href="global.html#normalizeIntentionEntry">normalizeIntentionEntry</a></li><li><a href="global.html#normalizeIntentions">normalizeIntentions</a></li><li><a href="global.html#normalizeScenario">normalizeScenario</a></li><li><a href="global.html#normalizeShip">normalizeShip</a></li><li><a href="global.html#normalizeShipId">normalizeShipId</a></li><li><a href="global.html#pixelOffsetToLatLng">pixelOffsetToLatLng</a></li><li><a href="global.html#pointInPolygon">pointInPolygon</a></li><li><a href="global.html#remainingRouteDistance">remainingRouteDistance</a></li><li><a href="global.html#requestJson">requestJson</a></li><li><a href="global.html#resolveEventShipId">resolveEventShipId</a></li><li><a href="global.html#resolveSectorKeyFromDbId">resolveSectorKeyFromDbId</a></li><li><a href="global.html#routePassesThroughSector">routePassesThroughSector</a></li><li><a href="global.html#simSecondsToTravelMinutes">simSecondsToTravelMinutes</a></li><li><a href="global.html#simTimeToClock">simTimeToClock</a></li><li><a href="global.html#travelMinutesToSimSeconds">travelMinutesToSimSeconds</a></li><li><a href="global.html#useDynamicIntentionsDisplay">useDynamicIntentionsDisplay</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Mon Jun 01 2026 20:09:53 GMT+0200 (Central European Summer Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

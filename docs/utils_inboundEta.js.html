@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: utils/inboundEta.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: utils/inboundEta.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import {
+  calculateDistance,
+  calculateETA,
+  formatETA,
+  pointInPolygon,
+} from "@utils/navigation";
+
+/**
+ * Distance from a ship's current position to the sector boundary along its
+ * remaining route.
+ *
+ * @param {Ship} ship - Enriched ship with position and waypoints
+ * @param {Coordinates[]} sectorBoundary - Sector polygon boundary
+ * @returns {number|null} Distance in nautical miles, or null if route doesn't enter the sector
+ */
+export function computeDistanceToSector(ship, sectorBoundary) {
+  if (!ship.waypoints || ship.currentWaypointIndex == null) return null;
+
+  let dist = calculateDistance(
+    ship.position,
+    ship.waypoints[ship.currentWaypointIndex],
+  );
+  for (let i = ship.currentWaypointIndex; i &lt; ship.waypoints.length; i++) {
+    if (pointInPolygon(ship.waypoints[i], sectorBoundary)) {
+      return dist;
+    }
+    if (i &lt; ship.waypoints.length - 1) {
+      dist += calculateDistance(ship.waypoints[i], ship.waypoints[i + 1]);
+    }
+  }
+  return null;
+}
+
+/**
+ * ETA-in-sector label for a ship: "In sector" when already inside, otherwise
+ * the formatted ETA along its remaining route, or a fallback when the route
+ * does not enter the sector.
+ *
+ * @param {Ship} ship - Enriched ship with position, waypoints and speed
+ * @param {Coordinates[]|null|undefined} sectorBoundary - Sector polygon boundary
+ * @param {string|null} [fallback=null] - Returned when no ETA can be determined
+ * @returns {string|null}
+ */
+export function getSectorEtaLabel(ship, sectorBoundary, fallback = null) {
+  if (!sectorBoundary) return fallback;
+  if (pointInPolygon(ship.position, sectorBoundary)) return "In sector";
+  const dist = computeDistanceToSector(ship, sectorBoundary);
+  if (dist == null) return fallback;
+  return formatETA(calculateETA(dist, ship.speed));
+}
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Global</h3><ul><li><a href="global.html#ALERT_INTENTION_CHANGE_DURATION_SEC">ALERT_INTENTION_CHANGE_DURATION_SEC</a></li><li><a href="global.html#API_URL">API_URL</a></li><li><a href="global.html#DANGEROUS_CARGO_KEYWORDS">DANGEROUS_CARGO_KEYWORDS</a></li><li><a href="global.html#ENDPOINT_DESTINATIONS">ENDPOINT_DESTINATIONS</a></li><li><a href="global.html#KM_MARKERS">KM_MARKERS</a></li><li><a href="global.html#MOCK_SHIPS">MOCK_SHIPS</a></li><li><a href="global.html#SECTORS">SECTORS</a></li><li><a href="global.html#SECTOR_WATER_BOUNDARIES">SECTOR_WATER_BOUNDARIES</a></li><li><a href="global.html#TURNING_BASINS">TURNING_BASINS</a></li><li><a href="global.html#WATERWAY_CENTERLINE">WATERWAY_CENTERLINE</a></li><li><a href="global.html#calculateDistance">calculateDistance</a></li><li><a href="global.html#calculateETA">calculateETA</a></li><li><a href="global.html#calculateFuturePosition">calculateFuturePosition</a></li><li><a href="global.html#calculateHeading">calculateHeading</a></li><li><a href="global.html#calculateIntentionsProgress">calculateIntentionsProgress</a></li><li><a href="global.html#computeDistanceToSector">computeDistanceToSector</a></li><li><a href="global.html#computeETAMarkers">computeETAMarkers</a></li><li><a href="global.html#computeHatchMark">computeHatchMark</a></li><li><a href="global.html#createETAIcon">createETAIcon</a></li><li><a href="global.html#createHullIcon">createHullIcon</a></li><li><a href="global.html#createLabelIcon">createLabelIcon</a></li><li><a href="global.html#createTriangleIcon">createTriangleIcon</a></li><li><a href="global.html#findShipByDbId">findShipByDbId</a></li><li><a href="global.html#formatClockTime">formatClockTime</a></li><li><a href="global.html#formatETA">formatETA</a></li><li><a href="global.html#getActiveIntentionChangeAlerts">getActiveIntentionChangeAlerts</a></li><li><a href="global.html#getCourseVectorEnd">getCourseVectorEnd</a></li><li><a href="global.html#getIntentionsCursor">getIntentionsCursor</a></li><li><a href="global.html#getSectorEtaLabel">getSectorEtaLabel</a></li><li><a href="global.html#getShipDisplayName">getShipDisplayName</a></li><li><a href="global.html#hullPixelSize">hullPixelSize</a></li><li><a href="global.html#moveAlongBearing">moveAlongBearing</a></li><li><a href="global.html#nearestPointOnSegment">nearestPointOnSegment</a></li><li><a href="global.html#normalizeBundle">normalizeBundle</a></li><li><a href="global.html#normalizeEvent">normalizeEvent</a></li><li><a href="global.html#normalizeIntentionEntry">normalizeIntentionEntry</a></li><li><a href="global.html#normalizeIntentions">normalizeIntentions</a></li><li><a href="global.html#normalizeScenario">normalizeScenario</a></li><li><a href="global.html#normalizeShip">normalizeShip</a></li><li><a href="global.html#normalizeShipId">normalizeShipId</a></li><li><a href="global.html#pixelOffsetToLatLng">pixelOffsetToLatLng</a></li><li><a href="global.html#pointInPolygon">pointInPolygon</a></li><li><a href="global.html#remainingRouteDistance">remainingRouteDistance</a></li><li><a href="global.html#requestJson">requestJson</a></li><li><a href="global.html#resolveEventShipId">resolveEventShipId</a></li><li><a href="global.html#resolveSectorKeyFromDbId">resolveSectorKeyFromDbId</a></li><li><a href="global.html#routePassesThroughSector">routePassesThroughSector</a></li><li><a href="global.html#simSecondsToTravelMinutes">simSecondsToTravelMinutes</a></li><li><a href="global.html#simTimeToClock">simTimeToClock</a></li><li><a href="global.html#travelMinutesToSimSeconds">travelMinutesToSimSeconds</a></li><li><a href="global.html#useDynamicIntentionsDisplay">useDynamicIntentionsDisplay</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.5</a> on Mon Jun 01 2026 20:09:53 GMT+0200 (Central European Summer Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

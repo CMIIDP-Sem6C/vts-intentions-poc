@@ -19,7 +19,7 @@ export function getStatusLevel(ship) {
   return "yellow";
 }
 
-/** @type {Record<<StatusLevel, { label: string, css: string, color: string, dots: number }>} */
+/** @type {Object.<StatusLevel, StatusEntry>} */
 export const STATUS = {
   red: {
     label: "Onbekend",
