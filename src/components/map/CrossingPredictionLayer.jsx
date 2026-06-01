@@ -74,7 +74,7 @@ function hasShipPassedCrossing(ship, crossingPosition, route) {
   const crossingDist = distanceAlongRouteToPoint(route, crossingPosition);
   const shipDist = distanceAlongRouteToPoint(route, ship.position);
   if (crossingDist == null || shipDist == null) return false;
-  return shipDist > crossingDist + CLEARANCE_NM;
+  return shipDist > crossingDist;
 }
 
 /**

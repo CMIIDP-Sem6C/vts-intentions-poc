@@ -1212,7 +1212,6 @@
 
 .crossing-alert-bubble-label {
   margin-top: 2px;
-  font-family: "Inter", "Segoe UI", sans-serif;
   font-weight: 700;
   line-height: 1.2;
   color: var(--color-error);
