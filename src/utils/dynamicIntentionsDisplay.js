@@ -107,7 +107,7 @@ function getIntentionsCursor(ship, routeSource) {
  * @param {Coordinates} b - Segment end
  * @returns {{ point: Coordinates, t: number }}
  */
-function nearestPointOnSegment(pos, a, b) {
+export function nearestPointOnSegment(pos, a, b) {
   const dx = b[0] - a[0];
   const dy = b[1] - a[1];
   const lenSq = dx * dx + dy * dy;

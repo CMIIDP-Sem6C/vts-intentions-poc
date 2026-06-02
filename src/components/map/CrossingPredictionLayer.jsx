@@ -4,33 +4,7 @@ import L from "leaflet";
 import { useScenario } from "@contexts/ScenarioContext";
 import { useShips } from "@contexts/ShipsContext";
 import { calculateDistance } from "@utils/navigation";
-
-const CLEARANCE_NM = 200 / 1852;
-
-/**
- * Nearest point on a line segment to a given target, in lat/lng space.
- * @param {Coordinates} point - Target `[lat, lng]`
- * @param {Coordinates} a - Segment start `[lat, lng]`
- * @param {Coordinates} b - Segment end `[lat, lng]`
- * @returns {{ point: Coordinates, t: number }} Closest point on the segment and its parametric position (0–1)
- */
-function nearestPointOnSegment(point, a, b) {
-  const dx = b[0] - a[0];
-  const dy = b[1] - a[1];
-  const lenSq = dx * dx + dy * dy;
-
-  if (lenSq === 0) return { point: [...a], t: 0 };
-
-  const t = Math.max(
-    0,
-    Math.min(1, ((point[0] - a[0]) * dx + (point[1] - a[1]) * dy) / lenSq),
-  );
-
-  return {
-    point: [a[0] + t * dx, a[1] + t * dy],
-    t,
-  };
-}
+import { nearestPointOnSegment } from "@utils/dynamicIntentionsDisplay";
 
 /**
  * Distance in nautical miles from the start of a route to the nearest point on it.
