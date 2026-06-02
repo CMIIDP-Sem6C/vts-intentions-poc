@@ -38,6 +38,25 @@ export function SimProvider({ children }) {
     return map;
   }, [events]);
 
+  /**
+   * @type {Map<number, number>} ship id → sim time at which it starts moving.
+   * A ship can spawn (be rendered) before it departs: it then waits at its
+   * first waypoint until the DepartShip event fires. Ships without a DepartShip
+   * event depart at their spawn time (unchanged behaviour).
+   */
+  const departTimes = useMemo(() => {
+    const map = new Map();
+    for (const event of events || []) {
+      if (event.type === "DepartShip") {
+        const triggerTime = event.triggerTime ?? 0;
+        const existing = map.get(event.subjectId);
+        if (existing == null || triggerTime < existing)
+          map.set(event.subjectId, triggerTime);
+      }
+    }
+    return map;
+  }, [events]);
+
   const duration = useMemo(() => {
     let max = 0;
     for (const event of events || []) {
@@ -52,14 +71,15 @@ export function SimProvider({ children }) {
     for (const ship of ships || []) {
       const key = ship.id ?? ship.dbId;
       const spawn = spawnTimes.get(key) ?? 0;
+      const depart = departTimes.get(key) ?? spawn;
       const totalNm = totalRouteDistanceNm(ship.waypoints);
       const speed = ship.speed || 5;
       const arrival =
-        speed > 0 ? spawn + ((totalNm / speed) * 3600) / timeScale : spawn;
+        speed > 0 ? depart + ((totalNm / speed) * 3600) / timeScale : depart;
       if (arrival > max) max = arrival;
     }
     return Math.max(1, Math.ceil(max + 5));
-  }, [ships, events, spawnTimes, timeScale]);
+  }, [ships, events, spawnTimes, departTimes, timeScale]);
 
   const [simTime, setSimTime] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
@@ -122,6 +142,7 @@ export function SimProvider({ children }) {
       startTime,
       currentTime: Date.now(),
       spawnTimes,
+      departTimes,
       activeIntentionChangeAlerts,
       play,
       pause,
@@ -136,6 +157,7 @@ export function SimProvider({ children }) {
       timeScale,
       startTime,
       spawnTimes,
+      departTimes,
       activeIntentionChangeAlerts,
       play,
       pause,

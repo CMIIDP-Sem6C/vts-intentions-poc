@@ -96,11 +96,13 @@ function normalizeBundle(payload) {
     payload.intentions ?? payload.intentions_by_ship_id,
   );
   const events = (payload.events || []).map(normalizeEvent);
+  const crossings = Array.isArray(payload.crossings) ? payload.crossings : [];
   return {
     scenario: normalizeScenario(payload.scenario),
     ships,
     intentions,
     events,
+    crossings,
   };
 }
 

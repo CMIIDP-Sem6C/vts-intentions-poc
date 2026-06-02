@@ -24,12 +24,15 @@ const ShipsContext = createContext(null);
  * Compute a ship's position along its waypoint route at a given simulation time.
  *
  * @param {NormalizedShip} ship - Ship with waypoints and speed
- * @param {number} spawnTime - Simulation time when the ship spawns
+ * @param {number} spawnTime - Simulation time when the ship becomes visible
+ * @param {number} departTime - Simulation time when the ship starts moving
+ *   (>= spawnTime). Between spawn and depart the ship waits at its first
+ *   waypoint, so it can be present on the map before it sets sail.
  * @param {number} time - Current simulation time in seconds
  * @param {number} timeScale - Simulation time scale factor
  * @returns {ShipMotion|null} Motion state, or null if ship hasn't spawned or has no route
  */
-function computeShipPosition(ship, spawnTime, time, timeScale) {
+function computeShipPosition(ship, spawnTime, departTime, time, timeScale) {
   const waypoints = ship.waypoints || [];
   if (waypoints.length === 0) return null;
   if (time < spawnTime) return null;
@@ -43,7 +46,7 @@ function computeShipPosition(ship, spawnTime, time, timeScale) {
       baseSpeed,
     };
   }
-  const travelSec = time - spawnTime;
+  const travelSec = Math.max(0, time - departTime);
   let remaining = baseSpeed * ((travelSec * timeScale) / 3600);
   for (let i = 0; i < waypoints.length - 1; i++) {
     const segDist = calculateDistance(waypoints[i], waypoints[i + 1]);
@@ -130,7 +133,7 @@ function computeIntentionVisibility(events, ships, intentions, time) {
 
 export function ShipsProvider({ children }) {
   const { ships: scenarioShips, intentions, events } = useScenario();
-  const { simTime, timeScale, spawnTimes } = useSim();
+  const { simTime, timeScale, spawnTimes, departTimes } = useSim();
   const { verificationByShipId, updateVerification, verificationError } =
     useVerificationSync();
   const { updateDynamicIntentions } = useDynamicIntentionsDisplay();
@@ -164,7 +167,14 @@ export function ShipsProvider({ children }) {
         const key = ship.id ?? ship.dbId;
         const spawn = spawnTimes.get(key);
         if (spawn == null) return null;
-        const motion = computeShipPosition(ship, spawn, simTime, timeScale);
+        const depart = departTimes.get(key) ?? spawn;
+        const motion = computeShipPosition(
+          ship,
+          spawn,
+          depart,
+          simTime,
+          timeScale,
+        );
         if (!motion) return null;
 
         const intentionsShowActive = visibility.get(key) ?? false;
@@ -195,6 +205,7 @@ export function ShipsProvider({ children }) {
     intentions,
     simTime,
     spawnTimes,
+    departTimes,
     timeScale,
     updateDynamicIntentions,
     verificationByShipId,
