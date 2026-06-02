@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Marker } from "react-leaflet";
 import L from "leaflet";
 import { useScenario } from "@contexts/ScenarioContext";
-import { useSim } from "@contexts/SimContext";
 import { useShips } from "@contexts/ShipsContext";
 import { calculateDistance } from "@utils/navigation";
 
@@ -159,52 +158,15 @@ function getVisibleCrossingPredictions(predictions, ships) {
 }
 
 /**
- * Fetch crossing predictions from the API and render alert bubbles on the map.
+ * Render crossing prediction bubbles from scenario context data.
  */
 export default function CrossingPredictionLayer() {
-  const { scenarioId, ships: scenarioShips } = useScenario();
-  const { timeScale } = useSim();
+  const { crossings, ships: scenarioShips } = useScenario();
   const { ships } = useShips();
-  /** @type {[CrossingPrediction[], React.Dispatch<React.SetStateAction<CrossingPrediction[]>>]} */
-  const [predictions, setPredictions] = useState([]);
-
-  useEffect(() => {
-    if (scenarioId == null) {
-      setPredictions([]);
-      return;
-    }
-
-    let cancelled = false;
-    const params = new URLSearchParams({
-      threshold_m: "200",
-      time_scale: String(timeScale),
-    });
-
-    fetch(
-      `/api/scenarios/${scenarioId}/intention-crossing-predictions?${params}`,
-    )
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
-      })
-      .then((payload) => {
-        if (cancelled) return;
-        setPredictions(Array.isArray(payload.predictions) ? payload.predictions : []);
-      })
-      .catch((err) => {
-        if (cancelled) return;
-        console.error("Failed to load crossing predictions:", err);
-        setPredictions([]);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [scenarioId, timeScale]);
 
   const visiblePredictions = useMemo(
-    () => getVisibleCrossingPredictions(predictions, ships),
-    [predictions, ships],
+    () => getVisibleCrossingPredictions(crossings || [], ships),
+    [crossings, ships],
   );
 
   const predictionIcons = useMemo(

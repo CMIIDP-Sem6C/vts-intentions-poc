@@ -24,6 +24,7 @@ export function ScenarioProvider({ scenarioId, sector, children }) {
       ships: activeData.ships.map((s) => ({ ...s })),
       intentions: activeData.intentions.map((i) => ({ ...i })),
       events: activeData.events.map((e) => ({ ...e })),
+      crossings: activeData.crossings.map((c) => ({ ...c })),
     };
   }, [activeData]);
 
@@ -36,10 +37,12 @@ export function ScenarioProvider({ scenarioId, sector, children }) {
       originalShips: originals?.ships ?? [],
       originalIntentions: originals?.intentions ?? [],
       originalEvents: originals?.events ?? [],
+      originalCrossings: originals?.crossings ?? [],
       // Live references
       ships: activeData?.ships ?? [],
       intentions: activeData?.intentions ?? [],
       events: activeData?.events ?? [],
+      crossings: activeData?.crossings ?? [],
       loading,
       error,
     }),
