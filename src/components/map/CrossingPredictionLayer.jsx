@@ -5,12 +5,14 @@ import { useScenario } from "@contexts/ScenarioContext";
 import { useShips } from "@contexts/ShipsContext";
 import { calculateDistance } from "@utils/navigation";
 
-/** @typedef {{ id: string, ship_ids: number[], position: [number, number], distance_m: number, trigger_time: number, active_from: number, active_until: number }} CrossingPrediction */
-
 const CLEARANCE_NM = 200 / 1852;
 
 /**
- * @returns {{ point: import("../types").Coordinates, t: number }}
+ * Nearest point on a line segment to a given target, in lat/lng space.
+ * @param {Coordinates} point - Target `[lat, lng]`
+ * @param {Coordinates} a - Segment start `[lat, lng]`
+ * @param {Coordinates} b - Segment end `[lat, lng]`
+ * @returns {{ point: Coordinates, t: number }} Closest point on the segment and its parametric position (0–1)
  */
 function nearestPointOnSegment(point, a, b) {
   const dx = b[0] - a[0];
@@ -32,7 +34,9 @@ function nearestPointOnSegment(point, a, b) {
 
 /**
  * Distance in nautical miles from the start of a route to the nearest point on it.
- * @returns {number|null}
+ * @param {Coordinates[]} route - Intention route polyline (`[lat, lng]` per point)
+ * @param {Coordinates} target - Point to project onto the route
+ * @returns {number|null} Distance along the route in NM, or `null` if the route is invalid
  */
 function distanceAlongRouteToPoint(route, target) {
   if (!Array.isArray(route) || route.length < 2) return null;
@@ -59,7 +63,11 @@ function distanceAlongRouteToPoint(route, target) {
 }
 
 /**
- * @returns {boolean}
+ * Whether a ship has sailed past a predicted crossing on its intention route.
+ * @param {Ship} ship - Live ship with current `position` and `intentions` route
+ * @param {Coordinates} crossingPosition - Predicted crossing `[lat, lng]`
+ * @param {Coordinates[]} route - Intention route polyline for this ship
+ * @returns {boolean} `true` when the ship's along-route distance exceeds the crossing point
  */
 function hasShipPassedCrossing(ship, crossingPosition, route) {
   const crossingDist = distanceAlongRouteToPoint(route, crossingPosition);
@@ -69,7 +77,10 @@ function hasShipPassedCrossing(ship, crossingPosition, route) {
 }
 
 /**
- * @returns {boolean}
+ * Whether both ships in a prediction have passed the crossing point.
+ * @param {CrossingPrediction} prediction - API crossing prediction
+ * @param {Ship[]} ships - Live enriched ships from the simulation
+ * @returns {boolean} `true` when every involved ship has passed the crossing
  */
 function bothShipsPassedCrossing(prediction, ships) {
   return prediction.ship_ids.every((id) => {
@@ -83,6 +94,11 @@ function bothShipsPassedCrossing(prediction, ships) {
   });
 }
 
+/**
+ * Escape HTML special characters for safe insertion into marker markup.
+ * @param {string|number} value - Raw label text
+ * @returns {string} HTML-escaped string
+ */
 function escapeHtml(value) {
   return String(value)
     .replace(/&/g, "&amp;")
@@ -92,7 +108,10 @@ function escapeHtml(value) {
 }
 
 /**
- * @returns {string}
+ * Build a short label for a crossing alert bubble (e.g. `"Ship A <-> Ship B"`).
+ * @param {NormalizedShip[]} scenarioShips - Scenario ship records (for names)
+ * @param {number[]} shipIds - IDs of the two ships in the prediction
+ * @returns {string} Display label for the crossing marker
  */
 function formatCrossingLabel(scenarioShips, shipIds) {
   const names = shipIds.map((id) => {
@@ -104,8 +123,9 @@ function formatCrossingLabel(scenarioShips, shipIds) {
 }
 
 /**
- * @param {string} label
- * @returns {L.DivIcon}
+ * Leaflet div icon for a crossing warning bubble with ship names.
+ * @param {string} label - HTML-safe ship-pair label (will be escaped again in markup)
+ * @returns {L.DivIcon} Non-interactive warning marker icon
  */
 function createCrossingBubbleIcon(label) {
   return L.divIcon({
@@ -139,7 +159,12 @@ function createCrossingBubbleIcon(label) {
 }
 
 /**
- * @returns {CrossingPrediction[]}
+ * Filter crossing predictions to those that should be shown on the map.
+ * A prediction is visible when both ships have shared intentions active and
+ * at least one ship has not yet passed the crossing point.
+ * @param {CrossingPrediction[]} predictions - Crossing predictions from the scenario bundle
+ * @param {Ship[]} ships - Live enriched ships from the simulation
+ * @returns {CrossingPrediction[]} Predictions that should render as map markers
  */
 function getVisibleCrossingPredictions(predictions, ships) {
   const sharedShipIds = new Set(
@@ -158,7 +183,8 @@ function getVisibleCrossingPredictions(predictions, ships) {
 }
 
 /**
- * Render crossing prediction bubbles from scenario context data.
+ * Map layer that renders crossing-prediction warning bubbles for ship pairs
+ * whose intention routes are predicted to pass within the API threshold.
  */
 export default function CrossingPredictionLayer() {
   const { crossings, ships: scenarioShips } = useScenario();

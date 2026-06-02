@@ -209,12 +209,25 @@
  */
 
 /**
+ * Predicted close approach between two ships on shared intention routes.
+ * @typedef {Object} CrossingPrediction
+ * @property {string} id - Stable pair id (e.g. `"1-2"`)
+ * @property {number[]} ship_ids - Database IDs of the two involved ships
+ * @property {Coordinates} position - Midpoint of closest approach `[lat, lng]`
+ * @property {number} distance_m - Minimum separation at trigger time, in metres
+ * @property {number} trigger_time - Simulation time (seconds) of closest approach
+ * @property {number} active_from - Simulation time when the alert becomes visible
+ * @property {number} active_until - Simulation time when the alert is hidden
+ */
+
+/**
  * The full scenario bundle returned by `GET /api/scenarios/:id`.
  * @typedef {Object} ScenarioBundle
  * @property {Scenario} scenario - Scenario metadata
  * @property {RawShip[]} ships - Ships in this scenario
  * @property {Object<string, Intention[]>} intentions_by_ship_id - Intentions keyed by ship ID string
  * @property {ScenarioEvent[]} events - Timed scenario events
+ * @property {CrossingPrediction[]} [crossings] - Predicted intention-route crossings
  */
 
 /**
@@ -224,6 +237,7 @@
  * @property {NormalizedShip[]} ships - Normalized ships
  * @property {Intention[]} intentions - Flattened intentions list
  * @property {ScenarioEvent[]} events - Normalized events
+ * @property {CrossingPrediction[]} crossings - Predicted intention-route crossings
  */
 
 /**
@@ -271,9 +285,11 @@
  * @property {NormalizedShip[]} originalShips - Immutable copies of original ship data
  * @property {Intention[]} originalIntentions - Immutable copies of original intention data
  * @property {ScenarioEvent[]} originalEvents - Immutable copies of original event data
+ * @property {CrossingPrediction[]} originalCrossings - Immutable copies of original crossing predictions
  * @property {NormalizedShip[]} ships - Live (mutable) ship references
  * @property {Intention[]} intentions - Live (mutable) intention references
  * @property {ScenarioEvent[]} events - Live (mutable) event references
+ * @property {CrossingPrediction[]} crossings - Live crossing predictions from the scenario bundle
  * @property {boolean} loading - Whether the scenario is loading
  * @property {string|null} error - Load error message
  */
