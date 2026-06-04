@@ -354,12 +354,6 @@
  */
 
 /**
- * @typedef {Object} VerificationUpdates
- * @property {boolean} [verified] - Whether verified
- * @property {string} [destination] - Destination
- */
-
-/**
  * @typedef {Object} VerificationSyncResult
  * @property {Object.<string, Verification>} verificationByShipId - Verification rows keyed by ship ID
  * @property {updateVerificationCallback} updateVerification - PATCH a verification row
