@@ -1,79 +1,109 @@
-import { useMemo } from 'react';
-import {
-  remainingRouteDistance,
-  calculateETA,
-  formatETA,
-} from '../../utils/navigation';
+import { useMemo, useState } from "react";
+import { pointInPolygon } from "@utils/navigation";
+import { getSectorEtaLabel } from "@utils/inboundEta";
+import { StatusDots, STATUS } from "@utils/status";
+import { SECTORS } from "@data/sectors";
 
-const STATUS_COLORS = {
-  red: '#F44336',
-  yellow: '#FF9800',
-  green: '#4CAF50',
-};
-
-function getStatusLevel(ship) {
-  const destKnown = ship.destination && ship.destination !== 'Unknown';
-  if (destKnown && ship.aisActive) return 'green';
-  if (destKnown || ship.aisActive) return 'yellow';
-  return 'red';
-}
-
-function StatusStar({ level }) {
-  const color = STATUS_COLORS[level];
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill={color}>
-      <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" />
-    </svg>
-  );
-}
-
+/**
+ * Panel listing inbound ships for the active sector.
+ *
+ * @param {Object} props
+ * @param {Ship[]} props.ships - Enriched ships
+ * @param {number|null} props.selectedShipId - Currently selected ship id
+ * @param {(id: number) => void} props.onSelectShip - Ship selection callback
+ * @param {(id: number, verified: boolean) => void} props.onToggleShipVerification - Verification toggle callback
+ * @param {string} props.activeSector - Active sector key
+ */
 export default function InboundPanel({
   ships,
   selectedShipId,
   onSelectShip,
+  onToggleShipVerification,
+  activeSector,
 }) {
-  const inboundShips = useMemo(
-    () => ships.filter((s) => s.status === 'inbound' || s.status === 'in-sector'),
-    [ships]
-  );
+  const [minimized, setMinimized] = useState(false);
+  const sectorBoundary = activeSector ? SECTORS[activeSector]?.boundary : null;
+
+  /** @type {InboundShip[]} */
+  const inboundShips = useMemo(() => {
+    if (!sectorBoundary) return [];
+
+    return ships
+      .filter((s) => !s.arrived)
+      .map((s) => {
+        const currentlyInSector = pointInPolygon(s.position, sectorBoundary);
+        const routeEntersSector =
+          !currentlyInSector &&
+          s.waypoints?.some(
+            (wp, i) =>
+              i >= (s.currentWaypointIndex || 0) &&
+              pointInPolygon(wp, sectorBoundary),
+          );
+        return { ...s, currentlyInSector, routeEntersSector };
+      })
+      .filter((s) => s.currentlyInSector || s.routeEntersSector);
+  }, [ships, sectorBoundary]);
+
+  if (minimized) {
+    return (
+      <button
+        className="panel inbound-panel-toggle"
+        onClick={() => setMinimized(false)}
+        title="Toon inbound vessels"
+      >
+        INBOUND ({inboundShips.length})
+      </button>
+    );
+  }
 
   return (
     <div className="panel inbound-panel">
-      <h2 className="panel-title">INBOUND VESSELS</h2>
+      <button
+        className="inbound-minimize-btn"
+        onClick={() => setMinimized(true)}
+        title="Verberg panel"
+      >
+        -
+      </button>
       <table className="inbound-table">
         <thead>
           <tr>
-            <th>NAAM</th>
-            <th>ETA IN SECTOR</th>
-            <th>BESTEMMING</th>
+            <th>SCHIP</th>
             <th>STATUS</th>
+            <th>BESTEMMING</th>
+            <th>ETA IN SECTOR</th>
           </tr>
         </thead>
         <tbody>
           {inboundShips.map((ship) => {
-            const eta = getShipETA(ship);
             const isSelected = ship.id === selectedShipId;
-            const level = getStatusLevel(ship);
+            const destKnown =
+              ship.destination && ship.destination !== "Unknown";
+
+            const eta = getSectorEtaLabel(ship, sectorBoundary, "Unknown");
 
             return (
               <tr
                 key={ship.id}
-                className={`inbound-row status-${level} ${isSelected ? 'selected' : ''}`}
+                className={`inbound-row ${isSelected ? "selected" : ""}`}
                 onClick={() => onSelectShip(ship.id)}
               >
                 <td className="ship-name-cell">{ship.name}</td>
-                <td className="eta-cell">{eta}</td>
+                <td className="status-cell">
+                  <StatusDots level={ship.status} />
+                </td>
                 <td className="destination-cell">
                   <span
                     className="dest-text"
-                    style={{ color: STATUS_COLORS[level] }}
+                    style={{
+                      color: destKnown ? "#bbb" : STATUS["red"].color,
+                      fontStyle: destKnown ? "normal" : "italic",
+                    }}
                   >
-                    {ship.destination}
+                    {destKnown ? ship.destination : "unknown"}
                   </span>
                 </td>
-                <td className="status-cell">
-                  <StatusStar level={level} />
-                </td>
+                <td className="status-cell">{eta}</td>
               </tr>
             );
           })}
@@ -81,16 +111,4 @@ export default function InboundPanel({
       </table>
     </div>
   );
-}
-
-function getShipETA(ship) {
-  if (ship.status === 'in-sector') return 'In sector';
-
-  const remaining = remainingRouteDistance(
-    ship.waypoints,
-    ship.currentWaypointIndex,
-    ship.position
-  );
-  const etaSeconds = calculateETA(remaining, ship.speed);
-  return formatETA(etaSeconds);
 }

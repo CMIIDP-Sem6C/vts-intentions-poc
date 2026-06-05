@@ -3,9 +3,15 @@ dist/
 .vite/
 *.local
 
-screenshot.png
+screenshot*.js
+screenshot*.png
 screenshot-clicked.png
+screenshots*/
+
+__pycache__/
+*.pyc
 
 .DS_Store
 Thumbs.db
 *.log
+.env

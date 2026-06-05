@@ -1,53 +1,62 @@
-import { useState, useEffect } from 'react';
+import { useState } from "react";
+import TextAutocompleteInput from "@components/inputs/TextAutocompleteInput";
+import Flag from "@components/panels/Flag";
+import { LadingSymbol, isDangerousCargo } from "@components/panels/ShipInfoSymbols";
+import {
+  getStatusLevel,
+  STATUS,
+  StatusDots,
+  TracklineSymbol,
+} from "@utils/status";
+import { getSectorEtaLabel } from "@utils/inboundEta";
+import { SECTORS } from "@data/sectors";
 
-function getStatusLevel(ship) {
-  const destKnown = ship.destination && ship.destination !== 'Unknown';
-  if (destKnown && ship.aisActive) return 'green';
-  if (destKnown || ship.aisActive) return 'yellow';
-  return 'red';
-}
-
-const STATUS_LABELS = {
-  red: 'Onbekend',
-  yellow: 'Gedeeltelijk',
-  green: 'Volledig',
-};
-
-const STATUS_CSS = {
-  red: 'status-red',
-  yellow: 'status-yellow',
-  green: 'status-ok',
-};
-
-export default function ShipInfoCard({ ship, onClose, onSetDestination, onScanAIS }) {
-  const [editDest, setEditDest] = useState('');
+/**
+ * Detail panel showing ship information, verification controls, and operator notes.
+ *
+ * @param {Object} props
+ * @param {Ship|null} props.ship - The selected ship, or null if none selected
+ * @param {string} [props.activeSector] - Active sector key (for ETA in header)
+ * @param {() => void} props.onClose - Close the panel
+ * @param {(id: number, destination: string) => void} props.onSetDestination - Set destination callback
+ * @param {(id: number) => void} props.onVerifyShip - Verify ship callback
+ * @param {(id: number) => void} [props.onResetShip] - Reset ship to red status callback
+ * @param {string|null} props.verificationError - Last verification error message
+ * @param {DestinationSuggestion[]} [props.destinations=[]] - Destination autocomplete suggestions
+ */
+export default function ShipInfoCard({
+  ship,
+  activeSector,
+  onClose,
+  onSetDestination,
+  onVerifyShip,
+  onResetShip,
+  verificationError,
+  destinations = [],
+}) {
   const [scanning, setScanning] = useState(false);
-
-  useEffect(() => {
-    if (ship) {
-      setEditDest(ship.destination === 'Unknown' ? '' : ship.destination);
-      setScanning(false);
-    }
-  }, [ship?.id, ship?.destination]);
-
   if (!ship) return null;
 
+  /** @type {StatusLevel} */
   const level = getStatusLevel(ship);
+  const sectorBoundary = activeSector ? SECTORS[activeSector]?.boundary : null;
+  const etaLabel = getSectorEtaLabel(ship, sectorBoundary);
+  const dangerous =
+    typeof ship.dangerousCargo === "boolean"
+      ? ship.dangerousCargo
+      : isDangerousCargo(ship.cargo);
 
-  const handleDestSubmit = () => {
-    const trimmed = editDest.trim();
-    if (trimmed && trimmed !== ship.destination) {
-      onSetDestination(ship.id, trimmed);
-    } else if (!trimmed && ship.destination !== 'Unknown') {
-      onSetDestination(ship.id, 'Unknown');
+  const handleDestSubmit = (newValue) => {
+    if (newValue !== ship.destination) {
+      onSetDestination(ship.id, newValue);
     }
   };
 
   const handleScan = () => {
-    if (ship.aisActive || scanning) return;
+    if (ship.verified || scanning) return;
     setScanning(true);
     setTimeout(() => {
-      onScanAIS(ship.id);
+      onVerifyShip(ship.id);
       setScanning(false);
     }, 1800);
   };
@@ -58,88 +67,90 @@ export default function ShipInfoCard({ ship, onClose, onSetDestination, onScanAI
         X
       </button>
 
-      <h2 className="panel-title">SCHIP INFO - {ship.name}</h2>
+      <div className="panel-title ship-info-title">
+        <h2 className="ship-info-name">{ship.name}</h2>
+        {etaLabel && <p className="ship-info-eta"> - {etaLabel}</p>}
+      </div>
 
       <div className="ship-info-actions">
         <button
-          className={`scan-ais-btn ${scanning ? 'scanning' : ''} ${ship.aisActive ? 'active' : ''}`}
+          className={`scan-ais-btn ${scanning ? "scanning" : ""} ${ship.verified ? "active" : ""}`}
           onClick={handleScan}
-          disabled={ship.aisActive}
+          disabled={ship.verified}
         >
-          {ship.aisActive
-            ? 'AIS / VDES ACTIEF'
+          {ship.verified
+            ? "SCHIP GEVERIFIEERD"
             : scanning
-              ? 'SCANNING...'
-              : 'SCAN AIS / VDES'}
+              ? "VERIFIEREN..."
+              : "VERIFIEER SCHIP"}
         </button>
       </div>
 
-      <div className="ship-info-body">
-        <div className="ship-info-visual">
-          <div className="ship-placeholder-img">
-            <svg viewBox="0 0 120 60" width="100%" height="100%">
-              <rect x="10" y="20" width="100" height="25" rx="4" fill="#555" />
-              <polygon points="110,32 125,32 120,20 110,20" fill="#666" />
-              <rect x="30" y="12" width="20" height="10" rx="2" fill="#444" />
-              <line x1="40" y1="5" x2="40" y2="12" stroke="#777" strokeWidth="1.5" />
-            </svg>
-          </div>
-          <button className="vhf-btn">CONTACT VIA VHF</button>
+      <div className="ship-info-details">
+        <div className="info-row">
+          <span className="info-label">BESTEMMING</span>
+          <TextAutocompleteInput
+            value={ship.destination === "Unknown" ? "" : ship.destination}
+            onSubmit={handleDestSubmit}
+            suggestions={destinations}
+            level={level}
+            style={{ color: STATUS[level].color }}
+            placeholder="Onbekend - voer in..."
+          />
         </div>
 
-        <div className="ship-info-details">
-          <div className="info-row">
-            <span className="info-label">BESTEMMING</span>
-            <input
-              className={`dest-input ${level === 'red' ? 'dest-unknown' : ''}`}
-              value={editDest}
-              placeholder="Onbekend - voer in..."
-              onChange={(e) => setEditDest(e.target.value)}
-              onBlur={handleDestSubmit}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  handleDestSubmit();
-                  e.target.blur();
-                }
-              }}
-            />
-          </div>
-          <div className="info-row">
-            <span className="info-label">AIS STATUS</span>
-            <span className={`info-value ${STATUS_CSS[level]}`}>
-              {ship.aisActive ? 'Actief' : ship.aisStatus}
-            </span>
-          </div>
-          <div className="info-row">
-            <span className="info-label">TRACKING</span>
-            <span className={`info-value ${STATUS_CSS[level]}`}>
-              {STATUS_LABELS[level]}
-            </span>
-          </div>
-          <div className="info-row">
-            <span className="info-label">LADING</span>
-            <span className="info-value">{ship.cargo}</span>
-          </div>
-          <div className="info-row">
-            <span className="info-label">TYPE</span>
-            <span className="info-value">{ship.shipType}</span>
-          </div>
-
-          {ship.operatorNotes && ship.operatorNotes.length > 0 && (
-            <div className="operator-notes">
-              <h3 className="notes-title">OPERATOR NOTITIES</h3>
-              {ship.operatorNotes.map((note, i) => (
-                <div key={i} className="note-entry">
-                  <div className="note-header">
-                    {note.channel} - {note.location} | {note.time}
-                  </div>
-                  <div className="note-text">{note.note}</div>
-                </div>
-              ))}
-            </div>
-          )}
+        <div className="info-row">
+          <span className="info-label">AIS STATUS</span>
+          <span className="info-value info-symbol">
+            <StatusDots level={level} ariaLabel={`AIS status ${STATUS[level].label}`} />
+          </span>
         </div>
+
+        <div className="info-row">
+          <span className="info-label">TRACKLINE</span>
+          <span className="info-value info-symbol">
+            <TracklineSymbol present={!!ship.intentionsShowActive} />
+          </span>
+        </div>
+
+        <div className="info-row">
+          <span className="info-label">LADING</span>
+          <span className="info-value info-symbol">
+            <LadingSymbol dangerous={dangerous} />
+          </span>
+        </div>
+
+        <div className="info-row">
+          <span className="info-label">TYPE</span>
+          <span className="info-value">{ship.shipType}</span>
+        </div>
+
+        <div className="info-row">
+          <span className="info-label">TAAL</span>
+          <span className="info-value info-taal">
+            {ship.nationality && <Flag code={ship.nationality} />}
+            <span>{(ship.nationality || "-").toUpperCase()}</span>
+          </span>
+        </div>
+
+        {verificationError && (
+          <div className="ship-info-error">
+            <span className="info-label">DATABASE FOUT</span>
+            <span className="note-text">{verificationError}</span>
+          </div>
+        )}
       </div>
+
+      {onResetShip && (
+        <button
+          className="reset-test-btn"
+          onClick={() => onResetShip(ship.id)}
+          type="button"
+          title="Zet dit schip terug naar rode status (testknop)"
+        >
+          reset status (test)
+        </button>
+      )}
     </div>
   );
 }
