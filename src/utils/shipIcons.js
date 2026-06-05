@@ -383,10 +383,14 @@ ${ship.status === "green" ? verifiedIcon : ""}</span>`;
 }
 
 /**
+ * @typedef {Array.<number>} PixelOffset
+ */
+
+/**
  * Convert a pixel offset from a map origin to a LatLng position.
  * @param {L.Map} map - Leaflet map instance
  * @param {Coordinates} origin - Origin [lat, lng]
- * @param {[number, number]} pxOffset - Pixel offset [x, y]
+ * @param {PixelOffset} pxOffset - Pixel offset [x, y]
  * @returns {L.LatLng}
  */
 export function pixelOffsetToLatLng(map, origin, pxOffset) {

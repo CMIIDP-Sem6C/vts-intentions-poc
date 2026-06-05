@@ -77,7 +77,8 @@
 
 /**
  * A ship after API normalization (adds `dbId`).
- * @typedef {RawShip & { dbId: number }} NormalizedShip
+ * @typedef {RawShip} NormalizedShip
+ * @property {number} dbId - Database ID
  */
 
 /**
@@ -164,7 +165,9 @@
  */
 
 /**
- * @typedef {Ship & { currentlyInSector: boolean, routeEntersSector: boolean }} InboundShip
+ * @typedef {Ship} InboundShip
+ * @property {boolean} currentlyInSector - Whether currently in sector
+ * @property {boolean} routeEntersSector - Whether route enters sector
  */
 
 /**
@@ -225,7 +228,7 @@
  * @typedef {Object} ScenarioBundle
  * @property {Scenario} scenario - Scenario metadata
  * @property {RawShip[]} ships - Ships in this scenario
- * @property {Object<string, Intention[]>} intentions_by_ship_id - Intentions keyed by ship ID string
+ * @property {Object.<string, Array.<Intention>>} intentions_by_ship_id - Intentions keyed by ship ID string
  * @property {ScenarioEvent[]} events - Timed scenario events
  * @property {CrossingPrediction[]} [crossings] - Predicted intention-route crossings
  */
@@ -248,17 +251,70 @@
  */
 
 /**
+ * @callback selectShipCallback
+ * @param {number|null} id
+ */
+
+/**
+ * @callback setDestinationCallback
+ * @param {number} id
+ * @param {string} dest
+ * @returns {Promise<void>}
+ */
+
+/**
+ * @callback verifyShipCallback
+ * @param {number} id
+ * @returns {Promise<void>}
+ */
+
+/**
+ * @callback toggleShipVerificationCallback
+ * @param {number} id
+ * @param {boolean} verified
+ * @returns {Promise<void>}
+ */
+
+/**
+ * @callback resetShipCallback
+ * @param {number} id
+ * @returns {Promise<void>}
+ */
+
+/**
  * @typedef {Object} ShipsContextValue
  * @property {Ship[]} ships - Fully enriched ships for the current sim time
  * @property {number|null} selectedShipId - Currently selected ship's id
  * @property {Ship|null} selectedShip - The selected ship object
  * @property {Intention[]} intentions - All intentions for the scenario
- * @property {(id: number|null) => void} selectShip - Select/deselect a ship
- * @property {(id: number, dest: string) => Promise<void>} setDestination - Set a ship's destination (also verifies)
- * @property {(id: number) => Promise<void>} verifyShip - Verify a ship
- * @property {(id: number, verified: boolean) => Promise<void>} toggleShipVerification - Toggle verification
- * @property {(id: number) => Promise<void>} resetShip - Reset a ship to red status
+ * @property {selectShipCallback} selectShip - Select/deselect a ship
+ * @property {setDestinationCallback} setDestination - Set a ship's destination (also verifies)
+ * @property {verifyShipCallback} verifyShip - Verify a ship
+ * @property {toggleShipVerificationCallback} toggleShipVerification - Toggle verification
+ * @property {resetShipCallback} resetShip - Reset a ship to red status
  * @property {string|null} verificationError - Last verification error message
+ */
+
+/**
+ * @callback playCallback
+ */
+
+/**
+ * @callback pauseCallback
+ */
+
+/**
+ * @callback seekCallback
+ * @param {number} time
+ */
+
+/**
+ * @callback restartCallback
+ */
+
+/**
+ * @callback setTimeScaleCallback
+ * @param {number} scale
  */
 
 /**
@@ -271,11 +327,11 @@
  * @property {number} currentTime - Current real-world time as epoch ms
  * @property {Map<number, number>} spawnTimes - Map of ship id → spawn sim time
  * @property {IntentionChangeAlert[]} activeIntentionChangeAlerts - Currently visible alerts
- * @property {() => void} play - Start/resume playback
- * @property {() => void} pause - Pause playback
- * @property {(time: number) => void} seek - Seek to a specific sim time
- * @property {() => void} restart - Reset to time 0 and play
- * @property {(scale: number) => void} setTimeScale - Change the time scale
+ * @property {playCallback} play - Start/resume playback
+ * @property {pauseCallback} pause - Pause playback
+ * @property {seekCallback} seek - Seek to a specific sim time
+ * @property {restartCallback} restart - Reset to time 0 and play
+ * @property {setTimeScaleCallback} setTimeScale - Change the time scale
  */
 
 /**
@@ -292,4 +348,45 @@
  * @property {CrossingPrediction[]} crossings - Live crossing predictions from the scenario bundle
  * @property {boolean} loading - Whether the scenario is loading
  * @property {string|null} error - Load error message
+ */
+
+/**
+ * @typedef {Object} VerificationUpdates
+ * @property {boolean} [verified] - Whether verified
+ * @property {string} [destination] - Destination
+ */
+
+/**
+ * @callback updateDynamicIntentionsCallback
+ * @param {Ship} ship
+ * @param {number} simTime
+ * @param {number} [timeScale]
+ * @returns {DynamicIntentionsState}
+ */
+
+/**
+ * @typedef {Object} DynamicIntentionsResult
+ * @property {updateDynamicIntentionsCallback} updateDynamicIntentions
+ */
+
+/**
+ * @typedef {Object} VerificationSyncResult
+ * @property {Object.<string, Verification>} verificationByShipId - Verification rows keyed by ship ID
+ * @property {updateVerificationCallback} updateVerification - PATCH a verification row
+ * @property {string|null} verificationError - Last fetch error message
+ */
+
+/**
+ * @callback updateVerificationCallback
+ * @param {string|number} shipId
+ * @param {VerificationUpdates} updates
+ * @returns {Promise<Verification>}
+ */
+
+/**
+ * @typedef {Object} StatusEntry
+ * @property {string} label - Display label
+ * @property {string} css - CSS class name
+ * @property {string} color - Hex color
+ * @property {number} dots - Number of filled dots
  */

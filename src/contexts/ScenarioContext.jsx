@@ -1,7 +1,7 @@
 import { createContext, useContext, useMemo } from "react";
 import useScenarioData from "@hooks/useScenarioData";
 
-/** @type {React.Context<<ScenarioContextValue|null>} */
+/** @type {React.Context.<ScenarioContextValue|null>} */
 const ScenarioContext = createContext(null);
 
 /**

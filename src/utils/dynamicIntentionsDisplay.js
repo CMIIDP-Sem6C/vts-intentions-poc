@@ -140,7 +140,7 @@ function travelMinutesToSimSeconds(minutes, timeScale) {
  * Hook that provides `updateDynamicIntentions` — a function that computes
  * the visible intentions path for a ship based on current sim state.
  *
- * @returns {{ updateDynamicIntentions: (ship: Ship, simTime: number, timeScale?: number) => DynamicIntentionsState }}
+ * @returns {DynamicIntentionsResult}
  */
 export function useDynamicIntentionsDisplay() {
   /**

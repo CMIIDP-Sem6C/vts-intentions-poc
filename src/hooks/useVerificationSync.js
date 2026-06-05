@@ -31,11 +31,7 @@ async function requestJson(url, options) {
  * Hook that polls `/api/verifications` and provides a ship-id-indexed lookup map
  * plus an `updateVerification` function for PATCH requests.
  *
- * @returns {{
- *   verificationByShipId: Record<string, Verification>,
- *   updateVerification: (shipId: string|number, updates: { verified?: boolean, destination?: string }) => Promise<<Verification>,
- *   verificationError: string|null
- * }}
+ * @returns {VerificationSyncResult}
  */
 export default function useVerificationSync() {
   const [rows, setRows] = useState([]);
@@ -75,8 +71,8 @@ export default function useVerificationSync() {
   /**
    * PATCH a verification row for a given ship.
    * @param {string|number} shipId
-   * @param {{ verified?: boolean, destination?: string }} updates
-   * @returns {Promise<<Verification>}
+   * @param {VerificationUpdates} updates
+   * @returns {Promise<Verification>}
    */
   const updateVerification = useCallback(async (shipId, updates) => {
     const saved = await requestJson(
